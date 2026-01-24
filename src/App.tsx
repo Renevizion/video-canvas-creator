@@ -10,6 +10,7 @@ import Patterns from "./pages/Patterns";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Editor from "./pages/Editor";
+import AnimationShowcase from "./pages/AnimationShowcase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/editor/:id" element={<Editor />} />
+          <Route path="/showcase" element={<AnimationShowcase />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

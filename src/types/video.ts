@@ -78,7 +78,7 @@ export interface PlannedScene {
 
 export interface PlannedElement {
   id: string;
-  type: 'text' | 'image' | 'shape' | 'cursor' | 'video';
+  type: 'text' | 'image' | 'shape' | 'cursor' | 'video' | 'code-editor' | 'progress-bar' | 'terminal' | 'laptop' | '3d-card';
   content: string;
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };

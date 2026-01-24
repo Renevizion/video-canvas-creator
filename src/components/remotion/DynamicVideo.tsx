@@ -1,6 +1,7 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing } from 'remotion';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
+import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
 
 interface DynamicVideoProps {
   plan: VideoPlan;
@@ -379,6 +380,31 @@ const ElementRenderer: React.FC<{
     zIndex: element.position?.z || 1,
     filter: blur > 0 ? `blur(${blur}px)` : undefined,
   };
+
+  // Check for advanced element types in content/style
+  const content = element.content?.toLowerCase() || '';
+  const styleType = (element.style as Record<string, unknown>)?.elementType as string;
+  
+  // Route to advanced elements based on content keywords or explicit type
+  if (styleType === 'code-editor' || content.includes('code') || content.includes('editor') || content.includes('syntax')) {
+    return <CodeEditor element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+  }
+  
+  if (styleType === 'progress' || content.includes('progress') || content.includes('render') || content.includes('loading')) {
+    return <ProgressBar element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+  }
+  
+  if (styleType === 'terminal' || content.includes('terminal') || content.includes('command') || content.includes('cli')) {
+    return <Terminal element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+  }
+  
+  if (styleType === 'laptop' || content.includes('laptop') || content.includes('macbook')) {
+    return <Laptop3D element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+  }
+  
+  if (styleType === '3d-card' || content.includes('3d card') || content.includes('perspective card')) {
+    return <Perspective3DCard element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+  }
 
   // Render based on element type
   switch (element.type) {
