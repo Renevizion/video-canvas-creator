@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Upload, Wand2, FolderOpen, Sparkles } from 'lucide-react';
+import { Upload, Wand2, FolderOpen, Play } from 'lucide-react';
 
 const actions = [
   {
@@ -24,11 +24,11 @@ const actions = [
     href: '/patterns',
   },
   {
-    icon: Sparkles,
-    title: 'Generate Assets',
-    description: 'Create images and backgrounds with AI',
+    icon: Play,
+    title: 'Animation Showcase',
+    description: 'See code editors, progress bars & 3D effects',
     gradient: 'from-glow-warning to-glow-warning/60',
-    href: '/assets',
+    href: '/showcase',
   },
 ];
 
