@@ -100,15 +100,23 @@ The JSON must follow this EXACT structure:
   }
 }
 
+ADVANCED ELEMENT TYPES (use these for tech/product demos):
+- "code-editor": Shows animated code typing in a 3D laptop mockup. Use styleType: "code-editor" and content with code snippet. Great for dev tools, APIs, coding tutorials.
+- "terminal": Animated terminal/command line with typing effect. Use styleType: "terminal" and content with commands. Perfect for CLI tools, installations.
+- "progress": Animated progress bar with percentage. Use styleType: "progress" and style.progress (0-100). Good for loading states, build progress.
+- "3d-card": Content in a 3D perspective card with glassmorphism. Use styleType: "3d-card". Great for feature highlights.
+- "laptop-mockup": 3D laptop frame to wrap other content. Use styleType: "laptop-mockup".
+
 Rules:
 1. Create ${Math.ceil(duration / 3)} to ${Math.ceil(duration / 2)} scenes
 2. Each scene should be 2-4 seconds
-3. Include varied element types: text, shape, cursor, image placeholders
+3. Include varied element types: text, shape, cursor, image, AND advanced types (code-editor, terminal, progress, 3d-card) where appropriate
 4. Add proper animations with delays for staggered effects
 5. Use the color palette: ${colors.join(', ')}
 6. Make it visually interesting with movement and transitions
-7. Include a cursor element for product demos
-8. End with a call-to-action scene`;
+7. For tech/dev product demos, USE code-editor and terminal elements
+8. For SaaS/app demos, USE progress bars and 3d-card elements
+9. End with a call-to-action scene`;
 
     console.log('Generating video plan for:', prompt);
 
