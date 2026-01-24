@@ -1,6 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence } from 'remotion';
-import type { VideoPlan, PlannedScene, PlannedElement } from '@/types/video';
+import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 
 interface DynamicVideoProps {
   plan: VideoPlan;
@@ -8,14 +8,13 @@ interface DynamicVideoProps {
 
 // Main dynamic video component that renders based on plan
 export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
-  const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const globalBg = plan.style?.colorPalette?.[0] || '#0a0e27';
+  const globalBg = plan.style?.colorPalette?.[2] || '#1e293b';
 
   return (
     <AbsoluteFill style={{ backgroundColor: globalBg }}>
-      {plan.scenes.map((scene, index) => {
+      {plan.scenes.map((scene) => {
         const startFrame = Math.round(scene.startTime * fps);
         const durationFrames = Math.round(scene.duration * fps);
 
@@ -35,13 +34,13 @@ const SceneRenderer: React.FC<{ scene: PlannedScene; globalStyle: VideoPlan['sty
   const { fps } = useVideoConfig();
 
   // Scene fade in
-  const sceneOpacity = interpolate(frame, [0, fps * 0.5], [0, 1], {
+  const sceneOpacity = interpolate(frame, [0, Math.round(fps * 0.3)], [0, 1], {
     extrapolateRight: 'clamp',
   });
 
   return (
     <AbsoluteFill style={{ opacity: sceneOpacity }}>
-      {scene.elements?.map((element, index) => (
+      {scene.elements?.map((element) => (
         <ElementRenderer 
           key={element.id} 
           element={element} 
@@ -49,29 +48,111 @@ const SceneRenderer: React.FC<{ scene: PlannedScene; globalStyle: VideoPlan['sty
           sceneFrame={frame}
         />
       ))}
-      
-      {/* Scene description as overlay for debugging */}
-      {scene.description && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 40,
-            left: 40,
-            right: 40,
-            padding: '16px 24px',
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: 12,
-            color: 'white',
-            fontSize: 14,
-            fontFamily: 'Inter, system-ui, sans-serif',
-          }}
-        >
-          {scene.description}
-        </div>
-      )}
     </AbsoluteFill>
   );
+};
+
+// Get animation values based on element animation config
+const useElementAnimation = (
+  element: PlannedElement,
+  sceneFrame: number,
+  fps: number
+) => {
+  const anim = element.animation as AnimationPattern | undefined;
+  
+  if (!anim) {
+    return { opacity: 1, translateX: 0, translateY: 0, scale: 1, rotate: 0 };
+  }
+
+  const delay = (anim.delay || 0) * fps;
+  const duration = (anim.duration || 0.5) * fps;
+  
+  // Calculate animation progress
+  const progress = interpolate(
+    sceneFrame,
+    [delay, delay + duration],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+  );
+
+  let opacity = 1;
+  let translateX = 0;
+  let translateY = 0;
+  let scale = 1;
+  let rotate = 0;
+
+  const animType = anim.type || anim.name;
+  const props = anim.properties || {};
+
+  switch (animType) {
+    case 'fade':
+    case 'fadeIn':
+      opacity = progress;
+      break;
+      
+    case 'slide':
+    case 'slideIn':
+      opacity = progress;
+      if (props.y) {
+        const [fromY, toY] = Array.isArray(props.y) ? props.y : [100, 0];
+        translateY = interpolate(progress, [0, 1], [fromY as number, toY as number]);
+      } else {
+        translateY = interpolate(progress, [0, 1], [50, 0]);
+      }
+      if (props.x) {
+        const [fromX, toX] = Array.isArray(props.x) ? props.x : [0, 0];
+        translateX = interpolate(progress, [0, 1], [fromX as number, toX as number]);
+      }
+      break;
+      
+    case 'scale':
+    case 'popIn':
+    case 'zoomIn':
+      opacity = progress;
+      if (props.scale) {
+        const [fromScale, toScale] = Array.isArray(props.scale) ? props.scale : [0.8, 1];
+        scale = interpolate(progress, [0, 1], [fromScale as number, toScale as number]);
+      } else {
+        scale = interpolate(progress, [0, 1], [0.8, 1]);
+      }
+      break;
+      
+    case 'move':
+    case 'moveAndClick':
+      // For cursor movement - don't fade, just move
+      if (props.x) {
+        const [fromX, toX] = Array.isArray(props.x) ? props.x : [0, 0];
+        translateX = interpolate(progress, [0, 1], [fromX as number - 50, toX as number - 50]) * 10;
+      }
+      if (props.y) {
+        const [fromY, toY] = Array.isArray(props.y) ? props.y : [0, 0];
+        translateY = interpolate(progress, [0, 1], [fromY as number - 50, toY as number - 50]) * 10;
+      }
+      break;
+      
+    case 'text':
+    case 'typewriter':
+      opacity = progress;
+      break;
+      
+    case 'pulse':
+      const pulseScale = Array.isArray(props.scale) ? props.scale : [1, 1.1];
+      scale = interpolate(
+        Math.sin(progress * Math.PI * 4),
+        [-1, 1],
+        [pulseScale[0] as number, pulseScale[1] as number]
+      );
+      break;
+
+    case 'flash':
+      opacity = progress;
+      break;
+      
+    default:
+      opacity = progress;
+  }
+
+  return { opacity, translateX, translateY, scale, rotate };
 };
 
 // Element renderer
@@ -81,59 +162,36 @@ const ElementRenderer: React.FC<{
   sceneFrame: number;
 }> = ({ element, globalStyle, sceneFrame }) => {
   const { fps } = useVideoConfig();
-
-  // Calculate animation
-  const animDelay = (element.animation?.delay || 0) * fps;
-  const animDuration = (element.animation?.duration || 0.5) * fps;
   
-  let opacity = 1;
-  let translateY = 0;
-  let scale = 1;
+  const { opacity, translateX, translateY, scale, rotate } = useElementAnimation(
+    element,
+    sceneFrame,
+    fps
+  );
 
-  if (element.animation) {
-    const animProgress = interpolate(
-      sceneFrame,
-      [animDelay, animDelay + animDuration],
-      [0, 1],
-      { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-    );
-
-    switch (element.animation.type) {
-      case 'fade':
-        opacity = animProgress;
-        break;
-      case 'slide':
-        opacity = animProgress;
-        translateY = interpolate(animProgress, [0, 1], [50, 0]);
-        break;
-      case 'scale':
-        scale = interpolate(animProgress, [0, 1], [0.8, 1]);
-        opacity = animProgress;
-        break;
-    }
-  }
-
-  const style: React.CSSProperties = {
+  const baseStyle: React.CSSProperties = {
     position: 'absolute',
     left: `${element.position?.x || 50}%`,
     top: `${element.position?.y || 50}%`,
-    transform: `translate(-50%, -50%) translateY(${translateY}px) scale(${scale})`,
+    transform: `translate(-50%, -50%) translateX(${translateX}px) translateY(${translateY}px) scale(${scale}) rotate(${rotate}deg)`,
     opacity,
-    width: element.size?.width ? `${element.size.width}%` : 'auto',
-    ...element.style as React.CSSProperties,
+    zIndex: element.position?.z || 1,
   };
 
+  // Text element
   if (element.type === 'text') {
+    const textStyle = element.style as Record<string, unknown>;
     return (
       <div
         style={{
-          ...style,
-          fontFamily: globalStyle?.typography?.primary || 'Inter, system-ui, sans-serif',
-          color: (element.style as any)?.color || globalStyle?.colorPalette?.[3] || '#53a8ff',
-          fontSize: (element.style as any)?.fontSize || 48,
-          fontWeight: (element.style as any)?.fontWeight || 700,
+          ...baseStyle,
+          fontFamily: (textStyle.fontFamily as string) || globalStyle?.typography?.primary || 'Inter, system-ui, sans-serif',
+          color: (textStyle.color as string) || globalStyle?.colorPalette?.[0] || '#ffffff',
+          fontSize: (textStyle.fontSize as number) || 48,
+          fontWeight: (textStyle.fontWeight as number) || 700,
           textAlign: 'center' as const,
-          textShadow: '0 0 30px rgba(83, 168, 255, 0.5)',
+          textShadow: '0 4px 20px rgba(0,0,0,0.3)',
+          whiteSpace: 'nowrap',
         }}
       >
         {element.content}
@@ -141,46 +199,78 @@ const ElementRenderer: React.FC<{
     );
   }
 
+  // Shape element
   if (element.type === 'shape') {
+    const shapeStyle = element.style as Record<string, unknown>;
     return (
       <div
         style={{
-          ...style,
-          background: (element.style as any)?.background || 'linear-gradient(135deg, #1a1a2e, #16213e)',
-          borderRadius: (element.style as any)?.borderRadius || globalStyle?.borderRadius || 16,
-          border: '1px solid rgba(83, 168, 255, 0.2)',
-          boxShadow: '0 0 40px rgba(83, 168, 255, 0.1)',
+          ...baseStyle,
+          width: element.size?.width ? `${element.size.width}%` : '200px',
           height: element.size?.height ? `${element.size.height}%` : '200px',
+          background: (shapeStyle.background as string) || 'rgba(255,255,255,0.1)',
+          borderRadius: (shapeStyle.borderRadius as number) || globalStyle?.borderRadius || 16,
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
         }}
       />
     );
   }
 
+  // Image placeholder element
   if (element.type === 'image') {
     return (
       <div
         style={{
-          ...style,
-          background: 'linear-gradient(135deg, #0a0e27, #1a1a2e)',
+          ...baseStyle,
+          width: element.size?.width ? `${element.size.width}%` : '200px',
+          height: element.size?.height ? `${element.size.height}%` : '200px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
           borderRadius: 16,
-          height: element.size?.height ? `${element.size.height}%` : '60%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: '1px solid rgba(83, 168, 255, 0.1)',
+          border: '1px solid rgba(255,255,255,0.1)',
         }}
       >
-        <span style={{ color: 'rgba(83, 168, 255, 0.5)', fontSize: 14 }}>
-          {element.content}
+        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontFamily: 'monospace' }}>
+          [{element.content}]
         </span>
       </div>
     );
   }
 
+  // Cursor element with smooth animation
   if (element.type === 'cursor') {
-    const cursorX = interpolate(sceneFrame, [0, 60], [30, 70], { extrapolateRight: 'clamp' });
-    const cursorY = interpolate(sceneFrame, [0, 60], [40, 60], { extrapolateRight: 'clamp' });
-    const clickScale = sceneFrame > 45 && sceneFrame < 50 ? 0.8 : 1;
+    // Use spring for smoother cursor movement
+    const cursorProgress = spring({
+      fps,
+      frame: sceneFrame,
+      config: {
+        damping: 50,
+        stiffness: 100,
+        mass: 0.5,
+      },
+    });
+
+    const anim = element.animation as AnimationPattern | undefined;
+    let cursorX = element.position?.x || 50;
+    let cursorY = element.position?.y || 50;
+    
+    if (anim?.properties) {
+      if (anim.properties.x && Array.isArray(anim.properties.x)) {
+        cursorX = interpolate(cursorProgress, [0, 1], anim.properties.x as number[]);
+      }
+      if (anim.properties.y && Array.isArray(anim.properties.y)) {
+        cursorY = interpolate(cursorProgress, [0, 1], anim.properties.y as number[]);
+      }
+    }
+
+    // Click effect - pulse when near end of animation
+    const clickProgress = interpolate(sceneFrame, [fps * 1.5, fps * 1.6, fps * 1.7], [1, 0.85, 1], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    });
 
     return (
       <div
@@ -188,12 +278,12 @@ const ElementRenderer: React.FC<{
           position: 'absolute',
           left: `${cursorX}%`,
           top: `${cursorY}%`,
-          transform: `scale(${clickScale})`,
-          transition: 'transform 0.1s',
+          transform: `translate(-50%, -50%) scale(${clickProgress})`,
           zIndex: 100,
+          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.3))',
         }}
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
           <path
             d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.48 0 .72-.58.38-.92L6.35 2.86a.5.5 0 0 0-.85.35Z"
             fill="#fff"

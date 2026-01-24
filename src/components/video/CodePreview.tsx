@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Check, Download, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ interface CodePreviewProps {
   code: string;
 }
 
-export function CodePreview({ code }: CodePreviewProps) {
+export const CodePreview = forwardRef<HTMLDivElement, CodePreviewProps>(({ code }, ref) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -32,7 +32,7 @@ export function CodePreview({ code }: CodePreviewProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={ref} className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground flex items-center gap-2">
@@ -82,4 +82,6 @@ export function CodePreview({ code }: CodePreviewProps) {
       </div>
     </div>
   );
-}
+});
+
+CodePreview.displayName = 'CodePreview';
