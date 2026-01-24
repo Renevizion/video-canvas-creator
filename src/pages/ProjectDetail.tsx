@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw, Film } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/Header';
@@ -10,7 +10,7 @@ import { AssetPreview } from '@/components/video/AssetPreview';
 import { CodePreview } from '@/components/video/CodePreview';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
 import { supabase } from '@/integrations/supabase/client';
-import { useGenerateRemotionCode } from '@/hooks/useVideoData';
+import { useGenerateRemotionCode, useRenderVideo } from '@/hooks/useVideoData';
 import type { VideoProject, VideoPlan, PlannedScene, AssetRequirement } from '@/types/video';
 import { toast } from 'sonner';
 
@@ -33,6 +33,7 @@ const ProjectDetail = () => {
   const [activeSceneId, setActiveSceneId] = useState('');
   
   const generateCodeMutation = useGenerateRemotionCode();
+  const renderVideoMutation = useRenderVideo();
 
   useEffect(() => {
     if (id) {
@@ -136,7 +137,7 @@ const ProjectDetail = () => {
                   Created {new Date(project.created_at).toLocaleDateString()} at {new Date(project.created_at).toLocaleTimeString()}
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" onClick={fetchProject} className="gap-2">
                   <RefreshCw className="w-4 h-4" />
                   Refresh
@@ -153,6 +154,29 @@ const ProjectDetail = () => {
                       <Code className="w-4 h-4" />
                     )}
                     Generate Code
+                  </Button>
+                )}
+                {project.generated_code && (
+                  <Button 
+                    onClick={async () => {
+                      if (!id) return;
+                      try {
+                        await renderVideoMutation.mutateAsync(id);
+                        fetchProject();
+                      } catch (error) {
+                        console.error('Failed to render:', error);
+                      }
+                    }}
+                    disabled={renderVideoMutation.isPending || project.status === 'rendering'}
+                    variant="default"
+                    className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                  >
+                    {renderVideoMutation.isPending || project.status === 'rendering' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Film className="w-4 h-4" />
+                    )}
+                    {project.status === 'completed' ? 'Re-render Video' : 'Render Video'}
                   </Button>
                 )}
               </div>

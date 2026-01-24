@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchVideoPlans, fetchPatterns, generateVideoPlan, generateRemotionCode, updatePlanStatus } from '@/lib/api';
+import { fetchVideoPlans, fetchPatterns, generateVideoPlan, generateRemotionCode, updatePlanStatus, renderVideo } from '@/lib/api';
 import { toast } from 'sonner';
 
 export function useVideoPlans() {
@@ -45,6 +45,22 @@ export function useGenerateRemotionCode() {
     onError: (error) => {
       console.error('Failed to generate Remotion code:', error);
       toast.error('Failed to generate Remotion code');
+    },
+  });
+}
+
+export function useRenderVideo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (planId: string) => renderVideo(planId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['video-plans'] });
+      toast.success('Video render complete! Download the code to render locally.');
+    },
+    onError: (error) => {
+      console.error('Failed to render video:', error);
+      toast.error('Failed to render video');
     },
   });
 }
