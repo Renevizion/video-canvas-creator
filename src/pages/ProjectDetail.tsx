@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw, Film, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +9,7 @@ import { SceneTimeline } from '@/components/video/SceneTimeline';
 import { AssetPreview } from '@/components/video/AssetPreview';
 import { CodePreview } from '@/components/video/CodePreview';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
+import { VideoExporter } from '@/components/video/VideoExporter';
 import { supabase } from '@/integrations/supabase/client';
 import { useGenerateRemotionCode, useRenderVideo } from '@/hooks/useVideoData';
 import type { VideoProject, VideoPlan, PlannedScene, AssetRequirement } from '@/types/video';
@@ -31,6 +32,7 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('preview');
   const [activeSceneId, setActiveSceneId] = useState('');
+  const [showExporter, setShowExporter] = useState(false);
   
   const generateCodeMutation = useGenerateRemotionCode();
   const renderVideoMutation = useRenderVideo();
@@ -166,27 +168,14 @@ const ProjectDetail = () => {
                     Edit Video
                   </Button>
                 )}
-                {project.generated_code && (
+                {plan && (
                   <Button 
-                    onClick={async () => {
-                      if (!id) return;
-                      try {
-                        await renderVideoMutation.mutateAsync(id);
-                        fetchProject();
-                      } catch (error) {
-                        console.error('Failed to render:', error);
-                      }
-                    }}
-                    disabled={renderVideoMutation.isPending || project.status === 'rendering'}
+                    onClick={() => setShowExporter(true)}
                     variant="default"
                     className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
                   >
-                    {renderVideoMutation.isPending || project.status === 'rendering' ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Film className="w-4 h-4" />
-                    )}
-                    {project.status === 'completed' ? 'Re-render Video' : 'Render Video'}
+                    <Download className="w-4 h-4" />
+                    Export Video
                   </Button>
                 )}
               </div>
@@ -322,6 +311,13 @@ const ProjectDetail = () => {
           </Tabs>
         </div>
       </main>
+
+      {/* Video Exporter Modal */}
+      <AnimatePresence>
+        {showExporter && plan && (
+          <VideoExporter plan={plan} onClose={() => setShowExporter(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
