@@ -113,10 +113,15 @@ const Index = () => {
                 <TrendingUp className="w-5 h-5 text-primary" />
                 Recent Projects
               </h2>
-              {projects.length > 6 && (
-                <a href="/projects" className="text-sm text-primary hover:underline">
+              {projects.length > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => navigate('/projects')}
+                  className="text-primary hover:text-primary"
+                >
                   View all →
-                </a>
+                </Button>
               )}
             </div>
 

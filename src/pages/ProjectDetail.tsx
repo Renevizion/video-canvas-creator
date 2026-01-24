@@ -110,9 +110,9 @@ const ProjectDetail = () => {
       <main className="pt-24 px-4 pb-12">
         <div className="container mx-auto max-w-6xl">
           {/* Back button */}
-          <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate('/')}>
+          <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate('/projects')}>
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            Back to Projects
           </Button>
 
           {/* Project header */}
