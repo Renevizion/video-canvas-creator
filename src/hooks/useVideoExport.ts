@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
 
 interface ExportProgress {
   status: 'idle' | 'preparing' | 'recording' | 'encoding' | 'complete' | 'error';
@@ -20,8 +21,6 @@ export function useVideoExport(options: UseVideoExportOptions = {}) {
     message: '',
   });
   
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const abortRef = useRef(false);
 
   const exportVideo = useCallback(async (
@@ -30,50 +29,28 @@ export function useVideoExport(options: UseVideoExportOptions = {}) {
     filename: string = 'video.webm'
   ): Promise<Blob | null> => {
     abortRef.current = false;
-    chunksRef.current = [];
     
     try {
       setExportProgress({ status: 'preparing', progress: 0, message: 'Preparing video export...' });
       
-      // Find the video element or canvas inside the player
-      const videoElement = playerContainer.querySelector('video');
-      const canvasElement = playerContainer.querySelector('canvas');
+      // Get the actual player content area
+      const playerElement = playerContainer.querySelector('[data-player-container]') || playerContainer;
+      const rect = playerElement.getBoundingClientRect();
       
-      let stream: MediaStream;
+      // Create a canvas for recording
+      const canvas = document.createElement('canvas');
+      canvas.width = 1920;
+      canvas.height = 1080;
+      const ctx = canvas.getContext('2d')!;
       
-      if (videoElement) {
-        // If there's a video element, capture its stream
-        stream = (videoElement as any).captureStream?.(fps);
-        if (!stream) {
-          throw new Error('captureStream not supported on video element');
-        }
-      } else if (canvasElement) {
-        // If there's a canvas, capture its stream
-        stream = (canvasElement as HTMLCanvasElement).captureStream(fps);
-      } else {
-        // Fallback: capture the entire container using html2canvas approach
-        // For now, we'll use the new getDisplayMedia API with element capture
-        // But that requires user permission, so let's try a different approach
-        
-        // Use a hidden canvas to capture frames
-        const rect = playerContainer.getBoundingClientRect();
-        const canvas = document.createElement('canvas');
-        canvas.width = rect.width * window.devicePixelRatio;
-        canvas.height = rect.height * window.devicePixelRatio;
-        
-        stream = canvas.captureStream(fps);
-        
-        // We'll need to manually draw frames - this is complex, so let's use
-        // a simpler approach: record the DOM element using html2canvas
-        throw new Error('Direct DOM recording requires additional setup. Looking for video/canvas element.');
-      }
-
+      // Set up MediaRecorder on the canvas stream
+      const stream = canvas.captureStream(fps);
+      
       // Check for supported mime types
       const mimeTypes = [
         'video/webm;codecs=vp9',
         'video/webm;codecs=vp8',
         'video/webm',
-        'video/mp4',
       ];
       
       let selectedMimeType = '';
@@ -88,73 +65,76 @@ export function useVideoExport(options: UseVideoExportOptions = {}) {
         throw new Error('No supported video format found in this browser');
       }
 
-      setExportProgress({ status: 'recording', progress: 5, message: 'Recording video...' });
-
+      const chunks: Blob[] = [];
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: selectedMimeType,
-        videoBitsPerSecond: 5000000, // 5 Mbps for good quality
+        videoBitsPerSecond: 8000000, // 8 Mbps for good quality
       });
       
-      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+        }
+      };
 
-      return new Promise((resolve, reject) => {
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            chunksRef.current.push(event.data);
-          }
-        };
+      // Start recording
+      mediaRecorder.start(100);
+      
+      setExportProgress({ status: 'recording', progress: 5, message: 'Recording video...' });
 
-        mediaRecorder.onerror = (event) => {
-          console.error('MediaRecorder error:', event);
-          setExportProgress({ status: 'error', progress: 0, message: 'Recording failed' });
-          reject(new Error('Recording failed'));
-        };
-
-        mediaRecorder.onstop = () => {
-          if (abortRef.current) {
-            setExportProgress({ status: 'idle', progress: 0, message: '' });
-            resolve(null);
-            return;
-          }
-
-          setExportProgress({ status: 'encoding', progress: 90, message: 'Encoding video...' });
+      const totalFrames = durationInSeconds * fps;
+      const frameInterval = 1000 / fps;
+      
+      // Record frames
+      for (let frame = 0; frame < totalFrames; frame++) {
+        if (abortRef.current) {
+          mediaRecorder.stop();
+          setExportProgress({ status: 'idle', progress: 0, message: '' });
+          return null;
+        }
+        
+        // Capture the current frame
+        try {
+          const frameCanvas = await html2canvas(playerElement as HTMLElement, {
+            backgroundColor: '#000000',
+            scale: canvas.width / rect.width,
+            useCORS: true,
+            logging: false,
+            allowTaint: true,
+          });
           
-          const blob = new Blob(chunksRef.current, { type: selectedMimeType });
+          // Draw to our recording canvas
+          ctx.drawImage(frameCanvas, 0, 0, canvas.width, canvas.height);
+        } catch (err) {
+          console.warn('Frame capture error:', err);
+        }
+        
+        // Update progress
+        const progress = 5 + (frame / totalFrames) * 85;
+        setExportProgress({ 
+          status: 'recording', 
+          progress, 
+          message: `Recording frame ${frame + 1}/${totalFrames}` 
+        });
+        
+        // Wait for next frame timing
+        await new Promise(resolve => setTimeout(resolve, frameInterval));
+      }
+
+      // Stop recording
+      return new Promise((resolve) => {
+        mediaRecorder.onstop = () => {
+          setExportProgress({ status: 'encoding', progress: 95, message: 'Encoding video...' });
+          
+          const blob = new Blob(chunks, { type: selectedMimeType });
           
           setExportProgress({ status: 'complete', progress: 100, message: 'Export complete!' });
+          toast.success('Video exported successfully!');
           
           resolve(blob);
         };
-
-        // Start recording
-        mediaRecorder.start(100); // Collect data every 100ms
-
-        // Progress updates during recording
-        const totalMs = durationInSeconds * 1000;
-        const startTime = Date.now();
         
-        const progressInterval = setInterval(() => {
-          if (abortRef.current) {
-            clearInterval(progressInterval);
-            return;
-          }
-          
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(85, 5 + (elapsed / totalMs) * 80);
-          setExportProgress({ 
-            status: 'recording', 
-            progress, 
-            message: `Recording... ${Math.round((elapsed / 1000))}s / ${durationInSeconds}s` 
-          });
-        }, 200);
-
-        // Stop recording after duration
-        setTimeout(() => {
-          clearInterval(progressInterval);
-          if (mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-          }
-        }, totalMs + 500); // Add small buffer
+        mediaRecorder.stop();
       });
 
     } catch (error) {
@@ -183,9 +163,6 @@ export function useVideoExport(options: UseVideoExportOptions = {}) {
 
   const cancelExport = useCallback(() => {
     abortRef.current = true;
-    if (mediaRecorderRef.current?.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
     setExportProgress({ status: 'idle', progress: 0, message: '' });
   }, []);
 
