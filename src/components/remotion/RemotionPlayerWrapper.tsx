@@ -14,15 +14,11 @@ export const RemotionPlayerWrapper = forwardRef<HTMLDivElement, RemotionPlayerWr
       return Math.max(30, Math.round((plan.duration || 10) * 30));
     }, [plan.duration]);
 
-    // Memoize the component to prevent unnecessary re-renders
-    const VideoComponent = useMemo(() => {
-      return () => <DynamicVideo plan={plan} />;
-    }, [plan]);
-
     return (
       <div ref={ref} className={className}>
         <Player
-          component={VideoComponent}
+          component={DynamicVideo}
+          inputProps={{ plan }}
           durationInFrames={durationInFrames}
           fps={30}
           compositionWidth={1920}
@@ -34,7 +30,7 @@ export const RemotionPlayerWrapper = forwardRef<HTMLDivElement, RemotionPlayerWr
             overflow: 'hidden',
           }}
           controls
-          autoPlay={false}
+          autoPlay
           loop
         />
       </div>
