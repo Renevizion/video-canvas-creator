@@ -384,6 +384,16 @@ const ElementRenderer: React.FC<{
   // Check for advanced element types in content/style
   const content = element.content?.toLowerCase() || '';
   const styleType = (element.style as Record<string, unknown>)?.elementType as string;
+
+  // Heuristics: some plans use shape placeholders like "Cursor" or "Arrow".
+  // Treat those as real elements to avoid giant blocks + label text.
+  if (element.type === 'shape' && content.includes('cursor')) {
+    return <CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />;
+  }
+
+  if (element.type === 'shape' && content.includes('arrow')) {
+    return <ArrowElement element={element} style={baseStyle} colors={colors} />;
+  }
   
   // Route to advanced elements based on content keywords or explicit type
   if (styleType === 'code-editor' || content.includes('code') || content.includes('editor') || content.includes('syntax')) {
@@ -480,6 +490,9 @@ const ShapeElement: React.FC<{
   sceneFrame: number;
 }> = ({ element, style, globalStyle, colors, sceneFrame }) => {
   const shapeStyle = element.style as Record<string, unknown>;
+  // NOTE: We intentionally do NOT render element.content as visible text for shapes.
+  // Many plans use content as a semantic label (e.g. "Background", "Arrow", "UI Card")
+  // which should not appear in the final video.
   const content = element.content || '';
   
   // Detect shape type from content/description
@@ -512,16 +525,7 @@ const ShapeElement: React.FC<{
           padding: 24,
         }}
       >
-        {content && (
-          <span style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: 16,
-            fontFamily: 'Inter, system-ui, sans-serif',
-            fontWeight: 500,
-          }}>
-            {content}
-          </span>
-        )}
+        {/* intentionally no label text */}
       </div>
     );
   }
@@ -649,17 +653,58 @@ const ShapeElement: React.FC<{
         justifyContent: 'center',
       }}
     >
-      {content && (
-        <span style={{
-          color: 'rgba(255,255,255,0.7)',
-          fontSize: 14,
-          fontFamily: 'Inter, system-ui, sans-serif',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em',
-        }}>
-          {content}
-        </span>
-      )}
+      {/* intentionally no label text */}
+    </div>
+  );
+};
+
+// ============================================================================
+// ARROW ELEMENT - Render a proper arrow icon instead of a label block
+// ============================================================================
+const ArrowElement: React.FC<{
+  element: PlannedElement;
+  style: React.CSSProperties;
+  colors: string[];
+}> = ({ element, style, colors }) => {
+  const width = element.size?.width
+    ? element.size.width <= 100
+      ? `${element.size.width}%`
+      : `${element.size.width}px`
+    : '120px';
+  const height = element.size?.height
+    ? element.size.height <= 100
+      ? `${element.size.height}%`
+      : `${element.size.height}px`
+    : '120px';
+
+  const fill = ((element.style as Record<string, unknown>)?.background as string) || colors[1] || '#06b6d4';
+
+  return (
+    <div
+      style={{
+        ...style,
+        width,
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
+        <path
+          d="M4 12h13"
+          stroke={fill}
+          strokeWidth={2.6}
+          strokeLinecap="round"
+        />
+        <path
+          d="M13 6l6 6-6 6"
+          stroke={fill}
+          strokeWidth={2.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
     </div>
   );
 };
