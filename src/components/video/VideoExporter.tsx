@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { DynamicVideo } from '@/components/remotion/DynamicVideo';
 import { useVideoExport } from '@/hooks/useVideoExport';
 import { useExportState } from '@/hooks/useExportState';
+import { shallow } from 'zustand/shallow';
 import type { VideoPlan } from '@/types/video';
 import { toast } from 'sonner';
 
@@ -27,18 +28,33 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
       fps: plan.fps || 30,
     });
 
-    const globalExportState = useExportState();
+    const { startExport, updateProgress, completeExport, failExport, resetExport: resetGlobalExport } = useExportState(
+      (s) => ({
+        startExport: s.startExport,
+        updateProgress: s.updateProgress,
+        completeExport: s.completeExport,
+        failExport: s.failExport,
+        resetExport: s.resetExport,
+      }),
+      shallow
+    );
 
     // Sync local progress with global state
     useEffect(() => {
       if (isExporting) {
-        globalExportState.updateProgress(
-          exportProgress.progress,
-          exportProgress.message,
-          exportProgress.status
-        );
+        updateProgress(exportProgress.progress, exportProgress.message, exportProgress.status);
       }
-    }, [exportProgress, isExporting]);
+    }, [exportProgress, isExporting, updateProgress]);
+
+    // If the modal unmounts mid-export (navigation/refresh), surface it as an interruption.
+    useEffect(() => {
+      return () => {
+        if (isExporting) {
+          cancelExport();
+          failExport('Export was interrupted (navigation / modal closed).');
+        }
+      };
+    }, [isExporting, cancelExport, failExport]);
 
     const duration = plan.duration || 10;
     const fps = plan.fps || 30;
@@ -52,7 +68,7 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
 
       setIsExporting(true);
       setExportedBlob(null);
-      globalExportState.startExport(projectId || 'unknown');
+      startExport(projectId || 'unknown');
 
       // Reset player to start
       playerRef.current?.seekTo(0);
@@ -77,9 +93,9 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
 
       if (blob) {
         setExportedBlob(blob);
-        globalExportState.completeExport(blob);
+        completeExport(blob);
       } else {
-        globalExportState.failExport('Export was cancelled or failed');
+        failExport('Export was cancelled or failed');
       }
       
       setIsExporting(false);
@@ -94,12 +110,14 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
 
     const handleCancel = () => {
       cancelExport();
+      failExport('Export cancelled.');
       playerRef.current?.pause();
       setIsExporting(false);
     };
 
     const handleReset = () => {
       resetExport();
+      resetGlobalExport();
       setExportedBlob(null);
       playerRef.current?.seekTo(0);
     };
@@ -144,7 +162,14 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
               </div>
             </div>
             {onClose && (
-              <Button variant="ghost" size="icon" onClick={onClose}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (isExporting) handleCancel();
+                  onClose();
+                }}
+              >
                 <X className="w-5 h-5" />
               </Button>
             )}

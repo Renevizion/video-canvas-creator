@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Loader2, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,18 @@ import { useExportState } from '@/hooks/useExportState';
 
 export function ExportIndicator() {
   const { isExporting, progress, message, status, blob, resetExport } = useExportState();
+
+  // Prevent accidental refresh/navigation during export.
+  useEffect(() => {
+    if (!isExporting) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Required for Chrome.
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isExporting]);
 
   const handleDownload = () => {
     if (blob) {
