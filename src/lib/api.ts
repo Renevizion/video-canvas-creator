@@ -91,3 +91,12 @@ export async function updatePlanStatus(planId: string, status: string, additiona
 
   if (error) throw error;
 }
+
+export async function renderVideo(planId: string) {
+  const { data, error } = await supabase.functions.invoke('render-video', {
+    body: { planId },
+  });
+
+  if (error) throw error;
+  return data;
+}
