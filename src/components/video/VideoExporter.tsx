@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { DynamicVideo } from '@/components/remotion/DynamicVideo';
 import { useVideoExport } from '@/hooks/useVideoExport';
 import { useExportState } from '@/hooks/useExportState';
-import { shallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 import type { VideoPlan } from '@/types/video';
 import { toast } from 'sonner';
 
@@ -29,14 +29,13 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
     });
 
     const { startExport, updateProgress, completeExport, failExport, resetExport: resetGlobalExport } = useExportState(
-      (s) => ({
+      useShallow((s) => ({
         startExport: s.startExport,
         updateProgress: s.updateProgress,
         completeExport: s.completeExport,
         failExport: s.failExport,
         resetExport: s.resetExport,
-      }),
-      shallow
+      }))
     );
 
     // Sync local progress with global state
