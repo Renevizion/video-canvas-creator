@@ -57,15 +57,9 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
 };
 
 // ============================================================================
-// ANIMATED BACKGROUND - Cinematic gradient with subtle motion
+// ANIMATED BACKGROUND - Static gradient (optimized for performance)
 // ============================================================================
-const AnimatedBackground: React.FC<{ colors: string[] }> = ({ colors }) => {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-  
-  const rotation = interpolate(frame, [0, durationInFrames], [0, 360]);
-  const pulse = Math.sin(frame * 0.02) * 0.1 + 1;
-  
+const AnimatedBackground: React.FC<{ colors: string[] }> = React.memo(({ colors }) => {
   const primary = colors[1] || '#06b6d4';
   const secondary = colors[2] || '#1e293b';
   
@@ -80,17 +74,17 @@ const AnimatedBackground: React.FC<{ colors: string[] }> = ({ colors }) => {
         }}
       />
       
-      {/* Animated orbs */}
+      {/* Static orbs - no per-frame animation */}
       <div
         style={{
           position: 'absolute',
           top: '20%',
           left: '60%',
-          width: 600 * pulse,
-          height: 600 * pulse,
+          width: 600,
+          height: 600,
           borderRadius: '50%',
           background: `radial-gradient(circle, ${primary}20 0%, transparent 70%)`,
-          transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+          transform: 'translate(-50%, -50%)',
           filter: 'blur(60px)',
         }}
       />
@@ -99,17 +93,17 @@ const AnimatedBackground: React.FC<{ colors: string[] }> = ({ colors }) => {
           position: 'absolute',
           top: '70%',
           left: '30%',
-          width: 500 * pulse,
-          height: 500 * pulse,
+          width: 500,
+          height: 500,
           borderRadius: '50%',
-          background: `radial-gradient(circle, #8b5cf620 0%, transparent 70%)`,
-          transform: `translate(-50%, -50%) rotate(${-rotation * 0.5}deg)`,
+          background: 'radial-gradient(circle, #8b5cf620 0%, transparent 70%)',
+          transform: 'translate(-50%, -50%)',
           filter: 'blur(80px)',
         }}
       />
     </AbsoluteFill>
   );
-};
+});
 
 // ============================================================================
 // VIGNETTE OVERLAY
@@ -215,18 +209,18 @@ const SceneBackground: React.FC<{ description: string }> = ({ description }) => 
   }
   
   if (isEnding) {
-    // Sparkle effect for endings
+    // Static sparkle effect for endings (no per-frame animation)
     return (
       <AbsoluteFill>
-        {[...Array(8)].map((_, i) => {
-          const angle = (i / 8) * Math.PI * 2;
-          const radius = 300 + Math.sin(frame * 0.05 + i) * 50;
-          const x = 50 + Math.cos(angle + frame * 0.01) * (radius / 19.2);
-          const y = 50 + Math.sin(angle + frame * 0.01) * (radius / 10.8);
-          const sparkleScale = 0.5 + Math.sin(frame * 0.1 + i * 0.5) * 0.5;
-          
+        {[...Array(4)].map((_, i) => {
+          const positions = [
+            { x: 20, y: 25 },
+            { x: 80, y: 20 },
+            { x: 15, y: 70 },
+            { x: 85, y: 65 },
+          ];
           return (
-            <Sparkle key={i} x={x} y={y} scale={sparkleScale} />
+            <Sparkle key={i} x={positions[i].x} y={positions[i].y} scale={0.8} />
           );
         })}
       </AbsoluteFill>
@@ -239,7 +233,7 @@ const SceneBackground: React.FC<{ description: string }> = ({ description }) => 
 // ============================================================================
 // SPARKLE ELEMENT - For decorative stars
 // ============================================================================
-const Sparkle: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scale }) => (
+const Sparkle: React.FC<{ x: number; y: number; scale: number }> = React.memo(({ x, y, scale }) => (
   <div
     style={{
       position: 'absolute',
@@ -256,7 +250,7 @@ const Sparkle: React.FC<{ x: number; y: number; scale: number }> = ({ x, y, scal
       />
     </svg>
   </div>
-);
+));
 
 // ============================================================================
 // ELEMENT ANIMATION HOOK
