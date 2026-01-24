@@ -19,18 +19,24 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are a video production planner. Convert user requests into detailed scene-by-scene video plans.
+    const styleColors: Record<string, string[]> = {
+      'dark-web': ['#0a0e27', '#1a1a2e', '#16213e', '#53a8ff'],
+      'corporate': ['#ffffff', '#f8fafc', '#1e293b', '#3b82f6'],
+      'neon': ['#0d0d0d', '#1a1a1a', '#ff00ff', '#00ffff'],
+      'minimal': ['#fafafa', '#f5f5f5', '#171717', '#737373'],
+      'gradient': ['#1e1b4b', '#312e81', '#667eea', '#f43f5e'],
+      'nature': ['#14532d', '#166534', '#22c55e', '#84cc16'],
+    };
 
-Your job:
-1. Break down the request into scenes with precise timing
-2. Identify all visual elements needed (text, images, shapes, cursors, etc.)
-3. Specify animations with easing and timing
-4. List required assets that need to be generated
-5. Define transitions between scenes
+    const colors = styleColors[style] || styleColors['dark-web'];
 
-Return ONLY valid JSON matching this structure:
+    const systemPrompt = `You are an expert video production planner. Create detailed, production-ready video plans.
+
+IMPORTANT: Return ONLY valid JSON, no markdown, no explanations.
+
+The JSON must follow this EXACT structure:
 {
-  "duration": number,
+  "duration": ${duration},
   "fps": 30,
   "resolution": { "width": 1920, "height": 1080 },
   "scenes": [
@@ -38,22 +44,38 @@ Return ONLY valid JSON matching this structure:
       "id": "scene_1",
       "startTime": 0,
       "duration": 3,
-      "description": "Scene description",
+      "description": "Opening scene description",
       "elements": [
         {
-          "id": "element_id",
-          "type": "text|image|shape",
-          "content": "content or description",
-          "position": { "x": 50, "y": 50, "z": 1 },
-          "size": { "width": 80, "height": 20 },
-          "style": { "fontSize": 48, "color": "#53a8ff" },
+          "id": "bg_1",
+          "type": "shape",
+          "content": "Background gradient",
+          "position": { "x": 50, "y": 50, "z": 0 },
+          "size": { "width": 100, "height": 100 },
+          "style": { "background": "linear-gradient(135deg, ${colors[0]}, ${colors[1]})" },
           "animation": {
             "name": "fadeIn",
             "type": "fade",
+            "duration": 1,
+            "easing": "ease-out",
+            "delay": 0,
+            "properties": { "opacity": [0, 1] }
+          }
+        },
+        {
+          "id": "title_1",
+          "type": "text",
+          "content": "Your Title Here",
+          "position": { "x": 50, "y": 40, "z": 1 },
+          "size": { "width": 80, "height": 20 },
+          "style": { "fontSize": 64, "fontWeight": 700, "color": "${colors[3]}" },
+          "animation": {
+            "name": "slideUp",
+            "type": "slide",
             "duration": 0.8,
             "easing": "ease-out",
             "delay": 0.5,
-            "properties": { "opacity": [0, 1] }
+            "properties": { "y": [100, 40] }
           }
         }
       ],
@@ -63,36 +85,30 @@ Return ONLY valid JSON matching this structure:
   ],
   "requiredAssets": [
     {
-      "id": "asset_id",
-      "type": "background|image|icon",
-      "description": "Asset description",
-      "specifications": {
-        "width": 1920,
-        "height": 1080,
-        "style": "dark web, futuristic"
-      },
+      "id": "asset_1",
+      "type": "background",
+      "description": "Main background image",
+      "specifications": { "width": 1920, "height": 1080, "style": "${style}" },
       "providedByUser": false
     }
   ],
   "style": {
-    "colorPalette": ["#0a0e27", "#1a1a2e", "#53a8ff"],
-    "typography": {
-      "primary": "Inter",
-      "secondary": "JetBrains Mono",
-      "sizes": { "h1": 48, "h2": 32, "body": 16 }
-    },
+    "colorPalette": ${JSON.stringify(colors)},
+    "typography": { "primary": "Inter", "secondary": "JetBrains Mono", "sizes": { "h1": 64, "h2": 48, "body": 18 } },
     "spacing": 24,
-    "borderRadius": 12
+    "borderRadius": 16
   }
-}`;
+}
 
-    const userPrompt = `Create a ${duration || 10}-second video:
-
-"${prompt}"
-
-Style preference: ${style || 'dark-web'}
-
-Be specific about timing, animations, and list all assets needed.`;
+Rules:
+1. Create ${Math.ceil(duration / 3)} to ${Math.ceil(duration / 2)} scenes
+2. Each scene should be 2-4 seconds
+3. Include varied element types: text, shape, cursor, image placeholders
+4. Add proper animations with delays for staggered effects
+5. Use the color palette: ${colors.join(', ')}
+6. Make it visually interesting with movement and transitions
+7. Include a cursor element for product demos
+8. End with a call-to-action scene`;
 
     console.log('Generating video plan for:', prompt);
 
@@ -106,9 +122,9 @@ Be specific about timing, animations, and list all assets needed.`;
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: `Create a ${duration}-second video for: "${prompt}"` },
         ],
-        temperature: 0.3,
+        temperature: 0.4,
       }),
     });
 
@@ -144,11 +160,17 @@ Be specific about timing, animations, and list all assets needed.`;
       // Try to extract JSON from markdown code block if present
       const jsonMatch = content.match(/```(?:json)?\n?([\s\S]+?)\n?```/);
       const jsonStr = jsonMatch ? jsonMatch[1] : content;
-      plan = JSON.parse(jsonStr);
+      // Clean up any potential issues
+      const cleanJson = jsonStr.trim().replace(/^\s*```json?\s*/, '').replace(/\s*```\s*$/, '');
+      plan = JSON.parse(cleanJson);
     } catch (parseError) {
       console.error("Failed to parse AI response:", content);
-      throw new Error("Failed to parse video plan from AI response");
+      // Create a fallback plan
+      plan = createFallbackPlan(prompt, duration, colors);
     }
+
+    // Validate and fix the plan structure
+    plan = validateAndFixPlan(plan, duration, colors);
 
     // Store in database
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -190,3 +212,101 @@ Be specific about timing, animations, and list all assets needed.`;
     });
   }
 });
+
+function createFallbackPlan(prompt: string, duration: number, colors: string[]) {
+  const numScenes = Math.ceil(duration / 3);
+  const scenes = [];
+  
+  for (let i = 0; i < numScenes; i++) {
+    const startTime = i * 3;
+    const sceneDuration = Math.min(3, duration - startTime);
+    
+    scenes.push({
+      id: `scene_${i + 1}`,
+      startTime,
+      duration: sceneDuration,
+      description: i === 0 ? "Opening with title" : i === numScenes - 1 ? "Closing with CTA" : `Feature showcase ${i}`,
+      elements: [
+        {
+          id: `bg_${i + 1}`,
+          type: "shape",
+          content: "Background",
+          position: { x: 50, y: 50, z: 0 },
+          size: { width: 100, height: 100 },
+          style: { background: `linear-gradient(135deg, ${colors[0]}, ${colors[1]})` },
+          animation: { name: "fadeIn", type: "fade", duration: 0.5, easing: "ease-out", delay: 0, properties: { opacity: [0, 1] } }
+        },
+        {
+          id: `text_${i + 1}`,
+          type: "text",
+          content: i === 0 ? prompt.slice(0, 30) : i === numScenes - 1 ? "Get Started Today" : `Feature ${i}`,
+          position: { x: 50, y: 40, z: 1 },
+          size: { width: 80, height: 20 },
+          style: { fontSize: 48, fontWeight: 700, color: colors[3] },
+          animation: { name: "slideUp", type: "slide", duration: 0.8, easing: "ease-out", delay: 0.3, properties: {} }
+        }
+      ],
+      animations: [],
+      transition: { type: "fade", duration: 0.3 }
+    });
+  }
+  
+  return {
+    duration,
+    fps: 30,
+    resolution: { width: 1920, height: 1080 },
+    scenes,
+    requiredAssets: [],
+    style: {
+      colorPalette: colors,
+      typography: { primary: "Inter", secondary: "JetBrains Mono", sizes: { h1: 64, h2: 48, body: 18 } },
+      spacing: 24,
+      borderRadius: 16
+    }
+  };
+}
+
+function validateAndFixPlan(plan: any, duration: number, colors: string[]) {
+  if (!plan || typeof plan !== 'object') {
+    return createFallbackPlan("Video", duration, colors);
+  }
+  
+  // Ensure required fields exist
+  plan.duration = plan.duration || duration;
+  plan.fps = 30;
+  plan.resolution = plan.resolution || { width: 1920, height: 1080 };
+  plan.scenes = Array.isArray(plan.scenes) ? plan.scenes : [];
+  plan.requiredAssets = Array.isArray(plan.requiredAssets) ? plan.requiredAssets : [];
+  plan.style = plan.style || {
+    colorPalette: colors,
+    typography: { primary: "Inter", secondary: "JetBrains Mono", sizes: { h1: 64, h2: 48, body: 18 } },
+    spacing: 24,
+    borderRadius: 16
+  };
+  
+  // Fix each scene
+  plan.scenes = plan.scenes.map((scene: any, index: number) => ({
+    id: scene.id || `scene_${index + 1}`,
+    startTime: scene.startTime ?? index * 3,
+    duration: scene.duration || 3,
+    description: scene.description || `Scene ${index + 1}`,
+    elements: Array.isArray(scene.elements) ? scene.elements.map((el: any, elIndex: number) => ({
+      id: el.id || `el_${index}_${elIndex}`,
+      type: el.type || "text",
+      content: el.content || "",
+      position: el.position || { x: 50, y: 50, z: elIndex },
+      size: el.size || { width: 80, height: 20 },
+      style: el.style || {},
+      animation: el.animation || { name: "fadeIn", type: "fade", duration: 0.5, easing: "ease-out", delay: 0, properties: {} }
+    })) : [],
+    animations: scene.animations || [],
+    transition: scene.transition || { type: "fade", duration: 0.3 }
+  }));
+  
+  // Ensure we have at least one scene
+  if (plan.scenes.length === 0) {
+    plan.scenes = createFallbackPlan("Video", duration, colors).scenes;
+  }
+  
+  return plan;
+}

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/Header';
 import { SceneTimeline } from '@/components/video/SceneTimeline';
 import { AssetPreview } from '@/components/video/AssetPreview';
 import { CodePreview } from '@/components/video/CodePreview';
+import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
 import { supabase } from '@/integrations/supabase/client';
 import { useGenerateRemotionCode } from '@/hooks/useVideoData';
 import type { VideoProject, VideoPlan, PlannedScene, AssetRequirement } from '@/types/video';
@@ -28,7 +29,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate();
   const [project, setProject] = useState<VideoProject | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('scenes');
+  const [activeTab, setActiveTab] = useState('preview');
   const [activeSceneId, setActiveSceneId] = useState('');
   
   const generateCodeMutation = useGenerateRemotionCode();
@@ -107,7 +108,7 @@ const ProjectDetail = () => {
       <Header />
 
       <main className="pt-24 px-4 pb-12">
-        <div className="container mx-auto max-w-5xl">
+        <div className="container mx-auto max-w-6xl">
           {/* Back button */}
           <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4" />
@@ -136,6 +137,10 @@ const ProjectDetail = () => {
                 </p>
               </div>
               <div className="flex gap-2">
+                <Button variant="outline" onClick={fetchProject} className="gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </Button>
                 {!project.generated_code && (
                   <Button 
                     onClick={handleGenerateCode}
@@ -150,30 +155,17 @@ const ProjectDetail = () => {
                     Generate Code
                   </Button>
                 )}
-                {project.generated_code && (
-                  <Button className="gap-2 glow-primary">
-                    <Play className="w-4 h-4" />
-                    Render Video
-                  </Button>
-                )}
               </div>
             </div>
           </motion.div>
 
-          {/* Full prompt */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass-card p-6 mb-8"
-          >
-            <h3 className="font-semibold text-foreground mb-2">Full Prompt</h3>
-            <p className="text-muted-foreground">{project.prompt}</p>
-          </motion.div>
-
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger value="preview" className="gap-2">
+                <Play className="w-4 h-4" />
+                Preview
+              </TabsTrigger>
               <TabsTrigger value="scenes" className="gap-2">
                 <Layers className="w-4 h-4" />
                 Scenes
@@ -182,11 +174,50 @@ const ProjectDetail = () => {
                 <Image className="w-4 h-4" />
                 Assets
               </TabsTrigger>
-              <TabsTrigger value="code" disabled={!project.generated_code} className="gap-2">
+              <TabsTrigger value="code" className="gap-2">
                 <Code className="w-4 h-4" />
                 Code
               </TabsTrigger>
             </TabsList>
+
+            {/* Preview Tab - Remotion Player */}
+            <TabsContent value="preview">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-6"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <Play className="w-4 h-4 text-primary" />
+                    Video Preview
+                  </h3>
+                  <span className="text-sm text-muted-foreground font-mono">
+                    {totalDuration}s @ 30fps
+                  </span>
+                </div>
+
+                {plan ? (
+                  <RemotionPlayerWrapper plan={plan} className="rounded-xl overflow-hidden" />
+                ) : (
+                  <div className="aspect-video bg-muted/50 rounded-xl flex items-center justify-center">
+                    <div className="text-center">
+                      <Play className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                      <p className="text-muted-foreground">No video plan available</p>
+                    </div>
+                  </div>
+                )}
+
+                {plan && (
+                  <div className="mt-4 p-4 glass-card bg-primary/5 border-primary/20">
+                    <p className="text-sm text-muted-foreground">
+                      <strong className="text-foreground">Tip:</strong> Use the player controls to play, pause, and scrub through the video. 
+                      The preview renders in real-time using Remotion.
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            </TabsContent>
 
             {/* Scenes Tab */}
             <TabsContent value="scenes">
@@ -232,9 +263,24 @@ const ProjectDetail = () => {
                 {project.generated_code ? (
                   <CodePreview code={project.generated_code} />
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Code className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>No code generated yet</p>
+                  <div className="text-center py-12">
+                    <Code className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <h3 className="font-semibold text-foreground mb-2">Generate Remotion Code</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Get the exportable React/Remotion code for this video
+                    </p>
+                    <Button
+                      onClick={handleGenerateCode}
+                      disabled={generateCodeMutation.isPending}
+                      className="gap-2"
+                    >
+                      {generateCodeMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                      Generate Exportable Code
+                    </Button>
                   </div>
                 )}
               </motion.div>
