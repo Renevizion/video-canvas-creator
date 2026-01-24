@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useGenerateVideoPlan } from '@/hooks/useVideoData';
 
 interface VideoRequestBuilderProps {
   onPlanGenerated?: (planId: string) => void;
@@ -25,34 +24,24 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState([10]);
   const [selectedStyle, setSelectedStyle] = useState('dark-web');
-  const [generating, setGenerating] = useState(false);
+  
+  const generateMutation = useGenerateVideoPlan();
 
   const generatePlan = async () => {
-    if (!prompt.trim()) {
-      toast.error('Please enter a video description');
-      return;
-    }
-
-    setGenerating(true);
+    if (!prompt.trim()) return;
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-video-plan', {
-        body: {
-          prompt: prompt.trim(),
-          duration: duration[0],
-          style: selectedStyle,
-        }
+      const result = await generateMutation.mutateAsync({
+        prompt: prompt.trim(),
+        duration: duration[0],
+        style: selectedStyle,
       });
-
-      if (error) throw error;
-
-      toast.success('Video plan generated!');
-      onPlanGenerated?.(data.planId);
+      
+      if (result?.planId) {
+        onPlanGenerated?.(result.planId);
+      }
     } catch (error) {
       console.error('Generation error:', error);
-      toast.error('Failed to generate video plan');
-    } finally {
-      setGenerating(false);
     }
   };
 
@@ -67,7 +56,7 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
         <Textarea
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Create a 10-second product showcase video with a dark futuristic dashboard, glowing blue accents, smooth fade-in animations, and professional typography..."
+          placeholder="Create a 10-second product showcase video with a dark futuristic dashboard, glowing blue accents, smooth fade-in animations, and professional typography. Include scenes showing the main features with cursor interactions and end with a call-to-action..."
           className="min-h-[150px] bg-input/50 border-border focus:border-primary resize-none"
         />
         <p className="text-xs text-muted-foreground">
@@ -133,15 +122,15 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
       {/* Generate Button */}
       <Button
         onClick={generatePlan}
-        disabled={generating || !prompt.trim()}
+        disabled={generateMutation.isPending || !prompt.trim()}
         className="w-full gap-2 h-12 text-base glow-primary"
       >
-        {generating ? (
+        {generateMutation.isPending ? (
           <Loader2 className="w-5 h-5 animate-spin" />
         ) : (
           <Sparkles className="w-5 h-5" />
         )}
-        {generating ? 'Generating Video Plan...' : 'Generate Video Plan'}
+        {generateMutation.isPending ? 'Generating Video Plan...' : 'Generate Video Plan'}
       </Button>
     </div>
   );

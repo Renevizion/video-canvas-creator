@@ -1,1 +1,20 @@
 project_id = "onksarfyxnfjlmodfcvo"
+
+[api]
+enabled = true
+port = 54321
+
+[db]
+port = 54322
+
+[functions.generate-video-plan]
+verify_jwt = false
+
+[functions.analyze-video]
+verify_jwt = false
+
+[functions.generate-asset]
+verify_jwt = false
+
+[functions.generate-remotion-code]
+verify_jwt = false
