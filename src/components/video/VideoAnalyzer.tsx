@@ -57,7 +57,7 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
 
     try {
       // Upload to Supabase Storage
-      const fileName = `${Date.now()}-${file.name}`;
+      const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('reference-videos')
         .upload(fileName, file);
@@ -70,7 +70,7 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
 
       // Call edge function to analyze with AI
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-video', {
-        body: { fileName, filePath: uploadData.path }
+        body: { fileName: file.name, filePath: uploadData.path }
       });
 
       if (analysisError) throw analysisError;
@@ -81,7 +81,7 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
       onAnalysisComplete?.(analysisData.patternId);
     } catch (error) {
       console.error('Analysis error:', error);
-      toast.error('Failed to analyze video');
+      toast.error('Failed to analyze video. Please try again.');
     } finally {
       setUploading(false);
       setAnalyzing(false);
@@ -135,7 +135,7 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
                 {(file.size / (1024 * 1024)).toFixed(2)} MB
               </p>
               {!uploading && !analyzing && !analysisResult && (
-                <Button variant="ghost" size="sm" onClick={clearFile} className="gap-2">
+                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); clearFile(); }} className="gap-2">
                   <X className="w-4 h-4" />
                   Remove
                 </Button>

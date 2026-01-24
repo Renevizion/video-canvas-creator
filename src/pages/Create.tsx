@@ -1,80 +1,68 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Wand2, Layers, Image } from 'lucide-react';
+import { ArrowLeft, Wand2, Layers, Image, Code, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/Header';
 import { VideoRequestBuilder } from '@/components/video/VideoRequestBuilder';
 import { SceneTimeline } from '@/components/video/SceneTimeline';
 import { AssetPreview } from '@/components/video/AssetPreview';
-import type { PlannedScene, AssetRequirement } from '@/types/video';
-
-// Demo data
-const demoScenes: PlannedScene[] = [
-  {
-    id: 'scene_1',
-    startTime: 0,
-    duration: 3,
-    description: 'Dark dashboard fade in with glowing cards',
-    elements: [],
-    animations: [],
-    transition: { type: 'fade', duration: 0.5 },
-  },
-  {
-    id: 'scene_2',
-    startTime: 3,
-    duration: 4,
-    description: 'Feature highlight with cursor interaction',
-    elements: [],
-    animations: [],
-    transition: { type: 'wipe', duration: 0.3 },
-  },
-  {
-    id: 'scene_3',
-    startTime: 7,
-    duration: 3,
-    description: 'CTA and final branding animation',
-    elements: [],
-    animations: [],
-    transition: null,
-  },
-];
-
-const demoAssets: (AssetRequirement & { generatedUrl?: string })[] = [
-  {
-    id: 'bg_1',
-    type: 'background',
-    description: 'Dark futuristic dashboard with blue glow',
-    specifications: { width: 1920, height: 1080, style: 'dark web, cyberpunk' },
-    providedByUser: false,
-    generatedUrl: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400',
-  },
-  {
-    id: 'icon_1',
-    type: 'icon',
-    description: 'Glowing analytics chart icon',
-    specifications: { width: 256, height: 256, style: 'neon, minimal' },
-    providedByUser: false,
-  },
-  {
-    id: 'bg_2',
-    type: 'background',
-    description: 'Abstract gradient overlay',
-    specifications: { width: 1920, height: 1080, style: 'gradient, smooth' },
-    providedByUser: false,
-    generatedUrl: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=400',
-  },
-];
+import { CodePreview } from '@/components/video/CodePreview';
+import { useNavigate } from 'react-router-dom';
+import { useGenerateRemotionCode } from '@/hooks/useVideoData';
+import { supabase } from '@/integrations/supabase/client';
+import type { PlannedScene, AssetRequirement, VideoPlan } from '@/types/video';
+import { toast } from 'sonner';
 
 const Create = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('prompt');
   const [planGenerated, setPlanGenerated] = useState(false);
-  const [activeSceneId, setActiveSceneId] = useState<string>('scene_1');
+  const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<VideoPlan | null>(null);
+  const [activeSceneId, setActiveSceneId] = useState<string>('');
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  
+  const generateCodeMutation = useGenerateRemotionCode();
 
-  const handlePlanGenerated = (planId: string) => {
+  const handlePlanGenerated = async (planId: string) => {
+    setCurrentPlanId(planId);
     setPlanGenerated(true);
+    
+    // Fetch the generated plan
+    const { data } = await supabase
+      .from('video_plans')
+      .select('plan')
+      .eq('id', planId)
+      .single();
+    
+    if (data?.plan) {
+      const plan = data.plan as unknown as VideoPlan;
+      setCurrentPlan(plan);
+      if (plan.scenes?.length > 0) {
+        setActiveSceneId(plan.scenes[0].id);
+      }
+    }
+    
     setActiveTab('scenes');
   };
+
+  const handleGenerateCode = async () => {
+    if (!currentPlanId) return;
+    
+    try {
+      const result = await generateCodeMutation.mutateAsync(currentPlanId);
+      setGeneratedCode(result.code);
+      setActiveTab('code');
+    } catch (error) {
+      console.error('Failed to generate code:', error);
+    }
+  };
+
+  const scenes: PlannedScene[] = currentPlan?.scenes || [];
+  const assets: (AssetRequirement & { generatedUrl?: string })[] = 
+    currentPlan?.requiredAssets?.map(a => ({ ...a, generatedUrl: undefined })) || [];
+  const totalDuration = currentPlan?.duration || 10;
 
   return (
     <div className="min-h-screen bg-background noise-bg">
@@ -83,11 +71,9 @@ const Create = () => {
       <main className="pt-24 px-4 pb-12">
         <div className="container mx-auto max-w-5xl">
           {/* Back button */}
-          <Button variant="ghost" className="mb-6 gap-2" asChild>
-            <a href="/">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
-            </a>
+          <Button variant="ghost" className="mb-6 gap-2" onClick={() => navigate('/')}>
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
           </Button>
 
           {/* Page header */}
@@ -109,18 +95,22 @@ const Create = () => {
 
           {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-8">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
               <TabsTrigger value="prompt" className="gap-2">
                 <Wand2 className="w-4 h-4" />
-                Prompt
+                <span className="hidden sm:inline">Prompt</span>
               </TabsTrigger>
               <TabsTrigger value="scenes" disabled={!planGenerated} className="gap-2">
                 <Layers className="w-4 h-4" />
-                Scenes
+                <span className="hidden sm:inline">Scenes</span>
               </TabsTrigger>
               <TabsTrigger value="assets" disabled={!planGenerated} className="gap-2">
                 <Image className="w-4 h-4" />
-                Assets
+                <span className="hidden sm:inline">Assets</span>
+              </TabsTrigger>
+              <TabsTrigger value="code" disabled={!planGenerated} className="gap-2">
+                <Code className="w-4 h-4" />
+                <span className="hidden sm:inline">Code</span>
               </TabsTrigger>
             </TabsList>
 
@@ -142,23 +132,39 @@ const Create = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-card p-8"
               >
-                <SceneTimeline
-                  scenes={demoScenes}
-                  totalDuration={10}
-                  activeSceneId={activeSceneId}
-                  onSceneSelect={setActiveSceneId}
-                />
+                {scenes.length > 0 ? (
+                  <>
+                    <SceneTimeline
+                      scenes={scenes}
+                      totalDuration={totalDuration}
+                      activeSceneId={activeSceneId}
+                      onSceneSelect={setActiveSceneId}
+                    />
 
-                <div className="mt-8 pt-8 border-t border-border">
-                  <h3 className="font-semibold text-foreground mb-4">Scene Details</h3>
-                  {demoScenes.find(s => s.id === activeSceneId) && (
-                    <div className="glass-card p-4 bg-muted/30">
-                      <p className="text-sm text-muted-foreground">
-                        {demoScenes.find(s => s.id === activeSceneId)?.description}
-                      </p>
+                    <div className="mt-8 pt-8 border-t border-border">
+                      <h3 className="font-semibold text-foreground mb-4">Scene Details</h3>
+                      {scenes.find(s => s.id === activeSceneId) && (
+                        <div className="glass-card p-4 bg-muted/30">
+                          <p className="text-sm text-muted-foreground">
+                            {scenes.find(s => s.id === activeSceneId)?.description}
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {scenes.find(s => s.id === activeSceneId)?.elements?.map((el, i) => (
+                              <span key={i} className="px-2 py-1 bg-primary/10 rounded text-xs text-primary">
+                                {el.type}: {el.content?.slice(0, 20)}...
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No scenes generated yet</p>
+                  </div>
+                )}
               </motion.div>
             </TabsContent>
 
@@ -169,7 +175,40 @@ const Create = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="glass-card p-8"
               >
-                <AssetPreview assets={demoAssets} />
+                <AssetPreview assets={assets} />
+              </motion.div>
+            </TabsContent>
+
+            {/* Code Tab */}
+            <TabsContent value="code">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-8"
+              >
+                {generatedCode ? (
+                  <CodePreview code={generatedCode} />
+                ) : (
+                  <div className="text-center py-12">
+                    <Code className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <h3 className="font-semibold text-foreground mb-2">Generate Remotion Code</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Transform your video plan into production-ready Remotion code
+                    </p>
+                    <Button
+                      onClick={handleGenerateCode}
+                      disabled={generateCodeMutation.isPending}
+                      className="gap-2"
+                    >
+                      {generateCodeMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                      {generateCodeMutation.isPending ? 'Generating...' : 'Generate Remotion Code'}
+                    </Button>
+                  </div>
+                )}
               </motion.div>
             </TabsContent>
           </Tabs>
@@ -181,12 +220,24 @@ const Create = () => {
               animate={{ opacity: 1, y: 0 }}
               className="mt-8 flex justify-center gap-4"
             >
-              <Button variant="outline" size="lg">
-                Preview Video
-              </Button>
-              <Button size="lg" className="glow-primary">
-                Render Final Video
-              </Button>
+              {!generatedCode && (
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={handleGenerateCode}
+                  disabled={generateCodeMutation.isPending}
+                >
+                  {generateCodeMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
+                  Generate Code
+                </Button>
+              )}
+              {generatedCode && (
+                <Button size="lg" className="glow-primary" onClick={() => toast.success('Rendering would start here!')}>
+                  Render Final Video
+                </Button>
+              )}
             </motion.div>
           )}
         </div>

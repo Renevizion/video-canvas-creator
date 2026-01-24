@@ -1,55 +1,21 @@
 import { motion } from 'framer-motion';
-import { Film, Video, Layers, Zap, TrendingUp, Clock } from 'lucide-react';
+import { Film, Video, Layers, Zap, TrendingUp, Clock, Plus } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { ProjectCard } from '@/components/dashboard/ProjectCard';
-import type { VideoProject } from '@/types/video';
-
-// Demo data for initial state
-const demoProjects: VideoProject[] = [
-  {
-    id: '1',
-    prompt: 'Product showcase with dark dashboard and glowing elements',
-    plan: null,
-    generated_code: null,
-    status: 'completed',
-    reference_pattern_id: null,
-    preview_url: null,
-    final_video_url: null,
-    error: null,
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    completed_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    prompt: 'SaaS landing page animation with feature highlights',
-    plan: null,
-    generated_code: null,
-    status: 'rendering',
-    reference_pattern_id: null,
-    preview_url: null,
-    final_video_url: null,
-    error: null,
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    completed_at: null,
-  },
-  {
-    id: '3',
-    prompt: 'Mobile app demo with smooth transitions',
-    plan: null,
-    generated_code: null,
-    status: 'pending',
-    reference_pattern_id: null,
-    preview_url: null,
-    final_video_url: null,
-    error: null,
-    created_at: new Date().toISOString(),
-    completed_at: null,
-  },
-];
+import { Button } from '@/components/ui/button';
+import { useVideoPlans, usePatterns } from '@/hooks/useVideoData';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { data: projects = [], isLoading: projectsLoading } = useVideoPlans();
+  const { data: patterns = [] } = usePatterns();
+
+  const completedCount = projects.filter(p => p.status === 'completed').length;
+  const renderingCount = projects.filter(p => p.status === 'rendering' || p.status === 'generating_code').length;
+
   return (
     <div className="min-h-screen bg-background noise-bg">
       <Header />
@@ -79,10 +45,20 @@ const Index = () => {
               <span className="text-foreground">with AI</span>
             </h1>
 
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
               Analyze reference videos, generate assets, and produce professional marketing videos
               using Remotion and AI-powered scene generation.
             </p>
+
+            <div className="flex justify-center gap-4">
+              <Button size="lg" className="gap-2 glow-primary" onClick={() => navigate('/create')}>
+                <Plus className="w-5 h-5" />
+                Create New Video
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => navigate('/analyze')}>
+                Analyze Reference
+              </Button>
+            </div>
           </motion.div>
 
           {/* Stats Grid */}
@@ -95,29 +71,29 @@ const Index = () => {
             <StatsCard
               icon={Video}
               title="Videos Created"
-              value="24"
-              trend={{ value: 12, positive: true }}
+              value={projects.length}
+              trend={projects.length > 0 ? { value: 12, positive: true } : undefined}
               glowColor="primary"
             />
             <StatsCard
               icon={Layers}
               title="Learned Patterns"
-              value="8"
+              value={patterns.length}
               subtitle="from reference videos"
               glowColor="accent"
             />
             <StatsCard
               icon={Film}
-              title="Assets Generated"
-              value="156"
-              trend={{ value: 23, positive: true }}
+              title="Completed"
+              value={completedCount}
+              trend={completedCount > 0 ? { value: 23, positive: true } : undefined}
               glowColor="success"
             />
             <StatsCard
               icon={Clock}
-              title="Avg. Render Time"
-              value="2.4m"
-              subtitle="per video"
+              title="In Progress"
+              value={renderingCount}
+              subtitle="currently rendering"
               glowColor="primary"
             />
           </motion.div>
@@ -137,28 +113,55 @@ const Index = () => {
                 <TrendingUp className="w-5 h-5 text-primary" />
                 Recent Projects
               </h2>
-              <a href="/projects" className="text-sm text-primary hover:underline">
-                View all →
-              </a>
+              {projects.length > 6 && (
+                <a href="/projects" className="text-sm text-primary hover:underline">
+                  View all →
+                </a>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {demoProjects.map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  <ProjectCard
-                    id={project.id}
-                    name={project.prompt.slice(0, 50) + (project.prompt.length > 50 ? '...' : '')}
-                    status={project.status}
-                    createdAt={project.created_at}
-                  />
-                </motion.div>
-              ))}
-            </div>
+            {projectsLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="glass-card aspect-[4/3] animate-pulse bg-muted/50" />
+                ))}
+              </div>
+            ) : projects.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass-card p-12 text-center"
+              >
+                <Video className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-foreground mb-2">No projects yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Create your first AI-generated video to get started
+                </p>
+                <Button onClick={() => navigate('/create')} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create First Video
+                </Button>
+              </motion.div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.slice(0, 6).map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                  >
+                    <ProjectCard
+                      id={project.id}
+                      name={project.prompt.slice(0, 50) + (project.prompt.length > 50 ? '...' : '')}
+                      status={project.status}
+                      createdAt={project.created_at}
+                      onOpen={() => navigate(`/project/${project.id}`)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
       </main>
