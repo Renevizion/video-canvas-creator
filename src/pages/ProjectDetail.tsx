@@ -315,7 +315,7 @@ const ProjectDetail = () => {
       {/* Video Exporter Modal */}
       <AnimatePresence>
         {showExporter && plan && (
-          <VideoExporter plan={plan} onClose={() => setShowExporter(false)} />
+          <VideoExporter plan={plan} projectId={id} onClose={() => setShowExporter(false)} />
         )}
       </AnimatePresence>
     </div>

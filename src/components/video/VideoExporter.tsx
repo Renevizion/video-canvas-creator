@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Player, PlayerRef } from '@remotion/player';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Loader2, X, Film, CheckCircle, AlertCircle } from 'lucide-react';
@@ -6,16 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { DynamicVideo } from '@/components/remotion/DynamicVideo';
 import { useVideoExport } from '@/hooks/useVideoExport';
+import { useExportState } from '@/hooks/useExportState';
 import type { VideoPlan } from '@/types/video';
 import { toast } from 'sonner';
 
 interface VideoExporterProps {
   plan: VideoPlan;
+  projectId?: string;
   onClose?: () => void;
 }
 
 export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps>(
-  function VideoExporter({ plan, onClose }, ref) {
+  function VideoExporter({ plan, projectId, onClose }, ref) {
     const playerRef = useRef<PlayerRef>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isExporting, setIsExporting] = useState(false);
@@ -24,6 +26,19 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
     const { exportProgress, exportVideo, downloadBlob, cancelExport, resetExport } = useVideoExport({
       fps: plan.fps || 30,
     });
+
+    const globalExportState = useExportState();
+
+    // Sync local progress with global state
+    useEffect(() => {
+      if (isExporting) {
+        globalExportState.updateProgress(
+          exportProgress.progress,
+          exportProgress.message,
+          exportProgress.status
+        );
+      }
+    }, [exportProgress, isExporting]);
 
     const duration = plan.duration || 10;
     const fps = plan.fps || 30;
@@ -37,6 +52,7 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
 
       setIsExporting(true);
       setExportedBlob(null);
+      globalExportState.startExport(projectId || 'unknown');
 
       // Reset player to start
       playerRef.current?.seekTo(0);
@@ -61,6 +77,9 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
 
       if (blob) {
         setExportedBlob(blob);
+        globalExportState.completeExport(blob);
+      } else {
+        globalExportState.failExport('Export was cancelled or failed');
       }
       
       setIsExporting(false);

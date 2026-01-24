@@ -12,6 +12,7 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Editor from "./pages/Editor";
 import AnimationShowcase from "./pages/AnimationShowcase";
 import NotFound from "./pages/NotFound";
+import { ExportIndicator } from "./components/video/ExportIndicator";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <ExportIndicator />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
