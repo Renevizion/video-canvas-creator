@@ -68,18 +68,6 @@ export const CodePreview = forwardRef<HTMLDivElement, CodePreviewProps>(({ code 
           TypeScript
         </div>
       </motion.div>
-
-      {/* Instructions */}
-      <div className="glass-card p-4 bg-primary/5 border-primary/20">
-        <h4 className="font-medium text-foreground mb-2">How to use this code</h4>
-        <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-          <li>Install Remotion: <code className="text-primary font-mono">npx create-video@latest</code></li>
-          <li>Replace the default composition with this code</li>
-          <li>Add any custom assets to your project</li>
-          <li>Run <code className="text-primary font-mono">npm start</code> to preview</li>
-          <li>Render with <code className="text-primary font-mono">npx remotion render</code></li>
-        </ol>
-      </div>
     </div>
   );
 });
