@@ -15,7 +15,6 @@ export function Header() {
     { href: '/create', label: 'Create' },
     { href: '/analyze', label: 'Analyze' },
     { href: '/patterns', label: 'Patterns' },
-    { href: '/roadmap', label: 'Roadmap' },
   ];
 
   return (

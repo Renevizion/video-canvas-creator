@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw, Film } from 'lucide-react';
+import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw, Film, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/Header';
@@ -154,6 +154,16 @@ const ProjectDetail = () => {
                       <Code className="w-4 h-4" />
                     )}
                     Generate Code
+                  </Button>
+                )}
+                {plan && (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(`/editor/${id}`)}
+                    className="gap-2"
+                  >
+                    <PenTool className="w-4 h-4" />
+                    Edit Video
                   </Button>
                 )}
                 {project.generated_code && (

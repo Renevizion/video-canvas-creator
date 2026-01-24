@@ -9,7 +9,7 @@ import Create from "./pages/Create";
 import Patterns from "./pages/Patterns";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
-import Roadmap from "./pages/Roadmap";
+import Editor from "./pages/Editor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/patterns" element={<Patterns />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/project/:id" element={<ProjectDetail />} />
-          <Route path="/roadmap" element={<Roadmap />} />
+          <Route path="/editor/:id" element={<Editor />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
