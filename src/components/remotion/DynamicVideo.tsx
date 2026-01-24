@@ -12,8 +12,20 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
 
   const globalBg = plan.style?.colorPalette?.[2] || '#1e293b';
 
+  // Helpful: if a plan ever arrives without scenes, render an obvious placeholder.
+  if (!plan?.scenes?.length) {
+    return (
+      <AbsoluteFill style={{ backgroundColor: globalBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#fff', fontFamily: 'monospace', opacity: 0.7 }}>
+          No scenes to preview
+        </div>
+      </AbsoluteFill>
+    );
+  }
+
   return (
     <AbsoluteFill style={{ backgroundColor: globalBg }}>
+      <DebugOverlay />
       {plan.scenes.map((scene) => {
         const startFrame = Math.round(scene.startTime * fps);
         const durationFrames = Math.round(scene.duration * fps);
@@ -25,6 +37,33 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
         );
       })}
     </AbsoluteFill>
+  );
+};
+
+const DebugOverlay = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const seconds = (frame / fps).toFixed(2);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 16,
+        top: 16,
+        zIndex: 9999,
+        padding: '6px 10px',
+        borderRadius: 10,
+        background: 'rgba(0,0,0,0.35)',
+        color: 'rgba(255,255,255,0.85)',
+        fontFamily: 'JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontSize: 12,
+        lineHeight: 1.2,
+        border: '1px solid rgba(255,255,255,0.08)',
+        pointerEvents: 'none',
+      }}
+    >
+      frame {frame} · {seconds}s
+    </div>
   );
 };
 
@@ -178,6 +217,12 @@ const ElementRenderer: React.FC<{
     zIndex: element.position?.z || 1,
   };
 
+  const resolveSize = (value?: number) => {
+    if (value === undefined || value === null) return undefined;
+    // Our plans typically use percentages (0-100). If it looks larger, treat as px.
+    return value <= 100 ? `${value}%` : `${value}px`;
+  };
+
   // Text element
   if (element.type === 'text') {
     const textStyle = element.style as Record<string, unknown>;
@@ -202,18 +247,48 @@ const ElementRenderer: React.FC<{
   // Shape element
   if (element.type === 'shape') {
     const shapeStyle = element.style as Record<string, unknown>;
+    const border = (shapeStyle.border as string) || '1px solid rgba(255,255,255,0.12)';
+    const background = (shapeStyle.background as string) || 'rgba(255,255,255,0.1)';
+    const borderRadius =
+      (shapeStyle.borderRadius as number) ||
+      (globalStyle?.borderRadius as number) ||
+      16;
+    const boxShadow =
+      (shapeStyle.boxShadow as string) ||
+      '0 10px 30px rgba(0,0,0,0.25)';
+
     return (
       <div
         style={{
           ...baseStyle,
-          width: element.size?.width ? `${element.size.width}%` : '200px',
-          height: element.size?.height ? `${element.size.height}%` : '200px',
-          background: (shapeStyle.background as string) || 'rgba(255,255,255,0.1)',
-          borderRadius: (shapeStyle.borderRadius as number) || globalStyle?.borderRadius || 16,
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          width: resolveSize(element.size?.width) || '200px',
+          height: resolveSize(element.size?.height) || '200px',
+          background,
+          borderRadius,
+          border,
+          boxShadow,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
-      />
+      >
+        {/* Optional label to make “boxes” visibly identifiable in preview */}
+        {typeof element.content === 'string' && element.content.trim().length > 0 ? (
+          <span
+            style={{
+              color: 'rgba(255,255,255,0.75)',
+              fontSize: 12,
+              fontFamily: 'JetBrains Mono, ui-monospace, SFMono-Regular, Menlo, monospace',
+              letterSpacing: 0.2,
+              textTransform: 'uppercase',
+              opacity: 0.7,
+              userSelect: 'none',
+            }}
+          >
+            {element.content}
+          </span>
+        ) : null}
+      </div>
     );
   }
 
