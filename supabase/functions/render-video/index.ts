@@ -5,6 +5,105 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface CompositionConfig {
+  compositionId: string;
+  width: number;
+  height: number;
+  fps: number;
+  durationInFrames: number;
+}
+
+/**
+ * Wraps component code with registerRoot() for Remotion CLI compatibility.
+ * Detects the main export (DynamicVideo or similar) and registers it.
+ */
+function wrapWithRegisterRoot(componentCode: string, config: CompositionConfig): string {
+  const { compositionId, width, height, fps, durationInFrames } = config;
+  
+  // Check if code already has registerRoot
+  if (componentCode.includes('registerRoot')) {
+    console.log('Code already has registerRoot, returning as-is');
+    return componentCode;
+  }
+  
+  // Check if code already imports registerRoot, if not add it
+  let modifiedCode = componentCode;
+  
+  // Ensure registerRoot is imported
+  if (!componentCode.includes("registerRoot")) {
+    // Add registerRoot to existing remotion import or create new import
+    if (componentCode.includes("from 'remotion'")) {
+      // Handle both single-line and multi-line imports
+      // Match the import statement and capture what's between { and }
+      modifiedCode = componentCode.replace(
+        /import\s*\{([^}]+)\}\s*from\s*['"]remotion['"]/,
+        (_match, imports) => {
+          // Clean up the imports - remove trailing comma, whitespace, newlines
+          const cleanImports = imports
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter((s: string) => s.length > 0)
+            .join(', ');
+          
+          // Check if registerRoot is already there
+          if (cleanImports.includes('registerRoot')) {
+            return `import { ${cleanImports} } from 'remotion'`;
+          }
+          return `import { ${cleanImports}, registerRoot } from 'remotion'`;
+        }
+      );
+    } else {
+      // No remotion import found, add one at the top
+      modifiedCode = `import { registerRoot, Composition } from 'remotion';\n${componentCode}`;
+    }
+  }
+  
+  // Detect the main component export - look for common patterns
+  let mainComponent = 'DynamicVideo';
+  
+  // Check for export const DynamicVideo or export function DynamicVideo
+  const exportMatch = modifiedCode.match(/export\s+(?:const|function)\s+(\w+)/);
+  if (exportMatch) {
+    mainComponent = exportMatch[1];
+  }
+  
+  // Check for default export: export default function X or export default X
+  const defaultExportMatch = modifiedCode.match(/export\s+default\s+(?:function\s+)?(\w+)/);
+  if (defaultExportMatch) {
+    mainComponent = defaultExportMatch[1];
+  }
+  
+  // Look for const DynamicVideo = () => or const DynamicVideo: React.FC
+  const componentDefMatch = modifiedCode.match(/const\s+(DynamicVideo|MyVideo|Video)\s*[=:]/);
+  if (componentDefMatch) {
+    mainComponent = componentDefMatch[1];
+  }
+  
+  console.log('Detected main component:', mainComponent);
+  
+  // Append the registerRoot call
+  const registerRootCode = `
+
+// Auto-generated Remotion registration
+export const RemotionRoot: React.FC = () => {
+  return (
+    <Composition
+      id="${compositionId}"
+      component={${mainComponent}}
+      durationInFrames={${durationInFrames}}
+      fps={${fps}}
+      width={${width}}
+      height={${height}}
+    />
+  );
+};
+
+registerRoot(RemotionRoot);
+`;
+
+  return modifiedCode + registerRootCode;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -62,17 +161,30 @@ Deno.serve(async (req) => {
       // Build webhook callback URL
       const webhookUrl = `${supabaseUrl}/functions/v1/render-webhook`;
       
+      const durationInFrames = duration * fps;
+      const componentCode = planData.generated_code as string;
+      
+      // Wrap the component code with registerRoot() for Remotion CLI compatibility
+      // The generated code exports a DynamicVideo component - we need to register it
+      const wrappedCode = wrapWithRegisterRoot(componentCode, {
+        compositionId: 'DynamicVideo',
+        width,
+        height,
+        fps,
+        durationInFrames,
+      });
+      
       // Send render request to Railway (fire-and-forget style)
       const renderPayload = {
         planId,
-        code: planData.generated_code,
+        code: wrappedCode,
         plan: planData.plan,
         composition: {
           id: 'DynamicVideo',
           width,
           height,
           fps,
-          durationInFrames: duration * fps,
+          durationInFrames,
         },
         webhookUrl,
       };
