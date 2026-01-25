@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -6,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -20,6 +19,7 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const railwayUrl = Deno.env.get("RAILWAY_RENDER_URL");
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     console.log('Starting video render for plan:', planId);
@@ -45,29 +45,106 @@ serve(async (req) => {
       .update({ status: 'rendering' })
       .eq('id', planId);
 
-    const plan = planData.plan;
+    const plan = planData.plan as {
+      duration?: number;
+      fps?: number;
+      resolution?: { width?: number; height?: number };
+    };
     const duration = plan?.duration || 10;
     const fps = plan?.fps || 30;
-    
-    // For now, we'll simulate rendering by creating a placeholder
-    // In production, this would call Remotion Lambda or similar service
-    
-    // Generate a unique filename
+    const width = plan?.resolution?.width || 1920;
+    const height = plan?.resolution?.height || 1080;
+
+    // If Railway URL is configured, send job to Railway
+    if (railwayUrl) {
+      console.log('Sending render job to Railway:', railwayUrl);
+      
+      // Build webhook callback URL
+      const webhookUrl = `${supabaseUrl}/functions/v1/render-webhook`;
+      
+      // Send render request to Railway (fire-and-forget style)
+      const renderPayload = {
+        planId,
+        code: planData.generated_code,
+        plan: planData.plan,
+        composition: {
+          id: 'DynamicVideo',
+          width,
+          height,
+          fps,
+          durationInFrames: duration * fps,
+        },
+        webhookUrl,
+      };
+
+      // Fire-and-forget: send to Railway without blocking
+      // Use globalThis.EdgeRuntime if available, otherwise just fire the promise
+      const sendToRailway = async () => {
+        try {
+          const response = await fetch(`${railwayUrl}/render`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(renderPayload),
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Railway render request failed:', response.status, errorText);
+            await supabase
+              .from('video_plans')
+              .update({ 
+                status: 'failed',
+                error: `Railway error: ${response.status} - ${errorText}`,
+              })
+              .eq('id', planId);
+          } else {
+            console.log('Railway render job accepted');
+            await response.text(); // Consume response body
+          }
+        } catch (error) {
+          console.error('Failed to reach Railway:', error);
+          await supabase
+            .from('video_plans')
+            .update({ 
+              status: 'failed',
+              error: `Failed to connect to render server: ${(error as Error).message}`,
+            })
+            .eq('id', planId);
+        }
+      };
+
+      // Check if EdgeRuntime is available (Supabase Edge Functions)
+      if (typeof globalThis !== 'undefined' && 'EdgeRuntime' in globalThis) {
+        (globalThis as unknown as { EdgeRuntime: { waitUntil: (p: Promise<void>) => void } }).EdgeRuntime.waitUntil(sendToRailway());
+      } else {
+        // Fallback: fire and don't await
+        sendToRailway();
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        planId,
+        status: 'rendering',
+        message: 'Video render job sent to cloud renderer. Check back for status updates.',
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fallback: No Railway configured - provide local render instructions
     const filename = `video-${planId}-${Date.now()}.mp4`;
     
-    // Create a placeholder video info (in production, this would be actual render)
-    // For MVP, we'll provide the code download as the "render" output
     const renderInfo = {
       status: 'ready_for_local_render',
-      message: 'Video code is ready. Download the code and run locally for full quality render.',
+      message: 'No cloud renderer configured. Download the code and run locally for full quality render.',
       code: planData.generated_code,
       settings: {
         duration,
         fps,
-        width: plan?.resolution?.width || 1920,
-        height: plan?.resolution?.height || 1080,
+        width,
+        height,
       },
-      command: `npx remotion render src/Video.tsx MyVideo out/${filename} --props='${JSON.stringify({ plan })}'`,
+      command: `npx remotion render src/Video.tsx MyVideo out/${filename} --props='${JSON.stringify({ plan: planData.plan })}'`,
     };
 
     // Update the plan with render info
@@ -76,7 +153,6 @@ serve(async (req) => {
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
-        // Store render info in a way that can be retrieved
         preview_url: JSON.stringify(renderInfo),
       })
       .eq('id', planId);
@@ -92,7 +168,7 @@ serve(async (req) => {
       success: true,
       planId,
       renderInfo,
-      message: 'Video render prepared successfully. Download the code to render locally.',
+      message: 'Video render prepared. Download the code to render locally.',
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -102,7 +178,8 @@ serve(async (req) => {
     
     // Try to update status to failed
     try {
-      const { planId } = await req.clone().json();
+      const body = await req.clone().json().catch(() => ({}));
+      const planId = body?.planId;
       if (planId) {
         const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
         const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

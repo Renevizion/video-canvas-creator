@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.render-video]
 verify_jwt = false
+
+[functions.render-webhook]
+verify_jwt = false
