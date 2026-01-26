@@ -1,5 +1,5 @@
 import React from 'react';
-import { interpolate, spring, useVideoConfig } from 'remotion';
+import { interpolate, spring, useVideoConfig, interpolateColors } from 'remotion';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface Laptop3DProps {
@@ -33,6 +33,25 @@ export const Laptop3D: React.FC<Laptop3DProps> = ({
   const translateY = interpolate(entrySpring, [0, 1], [100, 0]);
   const scale = interpolate(entrySpring, [0, 1], [0.8, 1]);
   
+  // Dynamic zoom during playback
+  const zoomScale = interpolate(
+    sceneFrame,
+    [0, fps * 2, fps * 4],
+    [1, 1.05, 1],
+    { extrapolateRight: 'clamp' }
+  );
+  
+  // Subtle continuous rotation for interest
+  const continuousRotateY = Math.sin(sceneFrame * 0.01) * 2;
+  
+  // Screen glow effect
+  const glowIntensity = interpolate(
+    sceneFrame,
+    [0, fps * 1, fps * 3],
+    [0, 1, 0.7],
+    { extrapolateRight: 'clamp' }
+  );
+  
   const screenWidth = element.size?.width || 800;
   const screenHeight = element.size?.height || 500;
 
@@ -47,10 +66,10 @@ export const Laptop3D: React.FC<Laptop3DProps> = ({
       <div
         style={{
           transform: `
-            rotateY(${rotateY}deg) 
+            rotateY(${rotateY + continuousRotateY}deg) 
             rotateX(${rotateX}deg) 
             translateY(${translateY}px) 
-            scale(${scale})
+            scale(${scale * zoomScale})
           `,
           transformStyle: 'preserve-3d',
         }}
@@ -66,6 +85,7 @@ export const Laptop3D: React.FC<Laptop3DProps> = ({
             boxShadow: `
               0 80px 160px rgba(0,0,0,0.4),
               0 40px 80px rgba(0,0,0,0.3),
+              0 0 ${50 * glowIntensity}px rgba(59, 130, 246, ${0.3 * glowIntensity}),
               inset 0 0 0 3px #2a2a2a
             `,
             transformStyle: 'preserve-3d',

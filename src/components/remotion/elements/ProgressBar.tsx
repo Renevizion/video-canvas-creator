@@ -1,5 +1,5 @@
 import React from 'react';
-import { interpolate, spring, useCurrentFrame, useVideoConfig, Easing } from 'remotion';
+import { interpolate, spring, useCurrentFrame, useVideoConfig, Easing, interpolateColors } from 'remotion';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface ProgressBarProps {
@@ -65,6 +65,28 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   });
   
   const iconScale = isComplete ? interpolate(iconBounce, [0, 1], [1, 1.1]) : 1;
+  
+  // Dynamic zoom effect
+  const zoomProgress = spring({
+    fps,
+    frame: sceneFrame,
+    config: { damping: 100, stiffness: 70, mass: 0.9 },
+  });
+  const scale = interpolate(zoomProgress, [0, 1], [0.9, 1]);
+  
+  // Progress bar glow
+  const progressGlow = interpolate(
+    progress,
+    [0, 50, 100],
+    [0, 0.5, 1]
+  );
+  
+  // Dynamic color shift for progress bar
+  const progressColor = interpolateColors(
+    progress,
+    [0, 50, 100],
+    ['#3b82f6', '#6366f1', '#10b981']
+  );
 
   return (
     <div
@@ -72,7 +94,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
         ...style,
         perspective: '1200px',
         opacity: entryOpacity,
-        transform: `${style.transform} translateY(${slideUp}px)`,
+        transform: `${style.transform} translateY(${slideUp}px) scale(${scale})`,
       }}
     >
       {/* Main container with 3D effect */}
@@ -194,11 +216,11 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
               width: `${progress}%`,
               background: isComplete 
                 ? 'linear-gradient(90deg, #10b981 0%, #34d399 100%)'
-                : 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)',
+                : `linear-gradient(90deg, ${progressColor} 0%, ${interpolateColors(progress, [0, 100], ['#60a5fa', '#34d399'])} 100%)`,
               borderRadius: 10,
               boxShadow: isComplete
                 ? '0 0 20px rgba(16, 185, 129, 0.5)'
-                : '0 0 20px rgba(59, 130, 246, 0.5)',
+                : `0 0 ${30 * progressGlow}px rgba(59, 130, 246, ${0.6 * progressGlow})`,
               transition: 'background 0.3s ease',
             }}
           />

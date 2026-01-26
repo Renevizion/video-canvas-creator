@@ -1,5 +1,6 @@
 import React from 'react';
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { interpolate, spring, useCurrentFrame, useVideoConfig, interpolateColors } from 'remotion';
+import { noise2D } from '@remotion/noise';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface TerminalProps {
@@ -21,6 +22,26 @@ export const Terminal: React.FC<TerminalProps> = ({
   
   const commands = (element.content || '$ npx remotion render\n✓ Video rendered successfully').split('\n');
   
+  // Dynamic zoom effect - subtle camera zoom in
+  const zoomProgress = spring({
+    fps,
+    frame: sceneFrame,
+    config: { damping: 100, stiffness: 50, mass: 1 },
+  });
+  const scale = interpolate(zoomProgress, [0, 1], [0.95, 1]);
+  
+  // Dynamic glow intensity based on typing progress
+  const glowIntensity = interpolate(
+    sceneFrame,
+    [0, fps * 2, fps * 4],
+    [0, 1, 0.7],
+    { extrapolateRight: 'clamp' }
+  );
+  
+  // Organic subtle movement using noise
+  const noiseX = noise2D('terminal-x', sceneFrame * 0.01, 0) * 3;
+  const noiseY = noise2D('terminal-y', sceneFrame * 0.01, 1) * 3;
+  
   // Typing animation
   const typingSpeed = 2;
   const lineDelay = fps * 0.8;
@@ -28,17 +49,16 @@ export const Terminal: React.FC<TerminalProps> = ({
   // Calculate visible lines and characters
   const getVisibleContent = () => {
     const result: Array<{ text: string; isComplete: boolean }> = [];
-    let currentFrame = sceneFrame;
     
     for (let i = 0; i < commands.length; i++) {
       const lineStartFrame = i * lineDelay;
       const line = commands[i];
       
-      if (currentFrame < lineStartFrame) {
+      if (sceneFrame < lineStartFrame) {
         break;
       }
       
-      const framesIntoLine = currentFrame - lineStartFrame;
+      const framesIntoLine = sceneFrame - lineStartFrame;
       const charsVisible = Math.floor(framesIntoLine * typingSpeed);
       const visibleText = line.slice(0, Math.min(charsVisible, line.length));
       const isComplete = charsVisible >= line.length;
@@ -65,24 +85,32 @@ export const Terminal: React.FC<TerminalProps> = ({
   
   const width = element.size?.width || 500;
   const height = element.size?.height || 280;
+  
+  // Dynamic background color shift
+  const bgColor = interpolateColors(
+    sceneFrame,
+    [0, fps * 3, fps * 6],
+    ['#1e1e2e', '#1a1a2a', '#1e1e2e']
+  );
 
   return (
     <div
       style={{
         ...style,
         opacity: entrySpring,
-        transform: `${style.transform} translateY(${slideUp}px)`,
+        transform: `${style.transform} translateY(${slideUp}px) translateX(${noiseX}px) translateY(${noiseY}px) scale(${scale})`,
       }}
     >
       <div
         style={{
           width,
           height,
-          background: 'linear-gradient(180deg, #1e1e2e 0%, #11111b 100%)',
+          background: `linear-gradient(180deg, ${bgColor} 0%, #11111b 100%)`,
           borderRadius: 14,
           boxShadow: `
             0 40px 80px rgba(0,0,0,0.35),
             0 15px 35px rgba(0,0,0,0.25),
+            0 0 ${40 * glowIntensity}px rgba(137, 180, 250, ${0.3 * glowIntensity}),
             inset 0 1px 0 rgba(255,255,255,0.05)
           `,
           overflow: 'hidden',
