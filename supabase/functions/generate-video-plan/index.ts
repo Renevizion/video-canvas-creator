@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, duration, style, brandData, aspectRatio = 'landscape', generateImages = false, imageStyle = 'illustration' } = await req.json();
+    const { prompt, duration, style, brandData, aspectRatio = 'landscape', generateImages = false, imageStyle = 'illustration', referencePattern } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -72,11 +72,36 @@ Use these brand elements in the video. Match the color scheme exactly.
 `;
     }
 
+    // Reference pattern context (from analyzed videos)
+    let referenceContext = '';
+    if (referencePattern) {
+      const refScenes = referencePattern.scenes || [];
+      referenceContext = `
+REFERENCE VIDEO PATTERN (IMPORTANT - Use this as cinematic inspiration):
+This video should be styled like the reference commercial. Use similar:
+- Scene pacing and structure
+- Transition types: ${refScenes.map((s: any) => s.transition?.type).filter(Boolean).join(', ')}
+- Animation styles: ${refScenes.map((s: any) => s.animations?.[0]?.name).filter(Boolean).join(', ')}
+- Scene durations: ${refScenes.map((s: any) => `${s.duration}s`).join(', ')}
+
+Reference Scene Descriptions (ADAPT these for the new content):
+${refScenes.slice(0, 5).map((s: any, i: number) => `Scene ${i + 1}: ${s.description}`).join('\n')}
+
+CINEMATIC TECHNIQUES FROM REFERENCE:
+- Opening style: ${refScenes[0]?.description || 'Dramatic intro'}
+- Transitions used: ${[...new Set(refScenes.map((s: any) => s.transition?.type).filter(Boolean))].join(', ') || 'fade, cut'}
+- Color palette: ${referencePattern.globalStyles?.colorPalette?.join(', ') || 'dark cinematic'}
+
+ADAPT the cinematic style to the new prompt content. Match the ENERGY and PACING, not the exact content.
+`;
+    }
+
     // Generate a unique seed for variation per video (using timestamp + random for better uniqueness)
     const uniqueSeed = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
     
     const systemPrompt = `You are an expert video production planner creating CINEMATIC, broadcast-quality commercial videos.
 ${brandContext}
+${referenceContext}
 CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 
 🎬 CREATIVITY & UNIQUENESS (MOST IMPORTANT):

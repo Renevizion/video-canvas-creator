@@ -48,10 +48,11 @@ export async function generateVideoPlan(
   brandData?: Record<string, unknown>,
   aspectRatio: 'landscape' | 'portrait' | 'square' = 'landscape',
   generateImages?: boolean,
-  imageStyle?: string
+  imageStyle?: string,
+  referencePattern?: Record<string, unknown>
 ) {
   const { data, error } = await supabase.functions.invoke('generate-video-plan', {
-    body: { prompt, duration, style, brandData, aspectRatio, generateImages, imageStyle },
+    body: { prompt, duration, style, brandData, aspectRatio, generateImages, imageStyle, referencePattern },
   });
 
   if (error) throw error;
