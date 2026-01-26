@@ -274,9 +274,10 @@ export class AdvancedColorGrading {
   }
   
   /**
-   * Get overlay elements for complex grading
+   * Get overlay style objects for complex grading
+   * Returns CSS properties for overlays (temperature, vignette)
    */
-  getOverlayElements(grade: ColorGrade): React.CSSProperties[] {
+  getOverlayStyles(grade: ColorGrade): React.CSSProperties[] {
     const overlays: React.CSSProperties[] = [];
     
     // Temperature overlay

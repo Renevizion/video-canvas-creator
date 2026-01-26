@@ -517,20 +517,93 @@ export class VideoCreationGateway {
    * Initialize services (to be implemented)
    */
   private initializeServices() {
-    // Services will be registered here
+    // Register sophisticated video production as STANDARD service
+    this.services.register({
+      name: 'sophisticatedProduction',
+      execute: async (input: any, context: WorkflowContext) => {
+        const { generateSophisticatedVideo } = await import('@/services/SophisticatedVideoGenerator');
+        
+        const options = {
+          prompt: input.prompt || context.input.prompt || '',
+          duration: input.duration || context.input.duration || 30,
+          style: this.inferStyle(context.input),
+          motionStyle: this.inferMotionStyle(context.input),
+          enableCameraPaths: true,  // ALWAYS enabled - this is standard now
+          enableCurvedPaths: true,   // ALWAYS enabled - this is standard now
+          enableParallax: true,      // ALWAYS enabled - this is standard now
+          enableColorGrading: true,  // ALWAYS enabled - this is standard now
+          fps: 30
+        };
+        
+        console.log('[Gateway] Applying sophisticated production (STANDARD)...');
+        return await generateSophisticatedVideo(options);
+      }
+    });
+    
+    // Other services...
     // this.services.register(new TextAnalysisService());
     // this.services.register(new WebScraperService());
-    // etc.
   }
   
   /**
    * Initialize workflows (to be implemented)
    */
   private initializeWorkflows() {
-    // Workflows will be registered here
-    // this.workflowEngine.register(new SimpleTextWorkflow());
+    // All workflows now use sophisticated production by default
+    this.workflowEngine.register({
+      type: 'SIMPLE_TEXT',
+      execute: async (context: WorkflowContext, services: ServiceRegistry) => {
+        // Execute sophisticated production (standard)
+        const sophisticatedService = services.get('sophisticatedProduction');
+        const videoPlan = await sophisticatedService.execute({}, context);
+        
+        return {
+          status: 'success',
+          workflowId: context.requestId,
+          videoPlan,
+          metadata: {
+            productionGrade: videoPlan.sophisticatedMetadata?.productionGrade || 'professional',
+            qualityScore: 85 // Sophisticated is standard
+          }
+        };
+      }
+    });
+    
+    // Register other workflows with sophisticated production built-in
     // this.workflowEngine.register(new MultimodalWorkflow());
-    // etc.
+  }
+  
+  /**
+   * Infer video style from input
+   */
+  private inferStyle(input: GatewayInput): 'space-journey' | 'product-launch' | 'data-story' | 'cinematic' {
+    const prompt = (input.prompt || '').toLowerCase();
+    
+    if (prompt.includes('github') || prompt.includes('stats') || prompt.includes('wrapped')) {
+      return 'space-journey';
+    }
+    if (prompt.includes('product') || prompt.includes('launch') || prompt.includes('feature')) {
+      return 'product-launch';
+    }
+    if (prompt.includes('data') || prompt.includes('analytics') || prompt.includes('chart')) {
+      return 'data-story';
+    }
+    
+    return 'cinematic'; // Default to highest quality
+  }
+  
+  /**
+   * Infer motion style from input
+   */
+  private inferMotionStyle(input: GatewayInput): any {
+    const prompt = (input.prompt || '').toLowerCase();
+    
+    if (prompt.includes('corporate') || prompt.includes('business')) return 'corporate';
+    if (prompt.includes('tech') || prompt.includes('software')) return 'tech';
+    if (prompt.includes('social') || prompt.includes('tiktok')) return 'social';
+    if (prompt.includes('minimal') || prompt.includes('clean')) return 'minimal';
+    
+    return 'cinematic'; // Default to highest quality
   }
 }
 

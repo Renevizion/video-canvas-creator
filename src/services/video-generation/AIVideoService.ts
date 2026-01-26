@@ -32,6 +32,7 @@ export interface VideoGenerationResult {
 export class AIVideoService {
   /**
    * Generate video from natural language prompt
+   * NOW USES SOPHISTICATED PRODUCTION SYSTEM BY DEFAULT
    * 
    * Examples:
    * - "Create a product demo for Bookedin showing scheduling and payments"
@@ -40,37 +41,98 @@ export class AIVideoService {
    */
   async generateFromPrompt(request: NaturalLanguageRequest): Promise<VideoGenerationResult> {
     try {
+      // Import sophisticated video generator (now standard)
+      const { generateSophisticatedVideo } = await import('@/services/SophisticatedVideoGenerator');
+      
       // Step 1: Analyze the prompt to understand intent
       const analysis = this.analyzePrompt(request.prompt);
 
-      // Step 2: Find best matching template
-      const template = this.findBestTemplate(analysis);
-
-      if (!template) {
-        return {
-          success: false,
-          error: 'Could not find a suitable template for your request',
-        };
-      }
-
-      // Step 3: Extract variables from prompt
-      const variables = this.extractVariables(request.prompt, template, request.context);
-
-      // Step 4: Generate video configuration
-      const video = this.buildVideoConfig(template, variables);
+      // Step 2: Generate sophisticated video (replaces old template system)
+      const sophisticatedPlan = await generateSophisticatedVideo({
+        prompt: request.prompt,
+        duration: analysis.duration,
+        style: this.mapVideoTypeToStyle(analysis.videoType),
+        motionStyle: this.inferMotionStyle(request.prompt),
+        fps: 30
+      });
+      
+      // Step 3: Convert to VideoConfig format (for compatibility)
+      const video = this.convertToVideoConfig(sophisticatedPlan, analysis);
 
       return {
         success: true,
         video,
-        template,
-        variables,
+        variables: {
+          productionGrade: sophisticatedPlan.sophisticatedMetadata?.productionGrade || 'professional',
+          hasCameraPaths: sophisticatedPlan.sophisticatedMetadata?.usesOrbitalCamera || false,
+          hasCurvedPaths: sophisticatedPlan.sophisticatedMetadata?.usesCurvedPaths || false,
+          hasParallax: sophisticatedPlan.sophisticatedMetadata?.usesParallax || false,
+          hasColorGrading: sophisticatedPlan.sophisticatedMetadata?.usesColorGrading || false
+        },
       };
     } catch (error) {
+      console.error('[AIVideoService] Error generating sophisticated video:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
+  }
+  
+  /**
+   * Map video type to sophisticated style
+   */
+  private mapVideoTypeToStyle(videoType: string): 'space-journey' | 'product-launch' | 'data-story' | 'cinematic' {
+    const styleMap: Record<string, any> = {
+      'product-demo': 'product-launch',
+      'youtube': 'cinematic',
+      'presentation': 'data-story',
+      'motion-graphics': 'cinematic',
+      'social-media': 'space-journey',
+      'marketing': 'product-launch',
+      'tutorial': 'data-story'
+    };
+    
+    return styleMap[videoType] || 'cinematic';
+  }
+  
+  /**
+   * Infer motion style from prompt
+   */
+  private inferMotionStyle(prompt: string): 'cinematic' | 'tech' | 'corporate' | 'creative' | 'social' | 'minimal' {
+    const lowerPrompt = prompt.toLowerCase();
+    
+    if (lowerPrompt.includes('corporate') || lowerPrompt.includes('business')) return 'corporate';
+    if (lowerPrompt.includes('tech') || lowerPrompt.includes('software') || lowerPrompt.includes('app')) return 'tech';
+    if (lowerPrompt.includes('social') || lowerPrompt.includes('tiktok') || lowerPrompt.includes('instagram')) return 'social';
+    if (lowerPrompt.includes('minimal') || lowerPrompt.includes('clean') || lowerPrompt.includes('simple')) return 'minimal';
+    if (lowerPrompt.includes('creative') || lowerPrompt.includes('artistic')) return 'creative';
+    
+    return 'cinematic'; // Default to highest quality
+  }
+  
+  /**
+   * Convert sophisticated plan to VideoConfig format
+   */
+  private convertToVideoConfig(sophisticatedPlan: any, analysis: PromptAnalysis): VideoConfig & { scenes: VideoScene[] } {
+    return {
+      id: sophisticatedPlan.id,
+      duration: sophisticatedPlan.duration,
+      fps: sophisticatedPlan.fps,
+      width: sophisticatedPlan.resolution.width,
+      height: sophisticatedPlan.resolution.height,
+      backgroundColor: '#000000',
+      scenes: sophisticatedPlan.scenes,
+      // Add sophisticated metadata as custom data
+      metadata: {
+        sophisticated: true,
+        productionGrade: sophisticatedPlan.sophisticatedMetadata?.productionGrade || 'professional',
+        cameraSystem: !!sophisticatedPlan.cameraPath,
+        curvedPaths: sophisticatedPlan.characterPaths?.size || 0,
+        parallaxLayers: sophisticatedPlan.parallaxConfig ? Object.keys(sophisticatedPlan.parallaxConfig).length : 0,
+        colorGrading: !!sophisticatedPlan.colorGrading
+      }
+    };
   }
 
   /**

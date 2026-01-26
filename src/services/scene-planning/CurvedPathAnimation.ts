@@ -225,11 +225,12 @@ export class CurvedPathAnimation {
   }
   
   /**
-   * Parse simple SVG path string (supports M, Q, T commands)
+   * Parse simple SVG path string (supports M, Q commands for cubic Bezier)
+   * Format: "M x,y Q cx1,cy1 cx2,cy2 ex,ey" (8 values for cubic Bezier)
    */
   private parseSVGPath(pathString: string): BezierCurve {
-    // Simple parser for basic SVG paths
-    // Format: "M x,y Q cx1,cy1 cx2,cy2 x,y"
+    // Parser for cubic Bezier paths with 2 control points
+    // Format: "M startX,startY Q cp1x,cp1y cp2x,cp2y endX,endY"
     const match = pathString.match(/M\s*([\d.]+)[,\s]+([\d.]+)\s*Q\s*([\d.]+)[,\s]+([\d.]+)\s*([\d.]+)[,\s]+([\d.]+)\s*([\d.]+)[,\s]+([\d.]+)/);
     
     if (match) {

@@ -147,6 +147,8 @@ export class ParallaxDepthSystem {
   
   /**
    * Get CSS style object for parallax layer
+   * Note: X and Y are negated to create the parallax effect as camera moves
+   * (when camera moves right, background should appear to move left)
    */
   static getLayerStyle(
     transform: ParallaxTransform,
