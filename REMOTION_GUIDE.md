@@ -270,12 +270,75 @@ npx remotion browser ensure
 3. Reduce frame rate
 4. Disable complex animations during development
 
-## Resources
+## AI-Powered Video Creation
 
+Remotion supports AI-powered motion graphics generation. You can create videos from text prompts using:
+
+```bash
+npx create-video@latest --prompt-to-motion-graphics
+```
+
+This allows you to:
+- Generate video compositions from natural language descriptions
+- Create motion graphics automatically
+- Rapidly prototype video ideas
+
+### AI Resources
+- [AI Documentation](https://www.remotion.dev/docs/ai/)
+- [System Prompt Guide](https://www.remotion.dev/docs/ai/system-prompt)
+
+## Additional Resources
+
+### Core Documentation
 - [Remotion Documentation](https://www.remotion.dev/docs)
 - [Remotion API Reference](https://www.remotion.dev/docs/api)
 - [CLI Options](https://www.remotion.dev/docs/cli)
 - [Performance Guide](https://www.remotion.dev/docs/performance)
+- [Terminology](https://www.remotion.dev/docs/terminology)
+- [Studio Guide](https://www.remotion.dev/docs/terminology/studio)
+
+### Advanced Features
+- [Measuring](https://www.remotion.dev/docs/measuring)
+- [Using Randomness](https://www.remotion.dev/docs/using-randomness)
+- [Noise Visualization](https://www.remotion.dev/docs/noise-visualization)
+- [Maps](https://www.remotion.dev/docs/maps)
+- [Animation Math](https://www.remotion.dev/docs/animation-math)
+- [Transitioning](https://www.remotion.dev/docs/transitioning)
+
+### Media and Styling
+- [Fonts](https://www.remotion.dev/docs/fonts)
+- [Videos](https://www.remotion.dev/docs/videos/)
+- [GIF Support](https://www.remotion.dev/docs/gif/)
+- [Lottie Animations](https://www.remotion.dev/docs/lottie/)
+- [Tailwind CSS](https://www.remotion.dev/docs/tailwind)
+
+### Utilities and Tools
+- [Fonts API](https://www.remotion.dev/docs/fonts-api/)
+- [Layout Utils](https://www.remotion.dev/docs/layout-utils/)
+- [Layout Utils Best Practices](https://www.remotion.dev/docs/layout-utils/best-practices)
+- [Measure Text](https://www.remotion.dev/docs/layout-utils/measure-text)
+- [Animation Utils](https://www.remotion.dev/docs/animation-utils/)
+- [Interpolate Styles](https://www.remotion.dev/docs/animation-utils/interpolate-styles)
+
+### Advanced Topics
+- [Bundler](https://www.remotion.dev/docs/bundler)
+- [Bundle](https://www.remotion.dev/docs/bundle)
+- [Enable SCSS](https://www.remotion.dev/docs/enable-scss/overview)
+- [Artifacts](https://www.remotion.dev/docs/artifacts)
+- [Parameterized Rendering](https://www.remotion.dev/docs/parameterized-rendering)
+- [Visual Editing](https://www.remotion.dev/docs/visual-editing)
+- [Config](https://www.remotion.dev/docs/config)
+
+### Snippets and Examples
+- [Align Duration](https://www.remotion.dev/docs/miscellaneous/snippets/align-duration)
+- [Jump Cuts](https://www.remotion.dev/docs/miscellaneous/snippets/jumpcuts)
+- [Different Segments at Different Speeds](https://www.remotion.dev/docs/miscellaneous/snippets/different-segments-at-different-speeds)
+
+### Integration
+- [Player Integration](https://www.remotion.dev/docs/player/integration)
+
+### Templates
+- [Remotion Templates](https://www.remotion.dev/templates)
 
 ## License
 
