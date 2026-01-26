@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Wand2, Clock, Palette, Sparkles, Loader2, Globe, X, Monitor, Smartphone, Square, Image, Paintbrush } from 'lucide-react';
+import { Wand2, Clock, Palette, Sparkles, Loader2, Globe, X, Monitor, Smartphone, Square, Image, Paintbrush, Layers, Film, Box, Zap, Coffee, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
@@ -45,6 +45,7 @@ interface BrandData {
 
 type AspectRatioType = 'landscape' | 'portrait' | 'square';
 type ImageStyleType = 'illustration' | 'isometric' | 'realistic' | 'cartoon' | '3d-render' | 'minimal';
+type VideoType = 'auto' | 'motion-graphics' | 'product' | 'tech' | 'lifestyle' | 'explainer';
 
 const aspectRatioPresets = [
   { id: 'landscape' as AspectRatioType, name: 'YouTube', icon: Monitor, dimensions: '1920×1080', ratio: '16:9' },
@@ -70,6 +71,15 @@ const imageStylePresets: { id: ImageStyleType; name: string; description: string
   { id: 'minimal', name: 'Minimal', description: 'Simple, iconic shapes' },
 ];
 
+const videoTypePresets: { id: VideoType; name: string; description: string; icon: React.ElementType; suggestImages: boolean }[] = [
+  { id: 'auto', name: 'Auto-Detect', description: 'AI chooses best approach', icon: Zap, suggestImages: true },
+  { id: 'motion-graphics', name: 'Motion Graphics', description: 'Abstract shapes & typography', icon: Layers, suggestImages: false },
+  { id: 'product', name: 'Product Showcase', description: 'Hero shots & close-ups', icon: Box, suggestImages: true },
+  { id: 'tech', name: 'Tech/SaaS', description: 'Code, terminals & mockups', icon: Code, suggestImages: false },
+  { id: 'lifestyle', name: 'Lifestyle/Brand', description: 'Cinematic imagery', icon: Coffee, suggestImages: true },
+  { id: 'explainer', name: 'Explainer', description: 'Icons & step-by-step', icon: Film, suggestImages: true },
+];
+
 // Detect URL in prompt
 const extractUrlFromPrompt = (text: string): string | null => {
   const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/i);
@@ -87,13 +97,22 @@ export function VideoRequestBuilder({ onPlanGenerated, referencePattern }: Video
   const [duration, setDuration] = useState([10]);
   const [selectedStyle, setSelectedStyle] = useState('dark-web');
   const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatioType>('landscape');
+  const [selectedVideoType, setSelectedVideoType] = useState<VideoType>('auto');
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [isExtractingBrand, setIsExtractingBrand] = useState(false);
   const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
   const [generateImages, setGenerateImages] = useState(false);
-  const [imageStyle, setImageStyle] = useState<ImageStyleType>('illustration');
+  const [imageStyle, setImageStyle] = useState<ImageStyleType>('realistic');
   
   const generateMutation = useGenerateVideoPlan();
+
+  // Auto-enable images for video types that benefit from them
+  useEffect(() => {
+    const preset = videoTypePresets.find(p => p.id === selectedVideoType);
+    if (preset && selectedVideoType !== 'auto') {
+      setGenerateImages(preset.suggestImages);
+    }
+  }, [selectedVideoType]);
 
   // Detect URL in prompt as user types
   useEffect(() => {
@@ -129,9 +148,22 @@ export function VideoRequestBuilder({ onPlanGenerated, referencePattern }: Video
       await extractBrand(detectedUrl);
     }
 
+    // Build enhanced prompt with video type context
+    let enhancedPrompt = prompt.trim();
+    if (selectedVideoType !== 'auto') {
+      const typeHint = {
+        'motion-graphics': '[Motion Graphics Style - abstract shapes, geometric animations, kinetic typography]',
+        'product': '[Product Showcase - hero product shots, close-ups, cinematic angles]',
+        'tech': '[Tech/SaaS Demo - code editors, terminals, laptop mockups, data viz]',
+        'lifestyle': '[Lifestyle/Brand - cinematic imagery, emotional storytelling, atmospheric]',
+        'explainer': '[Explainer Video - step-by-step, icons, clear visual hierarchy]',
+      }[selectedVideoType];
+      enhancedPrompt = `${typeHint} ${enhancedPrompt}`;
+    }
+
     try {
       const result = await generateMutation.mutateAsync({
-        prompt: prompt.trim(),
+        prompt: enhancedPrompt,
         duration: duration[0],
         style: brandData ? 'brand' : selectedStyle,
         brandData: brandData ? (brandData as unknown as Record<string, unknown>) : undefined,
@@ -294,6 +326,36 @@ export function VideoRequestBuilder({ onPlanGenerated, referencePattern }: Video
                 <Icon className="w-5 h-5 mb-1" />
                 <span className="text-xs font-medium">{preset.name}</span>
                 <span className="text-[10px] text-muted-foreground">{preset.ratio}</span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Video Type Selection */}
+      <div className="space-y-3">
+        <Label className="flex items-center gap-2 text-foreground">
+          <Film className="w-4 h-4 text-primary" />
+          Video Type
+        </Label>
+        <div className="grid grid-cols-3 gap-2">
+          {videoTypePresets.map((preset) => {
+            const Icon = preset.icon;
+            return (
+              <motion.button
+                key={preset.id}
+                onClick={() => setSelectedVideoType(preset.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`p-2 rounded-lg border transition-all flex flex-col items-center gap-1 ${
+                  selectedVideoType === preset.id
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-card hover:border-primary/50'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="text-[11px] font-medium">{preset.name}</span>
+                <span className="text-[9px] text-muted-foreground text-center leading-tight">{preset.description}</span>
               </motion.button>
             );
           })}

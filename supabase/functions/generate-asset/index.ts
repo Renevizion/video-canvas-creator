@@ -21,21 +21,41 @@ serve(async (req) => {
 
     console.log('Generating asset:', description);
 
-    const prompt = `Generate a high-quality image for a marketing video:
+    // Build a comprehensive prompt based on the style and description
+    const styleGuides: Record<string, string> = {
+      'illustration': 'Flat vector illustration style, clean lines, solid colors, modern and minimal, suitable for motion graphics',
+      'isometric': 'Isometric 3D perspective, clean geometric shapes, vibrant colors, floating in space with subtle shadows',
+      'realistic': 'Photorealistic, professional studio photography, perfect lighting, shallow depth of field, high-end commercial quality',
+      'cartoon': 'Playful cartoon style, bold colors, fun and expressive, rounded shapes, friendly aesthetic',
+      '3d-render': 'Polished 3D CGI render, soft global illumination, clean materials, floating in abstract space with reflections',
+      'minimal': 'Ultra-minimal design, single focal element, lots of negative space, simple geometric shapes, elegant',
+      'cinematic': 'Cinematic photography, dramatic lighting, moody atmosphere, film-like color grading, high contrast',
+      'product': 'Product photography, clean white or dark background, professional studio lighting, sharp focus, commercial quality',
+    };
 
-Description: ${description}
-Style: ${style}
-Dimensions: ${width}x${height}
+    const styleGuide = styleGuides[style] || styleGuides['realistic'];
 
-Requirements:
-- Professional, commercial quality
+    const prompt = `Create a high-quality image for a premium commercial video:
+
+SUBJECT: ${description}
+
+STYLE REQUIREMENTS:
+${styleGuide}
+
+TECHNICAL SPECIFICATIONS:
+- Dimensions: ${width}x${height} pixels
+- NO TEXT OR WORDS in the image
+- Sharp, high-resolution quality
+- Professional commercial/advertising aesthetic
 - Suitable for video production and motion graphics
-- Clean, modern aesthetic
-- No text unless specifically requested
-- If abstract/geometric: use vibrant colors and smooth shapes
-- If icon/illustration: use clean lines and solid colors
-- If pattern/texture: create seamless, repeatable design
-- Transparent background when appropriate (icons, shapes)`;
+- Clean composition with clear focal point
+
+LIGHTING & ATMOSPHERE:
+- Professional studio-quality lighting
+- Subtle reflections and shadows for depth
+- Rich, vibrant colors that pop on screen
+
+OUTPUT: A single, stunning image that could be used in a high-budget commercial or advertisement.`;
 
     // Use the Nano banana image model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

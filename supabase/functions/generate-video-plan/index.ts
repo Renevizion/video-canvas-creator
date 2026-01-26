@@ -126,18 +126,20 @@ ${brandContext}
 ${referenceContext}
 CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 
+🎬 VIDEO PRODUCTION APPROACH:
+This system creates rich visual content by combining:
+1. AI-generated images for product shots, close-ups, and hero visuals
+2. Geometric shapes with organic motion for motion graphics
+3. Kinetic typography with advanced animations
+4. Layered compositions with depth and parallax
+
 🎬 CREATIVITY & UNIQUENESS (MOST IMPORTANT):
 - ANALYZE THE PROMPT DEEPLY: Extract specific details, emotions, and unique aspects
 - BE CREATIVE: Don't follow a template - make each video truly unique and tailored
 - VARY YOUR APPROACH: Different prompts should result in COMPLETELY different video structures
 - USE VARIETY: Mix different animation types, layouts, element types, transitions
 - ADD PERSONALITY: Match the tone and style to the specific content being described
-- Generation Seed: ${uniqueSeed} - Use this for creative variation:
-  * Different seed = different creative choices
-  * Vary animation timing slightly based on seed
-  * Choose different element positions/sizes
-  * Select different animation combinations
-  * Pick different accent colors from palette
+- Generation Seed: ${uniqueSeed} - Use this for creative variation
 
 ASPECT RATIO OPTIMIZATION:
 - Video aspect ratio: ${aspectRatio} (${resolution.width}x${resolution.height})
@@ -147,69 +149,93 @@ ASPECT RATIO OPTIMIZATION:
 
 VOICEOVER & CAPTIONS:
 - Add a "voiceover" field to EACH scene with short, punchy text (3-7 words)
-- This text will be displayed as TikTok-style captions
 - Make voiceovers SPECIFIC to the content, not generic
-- Examples: "Check this out" → "Mind-blowing results" → "Get started today"
 
-VISUAL QUALITY STANDARDS:
-- Every scene should have 4-8 layered elements for visual depth
-- Use varied animations: scale, slide, fade, rotate, pulse, float
-- Stagger element delays by 0.15-0.3 seconds for professional flow
-- Include floating accent elements when appropriate (orbs, particles, glows)
-- Add subtle parallax motion to backgrounds when it fits
-- Use glassmorphism effects strategically, not everywhere
+🎬 CINEMATIC VISUAL TECHNIQUES:
 
-ADVANCED ELEMENT TYPES (USE CREATIVELY, NOT IN EVERY VIDEO):
-1. "code-editor" - 3D laptop with animated code. Best for tech/SaaS content
-2. "terminal" - Command line typing effect. Best for developer tools
-3. "progress" - Animated progress indicator. Best for showing metrics/growth
-4. "3d-card" - Glassmorphic floating card. Best for feature showcases
-5. "laptop-mockup" - 3D rotating laptop frame. Best for product demos
+1. AI-GENERATED IMAGES (Use type: "image" with descriptive content):
+   When to use: Product shots, hero images, close-ups, lifestyle photos, brand visuals
+   The system generates real AI images for these. Be DESCRIPTIVE:
+   - "Photorealistic close-up of a premium ice cream cone with vanilla swirl, studio lighting"
+   - "Isometric 3D render of a laptop with code on screen, floating in space"
+   - "Minimalist product shot of smartphone on marble surface, soft shadows"
+   - "Cinematic food close-up of burger with steam rising, dark background"
+   
+   Image element structure:
+   {
+     "id": "hero-product",
+     "type": "image",
+     "content": "[DETAILED description for AI generation - be specific about style, lighting, angle]",
+     "position": { "x": 50, "y": 45, "z": 2 },
+     "size": { "width": 400, "height": 400 },
+     "style": { 
+       "borderRadius": 20,
+       "boxShadow": "0 30px 60px rgba(0,0,0,0.4)",
+       "filter": "brightness(1.1) contrast(1.05)",
+       "kenBurns": true  // Enables subtle zoom/pan for cinematic effect
+     },
+     "animation": { "name": "scale", "type": "scale", "duration": 1.2, "delay": 0.3, "properties": { "scale": [0.8, 1.05] } }
+   }
 
-MOTION GRAPHICS ELEMENTS (FOR ABSTRACT/ANIMATED CONTENT) - CRITICAL FOR FLOW:
-The system automatically adds ORGANIC MOTION (drift, pulse, rotation) to geometric shapes.
-For motion graphics videos, create MULTIPLE shapes with STAGGERED TIMING for visual flow:
+2. MOTION GRAPHICS SHAPES (Use type: "shape"):
+   The system automatically adds organic motion (drift, pulse, rotation) to shapes.
+   Shape types: "circle", "triangle", "star", "hexagon", "polygon", "rect"
+   Use for: Abstract backgrounds, particle effects, decorative elements
+   
+   Create DEPTH with layered shapes at different z-indexes:
+   - z: 0-1 = Background layer (large, slow-moving, blurred)
+   - z: 2-3 = Mid-ground layer (medium shapes)
+   - z: 4-5 = Foreground layer (small accent shapes)
 
-Shape types (use type: "shape" with content containing):
-- "circle" or "dot" - Circles with auto-pulse and drift. BEST for: backgrounds, particles, orbs
-- "rect" or "square" - Rectangles with rotation. BEST for: grids, frames, panels
-- "triangle" - Triangles with float animation. BEST for: directional elements, arrows
-- "star" - Stars with spin and glow. BEST for: emphasis, sparkles, highlights
-- "polygon" or "hexagon" - Polygons with breathing. BEST for: tech patterns, honeycomb
+3. CINEMATIC COMPOSITIONS:
+   For product/brand videos, layer elements like this:
+   - Background: Gradient or animated shapes (z: 0)
+   - Ambient: Floating particles, orbs, geometric accents (z: 1)
+   - Hero image: AI-generated product shot (z: 2)
+   - Text: Headlines, captions (z: 3-4)
+   - Foreground: Sparkles, lens flares, accent shapes (z: 5)
 
-MOTION GRAPHICS FLOW PATTERN (IMPORTANT):
-To create professional motion graphics "flow", follow this pattern:
-1. Create 4-8 geometric shapes per scene with VARIED sizes (small: 50-100, medium: 100-200, large: 200-400)
-2. Position shapes at DIFFERENT locations (x: 10-90%, y: 10-90%)
-3. Use STAGGERED delays (0.1s, 0.2s, 0.3s, 0.4s...) for choreographed entrance
-4. Mix shape TYPES (circles + triangles + stars) for visual interest
-5. Use VARIED colors from the palette for each shape
-6. Layer shapes with different z-index (z: 1, 2, 3) for depth
+4. ADVANCED ELEMENT TYPES:
+   - "code-editor" - 3D laptop with animated code. For tech/SaaS content
+   - "terminal" - Command line typing effect. For developer tools
+   - "progress" - Animated progress indicator. For metrics/growth
+   - "3d-card" - Glassmorphic floating card. For feature showcases
+   - "laptop-mockup" - 3D rotating laptop frame. For product demos
 
-Example motion graphics scene:
-"elements": [
-  { "id": "bg-circle-1", "type": "shape", "content": "circle", "position": { "x": 20, "y": 30, "z": 1 }, "size": { "width": 200 }, "style": { "color": "${colors[1]}" }, "animation": { "name": "popIn", "delay": 0 } },
-  { "id": "accent-star", "type": "shape", "content": "star", "position": { "x": 80, "y": 25, "z": 2 }, "size": { "width": 80 }, "style": { "color": "${colors[3]}" }, "animation": { "name": "popIn", "delay": 0.15 } },
-  { "id": "floating-tri", "type": "shape", "content": "triangle", "position": { "x": 65, "y": 70, "z": 2 }, "size": { "width": 120 }, "style": { "color": "${colors[1]}" }, "animation": { "name": "slideUp", "delay": 0.3 } },
-  { "id": "hex-pattern", "type": "shape", "content": "hexagon", "position": { "x": 35, "y": 65, "z": 1 }, "size": { "width": 150 }, "style": { "color": "${colors[2]}" }, "animation": { "name": "fadeIn", "delay": 0.2 } }
-]
+5. ANIMATION VARIETY:
+   Mix these animation types for visual interest:
+   - "scale" / "popIn" / "zoomIn" - Dramatic entrances
+   - "slideUp" / "slideIn" - Smooth reveals
+   - "fadeIn" - Subtle appearances
+   - "rotate" / "spin" - Dynamic motion
+   - "float" - Gentle organic movement
+   - "pulse" - Breathing/attention effects
 
-CUSTOM AI-GENERATED ASSETS:
+🎨 REQUIRED ASSETS ARRAY:
 ${generateImages ? `
 IMAGE GENERATION IS ENABLED with style: "${imageStyle}"
-For this video, you MUST generate relevant image assets. Add entries to "requiredAssets" array with:
-- Descriptive prompts for AI image generation
-- Style: "${imageStyle}" (user selected)
-- Common assets to generate: product images, icons, illustrations, backgrounds, patterns
-- For known brands: Generate their product imagery (ice cream cone, coffee cup, etc.)
-- Be specific in descriptions: "A ${imageStyle} style ice cream cone with vanilla swirl and sprinkles" NOT "ice cream"
-` : 'Image generation is disabled. Use geometric shapes and text only.'}
+For EVERY image element, add a matching entry to "requiredAssets":
+{
+  "id": "[same as element id]",
+  "type": "image",
+  "description": "[DETAILED prompt for AI image generation - include style, lighting, angle, mood]",
+  "specifications": {
+    "width": 512,
+    "height": 512,
+    "style": "${imageStyle}"
+  },
+  "providedByUser": false
+}
 
-KEY PRINCIPLE: More shapes + staggered timing + varied sizes = better "flow"
+IMPORTANT: The description in requiredAssets controls AI image generation. Be SPECIFIC:
+✅ GOOD: "A photorealistic close-up of artisan coffee beans with steam rising, moody studio lighting, dark wood background, shallow depth of field"
+❌ BAD: "coffee beans"
 
-EXAMPLE JSON STRUCTURE (USE AS REFERENCE, NOT TEMPLATE):
-NOTE: This is just showing the structure. Your actual content should be COMPLETELY DIFFERENT and tailored to the prompt.
+✅ GOOD: "Isometric 3D render of a modern smartphone displaying an app interface, floating in space with soft glow, clean white background"
+❌ BAD: "phone"
+` : 'Image generation is disabled. Use geometric shapes, text, and the advanced element types listed above.'}
 
+📐 SCENE STRUCTURE (EXAMPLE):
 {
   "duration": ${duration},
   "fps": 30,
@@ -220,49 +246,26 @@ NOTE: This is just showing the structure. Your actual content should be COMPLETE
       "id": "scene_1",
       "startTime": 0,
       "duration": 3,
-      "description": "[Describe what actually happens in this specific scene]",
-      "voiceover": "[Specific 3-7 word caption for THIS content]",
+      "description": "[Describe the visual narrative of this scene]",
+      "voiceover": "[Punchy 3-7 word caption]",
       "elements": [
-        {
-          "id": "bg_[unique]",
-          "type": "shape",
-          "content": "[Background description]",
-          "position": { "x": 50, "y": 50, "z": 0 },
-          "size": { "width": 100, "height": 100 },
-          "style": { 
-            "background": "linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 50%, ${colors[0]} 100%)"
-          },
-          "animation": { "name": "fadeIn", "type": "fade", "duration": 0.5, "easing": "ease-out", "delay": 0, "properties": { "opacity": [0, 1] } }
-        },
-        {
-          "id": "main_content",
-          "type": "text",
-          "content": "[ACTUAL CONTENT FROM PROMPT - NOT A PLACEHOLDER]",
-          "position": { "x": 50, "y": 40, "z": 3 },
-          "size": { "width": 80, "height": 20 },
-          "style": { 
-            "fontSize": 72, 
-            "fontWeight": 700, 
-            "color": "${colors[3]}"
-          },
-          "animation": { "name": "[Choose appropriate animation]", "type": "[scale/slide/fade/rotate]", "duration": 0.8, "easing": "spring", "delay": 0.2, "properties": {} }
-        }
+        // Background layer
+        { "id": "bg_gradient", "type": "shape", "content": "Background", "position": { "x": 50, "y": 50, "z": 0 }, "size": { "width": 100, "height": 100 }, "style": { "background": "linear-gradient(135deg, ${colors[0]}, ${colors[1]})" }, "animation": { "name": "fadeIn", "duration": 0.5 } },
+        
+        // Ambient shapes for depth
+        { "id": "ambient_circle_1", "type": "shape", "content": "circle", "position": { "x": 75, "y": 25, "z": 1 }, "size": { "width": 150 }, "style": { "color": "${colors[3]}20" }, "animation": { "name": "popIn", "delay": 0.1 } },
+        
+        // Hero image (AI-generated)
+        { "id": "hero_product", "type": "image", "content": "[Detailed AI image prompt]", "position": { "x": 50, "y": 45, "z": 2 }, "size": { "width": 350, "height": 350 }, "style": { "kenBurns": true, "borderRadius": 16 }, "animation": { "name": "scale", "delay": 0.2, "properties": { "scale": [0.9, 1] } } },
+        
+        // Text overlay
+        { "id": "headline", "type": "text", "content": "[Compelling headline]", "position": { "x": 50, "y": 80, "z": 3 }, "size": { "width": 80 }, "style": { "fontSize": 56, "fontWeight": 800, "color": "#ffffff" }, "animation": { "name": "slideUp", "delay": 0.4 } }
       ],
-      "animations": [],
-      "transition": { "type": "[fade/slide/wipe/cut based on content]", "duration": 0.3 }
+      "transition": { "type": "fade", "duration": 0.4 }
     }
   ],
   "requiredAssets": [
-    ${generateImages ? `{
-      "id": "generated_asset_1",
-      "type": "image",
-      "description": "[Detailed ${imageStyle} style description of the main product/subject]",
-      "specifications": {
-        "width": 512,
-        "height": 512,
-        "style": "${imageStyle}"
-      }
-    }` : '// No assets when image generation is disabled'}
+    ${generateImages ? '{ "id": "hero_product", "type": "image", "description": "[Detailed description for AI generation]", "specifications": { "width": 512, "height": 512, "style": "' + imageStyle + '" } }' : ''}
   ],
   "style": {
     "colorPalette": ${JSON.stringify(colors)},
@@ -272,24 +275,18 @@ NOTE: This is just showing the structure. Your actual content should be COMPLETE
   }
 }
 
-SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
-1. ANALYZE THE PROMPT: What is the video actually about? What's unique about it?
-2. DETERMINE SCENE COUNT: Create ${Math.ceil(duration / 2.5)} to ${Math.ceil(duration / 2)} scenes based on content needs
-3. STRUCTURE CREATIVELY:
-   - Opening: Match the energy and tone to the content (could be dramatic, playful, mysterious, energetic)
-   - Middle: Showcase the SPECIFIC features/benefits mentioned in the prompt
-   - Closing: Strong CTA that makes sense for the content
-4. VARY ELEMENTS BY CONTENT TYPE:
-   - Tech/SaaS: code-editor, terminal, metrics, progress bars
-   - Products: images, 3d-cards, mockups, product features
-   - Services: testimonials, benefits, process flows
-   - Brand/Lifestyle: lifestyle imagery, text focus, emotional appeal
-   - Motion Graphics: geometric shapes (circles, triangles, stars), abstract patterns, dynamic animations
-   - Explainer Videos: Mix of text, shapes, and icons with smooth transitions
-5. BE SPECIFIC: Use actual content from the prompt, not generic placeholders
-6. MIX IT UP: Every video should feel different - vary transitions, animation styles, layouts
-7. Animation variety: Don't just use popIn - mix scale, slide, fade, rotate based on what fits
-8. Color usage: Use the palette creatively - not just [0] for bg, [3] for text everywhere`;
+🎬 CONTENT-AWARE PLANNING:
+Based on the prompt, determine the video type and apply these approaches:
+
+PRODUCT SHOWCASE: Use AI-generated product images as heroes, multiple angles, close-ups, floating in space with subtle rotation
+BRAND/LIFESTYLE: Large AI-generated lifestyle photos with Ken Burns effect, emotional typography, atmospheric elements
+TECH/SAAS: Code-editor, terminal, laptop mockups, data visualizations, metrics
+MOTION GRAPHICS: Abstract geometric shapes, flowing particles, dynamic typography, no AI images
+EXPLAINER: Mix of icons, illustrations, step-by-step reveals, clear hierarchy
+FOOD/BEVERAGE: Close-up product shots, steam effects, appetite appeal, rich colors
+
+NOW CREATE A ${duration}-SECOND VIDEO FOR: "${prompt}"
+Be creative, unique, and match the content to what the prompt is actually asking for.`;
 
     console.log('Generating video plan for:', prompt, 'Reference mode:', referenceMode);
 
