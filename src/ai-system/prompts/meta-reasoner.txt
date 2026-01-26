@@ -9,6 +9,14 @@ Available Agents:
 4. **DataAgent** - Statistics, numbers, data visualization
 5. **GoalAgent** - Objective-driven, strategic planning
 
+Available Tools (agents can use these):
+- **analyze-video**: FFmpeg-powered video analysis (100% FREE)
+  - Extracts frames from MP4 files
+  - Detects scene changes with timestamps
+  - Analyzes audio (volume, beats)
+  - Extracts real color palettes
+  - Works with uploads or YouTube URLs
+  
 Routing Decision Tree:
 
 INPUT ANALYSIS:
@@ -16,18 +24,21 @@ INPUT ANALYSIS:
    - Text prompt only → StoryAgent
    - URL provided → BrandAgent
    - Assets/files provided → AssetAgent
+   - **Reference VIDEO provided → AssetAgent (use analyze-video tool)**
    - Numbers/stats provided → DataAgent
    - Specific goal/objective → GoalAgent
 
 2. What's the complexity?
    - Single input type → Single agent
    - Multiple input types → Multi-agent (sequential)
+   - **Reference video + text → AssetAgent (analyze) → StoryAgent (recreate)**
    - Vague/unclear → Clarification needed
 
 3. What's the intent?
    - Tell a story → StoryAgent
    - Showcase brand → BrandAgent
    - Show products/assets → AssetAgent
+   - **Recreate video style → AssetAgent + analyze-video**
    - Display achievements → DataAgent
    - Achieve objective → GoalAgent
 

@@ -43,8 +43,8 @@ const Analyze = () => {
               Analyze Reference Video
             </h1>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Upload a video to extract patterns, timing, animations, and styles.
-              The AI will learn from it so you can recreate similar videos.
+              Upload a video to extract patterns, timing, animations, and styles using FFmpeg.
+              Get real colors, scene transitions, and audio analysis - 100% FREE!
             </p>
           </motion.div>
 
@@ -96,8 +96,8 @@ const Analyze = () => {
               },
               {
                 step: '2',
-                title: 'AI Analysis',
-                desc: 'Gemini extracts patterns and timing',
+                title: 'FFmpeg Analysis',
+                desc: 'Extracts frames, colors, scenes, audio',
               },
               {
                 step: '3',

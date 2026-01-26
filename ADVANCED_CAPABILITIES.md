@@ -4,6 +4,14 @@
 
 Your AI video creation system now has powerful capabilities to handle complex scenarios including:
 
+### ✅ Video Analysis (FFmpeg-Powered, 100% FREE!)
+- **Reference video analysis** - Upload a video and extract its style
+- **Real color extraction** - Get actual colors from video frames
+- **Scene detection** - Precise timestamps of transitions
+- **Audio analysis** - Volume levels, beat detection
+- **Style matching** - Recreate the look and feel of any video
+- **Template cloning** - Copy structure, timing, pacing
+
 ### ✅ Data Visualization
 - **Bar charts** with animated bars
 - **Line charts** with path animation
@@ -31,6 +39,29 @@ All 4 showcase use cases are available:
 - **Captions** - TikTok-style word highlighting
 - **Screencast** - Code editor with typing
 - **Year in Review** - Stats counter animations
+
+---
+
+## 🎬 NEW: Reference Video Analysis
+
+Upload ANY video and the system will:
+1. Extract real color palette from frames
+2. Detect scene transitions with timestamps
+3. Analyze audio characteristics
+4. Extract pacing and timing
+5. Create new videos matching that style
+
+**Example:**
+```
+User: "Make a video like this [uploads apple-ad.mp4]"
+
+System:
+1. Analyzes video → Extracts colors, scene timing
+2. Detects: Clean minimal style, 3-second scenes, no audio
+3. Creates new video with same structure but your content
+```
+
+See [VIDEO_ANALYSIS_INTEGRATION.md](./VIDEO_ANALYSIS_INTEGRATION.md) for full details.
 
 ---
 

@@ -5,9 +5,31 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AnalysisResultsDisplay } from './AnalysisResultsDisplay';
 
 interface VideoAnalyzerProps {
   onAnalysisComplete?: (patternId: string) => void;
+}
+
+interface AnalysisData {
+  pattern?: {
+    colors?: string[];
+    sceneChanges?: number[];
+    duration?: number;
+    resolution?: { width: number; height: number };
+    fps?: number;
+    audio?: {
+      meanVolume?: number;
+      maxVolume?: number;
+      hasBeat?: boolean;
+      codec?: string;
+    };
+  };
+  metadata?: {
+    processTime?: number;
+    frameUrls?: string[];
+  };
+  patternId?: string;
 }
 
 export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
@@ -17,6 +39,7 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -56,29 +79,50 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
     setProgress(10);
 
     try {
-      // Upload to Supabase Storage
-      const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('reference-videos')
-        .upload(fileName, file);
+      // Convert video to base64 for FFmpeg analysis
+      const reader = new FileReader();
+      
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64 = result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
 
-      if (uploadError) throw uploadError;
-
+      const videoBase64 = await base64Promise;
       setProgress(30);
+      
       setUploading(false);
       setAnalyzing(true);
 
-      // Call edge function to analyze with AI
+      // Call edge function with base64 video for FFmpeg analysis
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-video', {
-        body: { fileName: file.name, filePath: uploadData.path }
+        body: { 
+          videoBase64,
+          videoName: file.name,
+          frameCount: 5  // Extract 5 frames for analysis
+        }
       });
 
       if (analysisError) throw analysisError;
 
       setProgress(100);
-      setAnalysisResult(analysisData.patternId);
-      toast.success('Video analyzed successfully!');
-      onAnalysisComplete?.(analysisData.patternId);
+      
+      // Store full analysis data
+      setAnalysisData(analysisData);
+      
+      // Show analysis results
+      console.log('FFmpeg Analysis Results:', analysisData);
+      console.log('Scene changes at:', analysisData.pattern?.sceneChanges);
+      console.log('Extracted colors:', analysisData.pattern?.colors);
+      console.log('Audio has beat:', analysisData.pattern?.audio?.hasBeat);
+      
+      setAnalysisResult(analysisData.patternId || 'analysis-complete');
+      toast.success('Video analyzed with FFmpeg! See results below.');
+      onAnalysisComplete?.(analysisData.patternId || 'analysis-complete');
     } catch (error) {
       console.error('Analysis error:', error);
       toast.error('Failed to analyze video. Please try again.');
@@ -92,6 +136,7 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
     setFile(null);
     setProgress(0);
     setAnalysisResult(null);
+    setAnalysisData(null);
   };
 
   return (
@@ -219,6 +264,17 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
           {uploading ? 'Uploading...' : analyzing ? 'Analyzing...' : 'Analyze Video'}
         </Button>
       </div>
+
+      {/* Analysis Results */}
+      {analysisData && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 pt-6 border-t border-border"
+        >
+          <AnalysisResultsDisplay result={analysisData} />
+        </motion.div>
+      )}
     </div>
   );
 }
