@@ -11,7 +11,8 @@ Config.setPixelFormat('yuv420p');
 Config.setCodec('h264');
 
 // Concurrency settings - adjust based on your server capacity
-// For local development, use fewer threads (automatically adjusted based on CPU cores)
+// Set to 2 for compatibility, but you may increase based on your CPU cores
+// For example: Math.max(1, os.cpus().length - 1) for optimal performance
 Config.setConcurrency(2);
 
 // Chrome/Puppeteer settings for better performance

@@ -73,7 +73,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="DynamicVideo"
         component={DynamicVideo}
-        durationInFrames={300} // 10 seconds at 30fps
+        durationInFrames={Math.round(defaultPlan.duration * 30)} // Calculate frames from duration
         fps={30}
         width={1920}
         height={1080}

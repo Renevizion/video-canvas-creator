@@ -59,6 +59,35 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- **Remotion** - For high-grade video creation and rendering
+
+## Video Rendering with Remotion
+
+This project is properly configured to create **high-grade videos** using [Remotion](https://www.remotion.dev/), a framework for creating videos programmatically with React.
+
+### Quick Start
+
+```sh
+# Preview videos in Remotion Studio
+npm run remotion:preview
+
+# Render a video to MP4
+npm run remotion:render
+
+# List all available compositions
+npm run remotion:compositions
+```
+
+For detailed documentation on video rendering, quality settings, and advanced options, see [REMOTION_GUIDE.md](./REMOTION_GUIDE.md).
+
+### Features
+
+- ✅ **Browser Preview**: Real-time video editing with `@remotion/player`
+- ✅ **Server-Side Rendering**: High-quality MP4 exports with `@remotion/cli`
+- ✅ **Optimized Configuration**: Pre-configured for best quality and performance
+- ✅ **1080p Full HD**: Default output at 1920x1080 resolution
+- ✅ **H.264 Codec**: Maximum compatibility across all platforms
+- ✅ **Dynamic Compositions**: Create videos from JSON data structures
 
 ## How can I deploy this project?
 
