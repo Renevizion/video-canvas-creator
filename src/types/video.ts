@@ -24,7 +24,7 @@ export interface ScenePattern {
 }
 
 export interface Layer {
-  type: 'text' | 'image' | 'shape' | 'video' | 'cursor';
+  type: 'text' | 'image' | 'shape' | 'video' | 'audio' | 'cursor';
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };
   style: Record<string, unknown>;
@@ -78,7 +78,7 @@ export interface PlannedScene {
 
 export interface PlannedElement {
   id: string;
-  type: 'text' | 'image' | 'shape' | 'cursor' | 'video' | 'code-editor' | 'progress-bar' | 'terminal' | 'laptop' | '3d-card';
+  type: 'text' | 'image' | 'shape' | 'cursor' | 'video' | 'audio' | 'code-editor' | 'progress-bar' | 'terminal' | 'laptop' | '3d-card';
   content: string;
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };
@@ -88,7 +88,7 @@ export interface PlannedElement {
 
 export interface AssetRequirement {
   id: string;
-  type: 'image' | 'icon' | 'background';
+  type: 'image' | 'icon' | 'background' | 'video' | 'audio';
   description: string;
   specifications: {
     width: number;
