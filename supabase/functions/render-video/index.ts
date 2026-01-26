@@ -13,83 +13,217 @@ interface CompositionConfig {
   durationInFrames: number;
 }
 
-/**
- * Wraps component code with registerRoot() for Remotion CLI compatibility.
- * Detects the main export (DynamicVideo or similar) and registers it.
- */
-function wrapWithRegisterRoot(componentCode: string, config: CompositionConfig): string {
-  const { compositionId, width, height, fps, durationInFrames } = config;
-  
-  // Check if code already has registerRoot
-  if (componentCode.includes('registerRoot')) {
-    console.log('Code already has registerRoot, returning as-is');
-    return componentCode;
-  }
-  
-  // Check if code already imports registerRoot, if not add it
-  let modifiedCode = componentCode;
-  
-  // Ensure registerRoot is imported
-  if (!componentCode.includes("registerRoot")) {
-    // Add registerRoot to existing remotion import or create new import
-    if (componentCode.includes("from 'remotion'")) {
-      // Handle both single-line and multi-line imports
-      // Match the import statement and capture what's between { and }
-      modifiedCode = componentCode.replace(
-        /import\s*\{([^}]+)\}\s*from\s*['"]remotion['"]/,
-        (_match, imports) => {
-          // Clean up the imports - remove trailing comma, whitespace, newlines
-          const cleanImports = imports
-            .split(',')
-            .map((s: string) => s.trim())
-            .filter((s: string) => s.length > 0)
-            .join(', ');
-          
-          // Check if registerRoot is already there
-          if (cleanImports.includes('registerRoot')) {
-            return `import { ${cleanImports} } from 'remotion'`;
-          }
-          return `import { ${cleanImports}, registerRoot } from 'remotion'`;
-        }
-      );
-    } else {
-      // No remotion import found, add one at the top
-      modifiedCode = `import { registerRoot, Composition } from 'remotion';\n${componentCode}`;
-    }
-  }
-  
-  // Detect the main component export - look for common patterns
-  let mainComponent = 'DynamicVideo';
-  
-  // Check for export const DynamicVideo or export function DynamicVideo
-  const exportMatch = modifiedCode.match(/export\s+(?:const|function)\s+(\w+)/);
-  if (exportMatch) {
-    mainComponent = exportMatch[1];
-  }
-  
-  // Check for default export: export default function X or export default X
-  const defaultExportMatch = modifiedCode.match(/export\s+default\s+(?:function\s+)?(\w+)/);
-  if (defaultExportMatch) {
-    mainComponent = defaultExportMatch[1];
-  }
-  
-  // Look for const DynamicVideo = () => or const DynamicVideo: React.FC
-  const componentDefMatch = modifiedCode.match(/const\s+(DynamicVideo|MyVideo|Video)\s*[=:]/);
-  if (componentDefMatch) {
-    mainComponent = componentDefMatch[1];
-  }
-  
-  console.log('Detected main component:', mainComponent);
-  
-  // Append the registerRoot call
-  const registerRootCode = `
+interface VideoPlan {
+  duration?: number;
+  fps?: number;
+  resolution?: { width?: number; height?: number };
+  scenes?: Scene[];
+  style?: {
+    colorPalette?: string[];
+    typography?: { primary?: string };
+  };
+}
 
-// Auto-generated Remotion registration
+interface Scene {
+  id: string;
+  startTime: number;
+  duration: number;
+  description?: string;
+  elements?: Element[];
+}
+
+interface Element {
+  id: string;
+  type: string;
+  content?: string;
+  position?: { x?: number; y?: number; z?: number };
+  size?: { width?: number; height?: number };
+  style?: Record<string, unknown>;
+  animation?: {
+    name?: string;
+    type?: string;
+    delay?: number;
+    duration?: number;
+  };
+}
+
+/**
+ * Generate deterministic Remotion code from a video plan.
+ * This avoids AI generation which can produce unreliable code.
+ */
+function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): string {
+  const { width, height, fps, durationInFrames } = config;
+  const colors = plan.style?.colorPalette || ['#ffffff', '#06b6d4', '#1e293b', '#0f172a'];
+  const fontFamily = plan.style?.typography?.primary || 'Inter';
+  const scenes = plan.scenes || [];
+
+  const sceneCode = scenes.map((scene, idx) => {
+    const startFrame = Math.round(scene.startTime * fps);
+    const sceneDuration = Math.round(scene.duration * fps);
+    
+    const elementsCode = (scene.elements || []).map((el, elIdx) => {
+      const delay = (el.animation?.delay || 0) + elIdx * 0.1;
+      const delayFrames = Math.round(delay * fps);
+      
+      const posX = el.position?.x ?? 50;
+      const posY = el.position?.y ?? 50;
+      const zIndex = el.position?.z ?? elIdx;
+      
+      const elStyle = el.style || {};
+      const fontSize = (elStyle.fontSize as number) || 48;
+      const fontWeight = (elStyle.fontWeight as number) || 600;
+      const color = (elStyle.color as string) || colors[0];
+      const background = (elStyle.background as string) || '';
+      
+      if (el.type === 'text') {
+        return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${textSpring_${idx}_${elIdx}})\`,
+              opacity: textSpring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+              fontFamily: '${(elStyle.fontFamily as string) || fontFamily}, system-ui, sans-serif',
+              fontSize: ${fontSize},
+              fontWeight: ${fontWeight},
+              color: '${color}',
+              textAlign: 'center',
+              maxWidth: '80%',
+              textShadow: '0 4px 30px rgba(0,0,0,0.3)',
+            }}
+          >
+            ${JSON.stringify(el.content || '')}
+          </div>`;
+      }
+      
+      if (el.type === 'image' && el.content?.startsWith('http')) {
+        return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${textSpring_${idx}_${elIdx}})\`,
+              opacity: textSpring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+            }}
+          >
+            <img
+              src="${el.content}"
+              style={{
+                maxWidth: '${el.size?.width || 200}px',
+                maxHeight: '${el.size?.height || 200}px',
+                objectFit: 'contain',
+                borderRadius: 12,
+                boxShadow: '0 15px 40px rgba(0,0,0,0.3)',
+              }}
+            />
+          </div>`;
+      }
+      
+      if (el.type === 'shape') {
+        const w = el.size?.width ? (el.size.width <= 100 ? `${el.size.width}%` : `${el.size.width}px`) : '100%';
+        const h = el.size?.height ? (el.size.height <= 100 ? `${el.size.height}%` : `${el.size.height}px`) : '100%';
+        const borderRadius = (elStyle.borderRadius as number) || 0;
+        const filter = (elStyle.filter as string) || '';
+        
+        return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: 'translate(-50%, -50%)',
+              width: '${w}',
+              height: '${h}',
+              background: '${background}',
+              borderRadius: ${borderRadius},
+              filter: '${filter}',
+              opacity: ${elStyle.opacity || 1},
+              zIndex: ${zIndex},
+            }}
+          />`;
+      }
+      
+      return '';
+    }).join('\n');
+
+    // Generate spring variables for this scene's elements
+    const springVars = (scene.elements || []).map((el, elIdx) => {
+      const delay = (el.animation?.delay || 0) + elIdx * 0.1;
+      const delayFrames = Math.round(delay * fps);
+      return `const textSpring_${idx}_${elIdx} = spring({ fps, frame: Math.max(0, sceneFrame - ${delayFrames}), config: { damping: 30, stiffness: 120, mass: 0.5 } });`;
+    }).join('\n    ');
+
+    return `
+      {/* Scene ${idx + 1}: ${scene.description || ''} */}
+      <Sequence from={${startFrame}} durationInFrames={${sceneDuration}}>
+        {(() => {
+          const sceneFrame = frame - ${startFrame};
+          ${springVars}
+          return (
+            <AbsoluteFill>
+              ${elementsCode}
+            </AbsoluteFill>
+          );
+        })()}
+      </Sequence>`;
+  }).join('\n');
+
+  return `import React from 'react';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Composition, registerRoot } from 'remotion';
+
+const DynamicVideo: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: '${colors[3] || colors[2] || '#0f172a'}', overflow: 'hidden' }}>
+      {/* Animated background gradient */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(135deg, ${colors[2] || '#1e293b'} 0%, ${colors[3] || '#0f172a'} 100%)',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '60%',
+          width: 600,
+          height: 600,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, ${colors[1] || '#06b6d4'}20 0%, transparent 70%)',
+          transform: 'translate(-50%, -50%)',
+          filter: 'blur(60px)',
+        }}
+      />
+
+      {/* Scenes */}
+      ${sceneCode}
+
+      {/* Vignette */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+    </AbsoluteFill>
+  );
+};
+
 export const RemotionRoot: React.FC = () => {
   return (
     <Composition
-      id="${compositionId}"
-      component={${mainComponent}}
+      id="DynamicVideo"
+      component={DynamicVideo}
       durationInFrames={${durationInFrames}}
       fps={${fps}}
       width={${width}}
@@ -100,8 +234,6 @@ export const RemotionRoot: React.FC = () => {
 
 registerRoot(RemotionRoot);
 `;
-
-  return modifiedCode + registerRootCode;
 }
 
 Deno.serve(async (req) => {
@@ -123,7 +255,7 @@ Deno.serve(async (req) => {
 
     console.log('Starting video render for plan:', planId);
 
-    // Get the video plan with generated code
+    // Get the video plan
     const { data: planData, error: planError } = await supabase
       .from('video_plans')
       .select('*')
@@ -134,9 +266,23 @@ Deno.serve(async (req) => {
       throw new Error("Video plan not found");
     }
 
-    if (!planData.generated_code) {
-      throw new Error("No generated code found. Please generate code first.");
-    }
+    const plan = planData.plan as VideoPlan;
+    const duration = plan?.duration || 10;
+    const fps = plan?.fps || 30;
+    const width = plan?.resolution?.width || 1920;
+    const height = plan?.resolution?.height || 1080;
+    const durationInFrames = duration * fps;
+
+    // Generate deterministic Remotion code from the plan
+    const remotionCode = generateRemotionCode(plan, {
+      compositionId: 'DynamicVideo',
+      width,
+      height,
+      fps,
+      durationInFrames,
+    });
+
+    console.log('Generated Remotion code for rendering');
 
     // Update status to rendering
     await supabase
@@ -144,40 +290,15 @@ Deno.serve(async (req) => {
       .update({ status: 'rendering' })
       .eq('id', planId);
 
-    const plan = planData.plan as {
-      duration?: number;
-      fps?: number;
-      resolution?: { width?: number; height?: number };
-    };
-    const duration = plan?.duration || 10;
-    const fps = plan?.fps || 30;
-    const width = plan?.resolution?.width || 1920;
-    const height = plan?.resolution?.height || 1080;
-
     // If Railway URL is configured, send job to Railway
     if (railwayUrl) {
       console.log('Sending render job to Railway:', railwayUrl);
       
-      // Build webhook callback URL
       const webhookUrl = `${supabaseUrl}/functions/v1/render-webhook`;
       
-      const durationInFrames = duration * fps;
-      const componentCode = planData.generated_code as string;
-      
-      // Wrap the component code with registerRoot() for Remotion CLI compatibility
-      // The generated code exports a DynamicVideo component - we need to register it
-      const wrappedCode = wrapWithRegisterRoot(componentCode, {
-        compositionId: 'DynamicVideo',
-        width,
-        height,
-        fps,
-        durationInFrames,
-      });
-      
-      // Send render request to Railway (fire-and-forget style)
       const renderPayload = {
         planId,
-        code: wrappedCode,
+        code: remotionCode,
         plan: planData.plan,
         composition: {
           id: 'DynamicVideo',
@@ -189,8 +310,7 @@ Deno.serve(async (req) => {
         webhookUrl,
       };
 
-      // Fire-and-forget: send to Railway without blocking
-      // Use globalThis.EdgeRuntime if available, otherwise just fire the promise
+      // Fire-and-forget: send to Railway
       const sendToRailway = async () => {
         try {
           const response = await fetch(`${railwayUrl}/render`, {
@@ -211,7 +331,7 @@ Deno.serve(async (req) => {
               .eq('id', planId);
           } else {
             console.log('Railway render job accepted');
-            await response.text(); // Consume response body
+            await response.text();
           }
         } catch (error) {
           console.error('Failed to reach Railway:', error);
@@ -225,11 +345,9 @@ Deno.serve(async (req) => {
         }
       };
 
-      // Check if EdgeRuntime is available (Supabase Edge Functions)
       if (typeof globalThis !== 'undefined' && 'EdgeRuntime' in globalThis) {
         (globalThis as unknown as { EdgeRuntime: { waitUntil: (p: Promise<void>) => void } }).EdgeRuntime.waitUntil(sendToRailway());
       } else {
-        // Fallback: fire and don't await
         sendToRailway();
       }
 
@@ -237,58 +355,24 @@ Deno.serve(async (req) => {
         success: true,
         planId,
         status: 'rendering',
-        message: 'Video render job sent to cloud renderer. Check back for status updates.',
+        message: 'Video render job sent to cloud renderer.',
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Fallback: No Railway configured - provide local render instructions
-    const filename = `video-${planId}-${Date.now()}.mp4`;
-    
-    const renderInfo = {
-      status: 'ready_for_local_render',
-      message: 'No cloud renderer configured. Download the code and run locally for full quality render.',
-      code: planData.generated_code,
-      settings: {
-        duration,
-        fps,
-        width,
-        height,
-      },
-      command: `npx remotion render src/Video.tsx MyVideo out/${filename} --props='${JSON.stringify({ plan: planData.plan })}'`,
-    };
-
-    // Update the plan with render info
-    const { error: updateError } = await supabase
-      .from('video_plans')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        preview_url: JSON.stringify(renderInfo),
-      })
-      .eq('id', planId);
-
-    if (updateError) {
-      console.error('Failed to update plan:', updateError);
-      throw updateError;
-    }
-
-    console.log('Render preparation completed for plan:', planId);
-
+    // Fallback: No Railway configured
     return new Response(JSON.stringify({
-      success: true,
-      planId,
-      renderInfo,
-      message: 'Video render prepared. Download the code to render locally.',
+      success: false,
+      error: 'No cloud renderer configured. Set RAILWAY_RENDER_URL.',
     }), {
+      status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error) {
     console.error("Error in render-video:", error);
     
-    // Try to update status to failed
     try {
       const body = await req.clone().json().catch(() => ({}));
       const planId = body?.planId;
