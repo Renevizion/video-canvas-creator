@@ -20,11 +20,16 @@ export function useGenerateVideoPlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ prompt, duration, style }: { prompt: string; duration: number; style: string }) =>
-      generateVideoPlan(prompt, duration, style),
+    mutationFn: ({ prompt, duration, style, brandData }: { 
+      prompt: string; 
+      duration: number; 
+      style: string;
+      brandData?: Record<string, unknown>;
+    }) =>
+      generateVideoPlan(prompt, duration, style, brandData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['video-plans'] });
-      toast.success('Video plan generated successfully!');
+      toast.success('Video plan generated!');
     },
     onError: (error) => {
       console.error('Failed to generate video plan:', error);

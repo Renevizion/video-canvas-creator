@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, duration, style } = await req.json();
+    const { prompt, duration, style, brandData } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -28,13 +28,54 @@ serve(async (req) => {
       'nature': ['#14532d', '#166534', '#22c55e', '#84cc16'],
     };
 
-    const colors = styleColors[style] || styleColors['dark-web'];
+    // Use brand colors if provided, otherwise use style preset
+    let colors = styleColors[style] || styleColors['dark-web'];
+    let brandContext = '';
+    
+    if (brandData) {
+      colors = [
+        brandData.colors?.background || colors[0],
+        brandData.colors?.secondary || colors[1],
+        brandData.colors?.primary || colors[2],
+        brandData.colors?.accent || colors[3],
+      ];
+      
+      brandContext = `
+BRAND CONTEXT (use this for the video):
+- Company/Title: ${brandData.title || 'Unknown'}
+- Primary Color: ${brandData.colors?.primary || '#3b82f6'}
+- Secondary Color: ${brandData.colors?.secondary || '#1e293b'}
+- Accent Color: ${brandData.colors?.accent || '#06b6d4'}
+- Font: ${brandData.fonts?.primary || 'Inter'}
+- Headlines: ${brandData.copywriting?.headlines?.slice(0, 3).join(' | ') || 'N/A'}
+- CTAs: ${brandData.copywriting?.ctas?.slice(0, 2).join(' | ') || 'Get Started'}
+- Logo URL: ${brandData.logo || 'none'}
+- Screenshot available: ${brandData.screenshot ? 'yes' : 'no'}
 
-    const systemPrompt = `You are an expert video production planner. Create detailed, production-ready video plans.
+Use these brand elements in the video. Match the color scheme exactly.
+`;
+    }
 
-IMPORTANT: Return ONLY valid JSON, no markdown, no explanations.
+    const systemPrompt = `You are an expert video production planner specializing in CINEMATIC, high-quality commercial videos.
+${brandContext}
+CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 
-The JSON must follow this EXACT structure:
+STYLE REQUIREMENTS - Create visually STUNNING videos like professional motion graphics:
+- Use dramatic entrances (scale from 0, slide from off-screen, fade with blur)
+- Layer multiple elements with staggered timing for depth
+- Include animated backgrounds with gradients and floating orbs
+- Use 3D perspective elements for tech products
+- Add micro-animations (pulse, float, glow) for visual interest
+- Create smooth scene transitions
+
+ADVANCED ELEMENT TYPES (USE THESE - not basic shapes):
+1. "code-editor" - Animated code in a 3D laptop. styleType: "code-editor", content: code snippet
+2. "terminal" - Command line with typing effect. styleType: "terminal", content: commands
+3. "progress" - Animated progress bar. styleType: "progress", style.progress: 0-100
+4. "3d-card" - Glassmorphic perspective card. styleType: "3d-card"
+5. "laptop-mockup" - 3D laptop frame. styleType: "laptop-mockup"
+
+JSON STRUCTURE:
 {
   "duration": ${duration},
   "fps": 30,
@@ -44,79 +85,51 @@ The JSON must follow this EXACT structure:
       "id": "scene_1",
       "startTime": 0,
       "duration": 3,
-      "description": "Opening scene description",
+      "description": "Cinematic opening with logo reveal",
       "elements": [
         {
           "id": "bg_1",
           "type": "shape",
-          "content": "Background gradient",
+          "content": "Animated gradient background",
           "position": { "x": 50, "y": 50, "z": 0 },
           "size": { "width": 100, "height": 100 },
           "style": { "background": "linear-gradient(135deg, ${colors[0]}, ${colors[1]})" },
-          "animation": {
-            "name": "fadeIn",
-            "type": "fade",
-            "duration": 1,
-            "easing": "ease-out",
-            "delay": 0,
-            "properties": { "opacity": [0, 1] }
-          }
+          "animation": { "name": "fadeIn", "type": "fade", "duration": 1, "easing": "ease-out", "delay": 0, "properties": { "opacity": [0, 1] } }
         },
         {
           "id": "title_1",
           "type": "text",
-          "content": "Your Title Here",
-          "position": { "x": 50, "y": 40, "z": 1 },
+          "content": "Your Headline",
+          "position": { "x": 50, "y": 40, "z": 2 },
           "size": { "width": 80, "height": 20 },
-          "style": { "fontSize": 64, "fontWeight": 700, "color": "${colors[3]}" },
-          "animation": {
-            "name": "slideUp",
-            "type": "slide",
-            "duration": 0.8,
-            "easing": "ease-out",
-            "delay": 0.5,
-            "properties": { "y": [100, 40] }
-          }
+          "style": { "fontSize": 72, "fontWeight": 800, "color": "${colors[3]}" },
+          "animation": { "name": "popIn", "type": "scale", "duration": 0.8, "easing": "ease-out", "delay": 0.3, "properties": { "scale": [0.5, 1] } }
         }
       ],
       "animations": [],
       "transition": { "type": "fade", "duration": 0.3 }
     }
   ],
-  "requiredAssets": [
-    {
-      "id": "asset_1",
-      "type": "background",
-      "description": "Main background image",
-      "specifications": { "width": 1920, "height": 1080, "style": "${style}" },
-      "providedByUser": false
-    }
-  ],
+  "requiredAssets": [],
   "style": {
     "colorPalette": ${JSON.stringify(colors)},
-    "typography": { "primary": "Inter", "secondary": "JetBrains Mono", "sizes": { "h1": 64, "h2": 48, "body": 18 } },
+    "typography": { "primary": "${brandData?.fonts?.primary || 'Inter'}", "secondary": "JetBrains Mono", "sizes": { "h1": 72, "h2": 48, "body": 18 } },
     "spacing": 24,
     "borderRadius": 16
   }
 }
 
-ADVANCED ELEMENT TYPES (use these for tech/product demos):
-- "code-editor": Shows animated code typing in a 3D laptop mockup. Use styleType: "code-editor" and content with code snippet. Great for dev tools, APIs, coding tutorials.
-- "terminal": Animated terminal/command line with typing effect. Use styleType: "terminal" and content with commands. Perfect for CLI tools, installations.
-- "progress": Animated progress bar with percentage. Use styleType: "progress" and style.progress (0-100). Good for loading states, build progress.
-- "3d-card": Content in a 3D perspective card with glassmorphism. Use styleType: "3d-card". Great for feature highlights.
-- "laptop-mockup": 3D laptop frame to wrap other content. Use styleType: "laptop-mockup".
-
-Rules:
-1. Create ${Math.ceil(duration / 3)} to ${Math.ceil(duration / 2)} scenes
-2. Each scene should be 2-4 seconds
-3. Include varied element types: text, shape, cursor, image, AND advanced types (code-editor, terminal, progress, 3d-card) where appropriate
-4. Add proper animations with delays for staggered effects
-5. Use the color palette: ${colors.join(', ')}
-6. Make it visually interesting with movement and transitions
-7. For tech/dev product demos, USE code-editor and terminal elements
-8. For SaaS/app demos, USE progress bars and 3d-card elements
-9. End with a call-to-action scene`;
+MANDATORY RULES:
+1. Create ${Math.ceil(duration / 3)} to ${Math.ceil(duration / 2)} CINEMATIC scenes
+2. Each scene: 2-4 seconds with DRAMATIC animations
+3. ALWAYS use advanced elements (code-editor, terminal, 3d-card, progress) for tech demos
+4. Use proper animation delays (0.2s stagger between elements)
+5. Color palette: ${colors.join(', ')}
+6. Scene 1: Hero intro with main headline and dramatic entrance
+7. Final scene: Strong CTA with contact info or button
+8. For SaaS/tech: Include at least one code-editor or terminal element
+9. Text animations: Use "popIn" or "slideUp" with scale, never just fade
+10. Background: Use gradient backgrounds, not solid colors`;
 
     console.log('Generating video plan for:', prompt);
 

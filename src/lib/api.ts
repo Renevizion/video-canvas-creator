@@ -41,9 +41,9 @@ export async function fetchPatterns(): Promise<StoredPattern[]> {
   }));
 }
 
-export async function generateVideoPlan(prompt: string, duration: number, style: string) {
+export async function generateVideoPlan(prompt: string, duration: number, style: string, brandData?: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke('generate-video-plan', {
-    body: { prompt, duration, style },
+    body: { prompt, duration, style, brandData },
   });
 
   if (error) throw error;
