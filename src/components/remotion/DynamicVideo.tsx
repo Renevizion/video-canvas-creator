@@ -28,6 +28,9 @@ import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 import { getLength, getPointAtLength, evolvePath } from '@remotion/paths';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard, AnimatedText, PhoneMockup, LogoGrid, DataVisualization } from './elements';
+import { AudioVisualization } from './elements/AudioVisualization';
+import { ColorGrading, FilmGrain, Vignette, Bloom } from './elements/ColorGrading';
+import { ResponsiveContainer, type AspectRatio } from './elements/AspectRatioSupport';
 
 interface DynamicVideoProps {
   plan: VideoPlan;
@@ -307,6 +310,15 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
   const colors = plan.style?.colorPalette || ['#ffffff', '#06b6d4', '#1e293b', '#0f172a'];
   const globalBg = colors[3] || colors[2] || '#0f172a';
 
+  // NEW: Extract global video effects from plan.style
+  const videoStyle = plan.style as any;
+  const aspectRatio = videoStyle?.aspectRatio as AspectRatio | undefined;
+  const colorGradingPreset = videoStyle?.colorGrading as 'cinematic' | 'vintage' | 'vibrant' | 'moody' | 'pastel' | 'noir' | 'sunset' | 'cool' | 'natural' | undefined;
+  const filmGrainIntensity = videoStyle?.filmGrain as number | undefined;
+  const vignetteIntensity = videoStyle?.vignette as number | undefined;
+  const bloomIntensity = videoStyle?.bloom as number | undefined;
+  const safeArea = videoStyle?.safeArea as boolean | undefined;
+
   // No scenes placeholder
   if (!plan?.scenes?.length) {
     return (
@@ -318,128 +330,78 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
     );
   }
 
-  // Use simple Sequence-based rendering for better compatibility
-  const useSimpleRendering = true; // Toggle for debugging
-
-  if (useSimpleRendering) {
-    return (
-      <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
-        {/* Animated background gradient */}
-        <AnimatedBackground colors={colors} />
-        
-        {/* Render scenes with simple Sequences */}
-        {plan.scenes.map((scene, index) => {
-          const startFrame = Math.round(scene.startTime * fps);
-          const durationFrames = Math.round(scene.duration * fps);
-          
-          return (
-            <Sequence
-              key={scene.id}
-              from={startFrame}
-              durationInFrames={durationFrames}
-            >
-              <SceneRenderer 
-                scene={scene} 
-                globalStyle={plan.style} 
-                sceneIndex={index}
-                totalScenes={plan.scenes.length}
-              />
-            </Sequence>
-          );
-        })}
-        
-        {/* Subtle vignette overlay */}
-        <Vignette />
-      </AbsoluteFill>
-    );
-  }
-
-  return (
+  // Render function for the actual video content
+  const renderVideoContent = () => (
     <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
       {/* Animated background gradient */}
       <AnimatedBackground colors={colors} />
       
-      {/* Render scenes with TransitionSeries */}
-      <TransitionSeries>
-        {plan.scenes.flatMap((scene, index) => {
-          const durationFrames = Math.round(scene.duration * fps);
-          
-          // Determine transition based on scene.transition property
-          const transitionType = scene.transition?.type || 'fade';
-          const transitionDuration = scene.transition?.duration || 0.3;
-          
-          let transition;
-          switch (transitionType) {
-            case 'slide':
-              transition = slide({ direction: 'from-right' });
-              break;
-            case 'wipe':
-              transition = wipe({ direction: 'from-right' });
-              break;
-            case 'zoom':
-              transition = fade(); // Use fade for zoom (can be extended with custom transition)
-              break;
-            case 'cut':
-              // For cut transitions, use very short fade
-              transition = fade();
-              break;
-            default:
-              transition = fade();
-          }
-
-          const elements: React.ReactNode[] = [
-            <TransitionSeries.Sequence 
-              key={scene.id}
-              durationInFrames={durationFrames}
-            >
-              <SceneRenderer 
-                scene={scene} 
-                globalStyle={plan.style} 
-                sceneIndex={index}
-                totalScenes={plan.scenes.length}
-              />
-            </TransitionSeries.Sequence>
-          ];
-
-          // Add transition AFTER the sequence (between scenes)
-          if (index < plan.scenes.length - 1) {
-            const nextScene = plan.scenes[index + 1];
-            const nextDurationFrames = Math.round(nextScene.duration * fps);
-            
-            // Calculate transition duration in frames
-            let transitionDurationFrames = transitionType === 'cut' 
-              ? Math.round(fps * 0.1) // Very quick for cuts
-              : Math.round(fps * transitionDuration);
-            
-            // Ensure transition doesn't exceed either adjacent sequence duration
-            // Rule: Transition must be <= min(current sequence, next sequence)
-            const maxAllowedDuration = Math.min(durationFrames, nextDurationFrames);
-            transitionDurationFrames = Math.min(transitionDurationFrames, Math.floor(maxAllowedDuration * 0.9)); // Use 90% to be safe
-            
-            const timing = transitionType === 'cut' 
-              ? linearTiming({ durationInFrames: transitionDurationFrames })
-              : springTiming({ 
-                  config: { damping: 200, stiffness: 100 },
-                  durationInFrames: transitionDurationFrames
-                });
-            
-            elements.push(
-              <TransitionSeries.Transition
-                key={`${scene.id}-transition`}
-                presentation={transition}
-                timing={timing}
-              />
-            );
-          }
-
-          return elements;
-        })}
-      </TransitionSeries>
+      {/* Render scenes with simple Sequences */}
+      {plan.scenes.map((scene, index) => {
+        const startFrame = Math.round(scene.startTime * fps);
+        const durationFrames = Math.round(scene.duration * fps);
+        
+        return (
+          <Sequence
+            key={scene.id}
+            from={startFrame}
+            durationInFrames={durationFrames}
+          >
+            <SceneRenderer 
+              scene={scene} 
+              globalStyle={plan.style} 
+              sceneIndex={index}
+              totalScenes={plan.scenes.length}
+            />
+          </Sequence>
+        );
+      })}
       
-      {/* Subtle vignette overlay */}
-      <Vignette />
+      {/* Subtle vignette overlay (always on by default) */}
+      <Vignette intensity={vignetteIntensity !== undefined ? vignetteIntensity : 0.15} />
     </AbsoluteFill>
   );
+
+  // Wrap with aspect ratio container if specified
+  const withAspectRatio = (content: React.ReactNode) => {
+    if (aspectRatio) {
+      return (
+        <ResponsiveContainer 
+          aspectRatio={aspectRatio} 
+          safeArea={safeArea}
+          backgroundColor={globalBg}
+        >
+          {content}
+        </ResponsiveContainer>
+      );
+    }
+    return content;
+  };
+
+  // Wrap with color grading if specified
+  const withColorGrading = (content: React.ReactNode) => {
+    if (colorGradingPreset) {
+      return (
+        <ColorGrading preset={colorGradingPreset}>
+          {content}
+          {filmGrainIntensity !== undefined && filmGrainIntensity > 0 && (
+            <FilmGrain intensity={filmGrainIntensity} />
+          )}
+          {vignetteIntensity !== undefined && vignetteIntensity > 0 && (
+            <Vignette intensity={vignetteIntensity} />
+          )}
+          {bloomIntensity !== undefined && bloomIntensity > 0 && (
+            <Bloom intensity={bloomIntensity} />
+          )}
+        </ColorGrading>
+      );
+    }
+    return content;
+  };
+
+  // Apply all wrappers: aspectRatio -> colorGrading -> content
+  return withAspectRatio(withColorGrading(renderVideoContent())) as React.ReactElement;
+
 };
 
 // ============================================================================
@@ -929,7 +891,28 @@ const ElementRenderer: React.FC<{
   // NEW: Showcase element support for reusable components
   // These can be used directly in video plans by setting element.type or keywords in content
   
-  // Music Visualization bars
+  // REAL Audio Visualization using @remotion/media-utils
+  if (element.type === 'audio-visualization' || element.type === 'real-audio-viz' || styleType === 'real-audio' || content.includes('real audio visualization')) {
+    const audioSrc = elementStyle?.audioSrc as string || elementStyle?.src as string || '';
+    const visualizationType = elementStyle?.visualizationType as 'bars' | 'waveform' | 'circular' | 'spectrum' || 'bars';
+    const numberOfSamples = elementStyle?.numberOfSamples as number || 64;
+    const color = elementStyle?.color as string || colors[1] || '#3b82f6';
+    
+    if (audioSrc) {
+      return (
+        <div style={baseStyle}>
+          <AudioVisualization
+            audioSrc={audioSrc}
+            visualizationType={visualizationType}
+            numberOfSamples={numberOfSamples}
+            color={color}
+          />
+        </div>
+      );
+    }
+  }
+  
+  // Music Visualization bars (simulated)
   if (element.type === 'music-visualization' || styleType === 'music-bars' || content.includes('music visualization') || content.includes('audio bars')) {
     // Render audio visualization bars
     const bars = 64;
