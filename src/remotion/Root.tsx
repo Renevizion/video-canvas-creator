@@ -25,6 +25,13 @@ import {
   EffectsStackDemo,
   BeforeAfterDemo,
 } from '../components/remotion/elements/ColorGrading';
+import {
+  ModernMusicVisualization,
+  ModernCaptions,
+  ModernYearInReview,
+  ModernScreencast,
+  ModernRenderProgress,
+} from '../components/remotion/showcases/ModernShowcases';
 
 // Default video plan for testing
 const defaultPlan: VideoPlan = {
