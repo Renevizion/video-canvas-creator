@@ -111,8 +111,8 @@ export const SceneBreakdown: React.FC<SceneBreakdownProps> = ({ videoPlan }) => 
                 <h4 className="font-semibold text-sm mb-1">Production Analysis</h4>
                 <p className="text-sm text-muted-foreground">
                   This video was generated using our <span className="font-semibold text-foreground">sophisticated production system</span>, 
-                  based on complete analysis of {enabledFeatures.length === 4 ? 'all 4' : enabledFeatures.length} advanced cinematography 
-                  techniques from professional reference videos.
+                  which automatically applies {enabledFeatures.length === 4 ? 'all 4' : enabledFeatures.length} advanced cinematography 
+                  techniques to every video.
                 </p>
               </div>
             </div>

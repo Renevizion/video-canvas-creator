@@ -9,7 +9,7 @@
 import { generateSophisticatedVideo } from './src/services/SophisticatedVideoGenerator.ts';
 
 console.log('🧪 Testing Sophisticated Video Generation System\n');
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 
 async function testSophisticatedGeneration() {
   const testCases = [
