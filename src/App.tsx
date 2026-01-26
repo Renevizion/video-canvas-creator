@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Analyze from "./pages/Analyze";
 import Create from "./pages/Create";
 import Patterns from "./pages/Patterns";
+import PatternDetail from "./pages/PatternDetail";
 import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Editor from "./pages/Editor";
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/analyze" element={<Analyze />} />
           <Route path="/create" element={<Create />} />
           <Route path="/patterns" element={<Patterns />} />
+          <Route path="/patterns/:id" element={<PatternDetail />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/editor/:id" element={<Editor />} />
