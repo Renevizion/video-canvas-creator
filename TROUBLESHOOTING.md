@@ -21,9 +21,10 @@ Backend Render Service → ❌ FAILS HERE - missing packages
 
 ### Step 1: Locate Your Backend Render Service
 This is **NOT** this repository. It's a separate Node.js server, such as:
-- `Renevizion/remorender` repository on GitHub
+- A separate repository like `your-org/your-render-service` on GitHub
 - Your Railway deployment
 - Your custom render server
+- Example: `Renevizion/remorender` (if using that setup)
 
 ### Step 2: Add Missing Packages
 In your **backend render service** (not this repo), update `package.json`:

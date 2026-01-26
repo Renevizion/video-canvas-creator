@@ -76,11 +76,15 @@ Your backend render service MUST have all these packages installed:
 ### 1. Clone/Create Your Backend Render Service
 
 ```bash
-# If using the Renevizion/remorender repository
-git clone https://github.com/Renevizion/remorender.git
-cd remorender
+# If you have an existing render service repository
+git clone https://github.com/YOUR_ORG/YOUR_RENDER_SERVICE.git
+cd YOUR_RENDER_SERVICE
 
-# Or create a new directory
+# Example: If using Renevizion/remorender
+# git clone https://github.com/Renevizion/remorender.git
+# cd remorender
+
+# Or create a new directory for your render service
 mkdir video-render-service
 cd video-render-service
 npm init -y

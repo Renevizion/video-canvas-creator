@@ -86,10 +86,17 @@ for (const [pkg, minVersion] of Object.entries(REQUIRED_PACKAGES)) {
       require.resolve(pkg);
       installed.push(pkg);
       console.log(`✅ ${pkg} - ${deps[pkg]}`);
-    } catch (e) {
+    } catch (error) {
       // Package in package.json but not in node_modules
-      missing.push(pkg);
-      console.log(`⚠️  ${pkg} - in package.json but not installed (run npm install)`);
+      // This happens when package.json lists it but npm install hasn't been run
+      if (error.code === 'MODULE_NOT_FOUND') {
+        missing.push(pkg);
+        console.log(`⚠️  ${pkg} - in package.json but not installed (run npm install)`);
+      } else {
+        // Some other error (permissions, corrupted install, etc.)
+        missing.push(pkg);
+        console.log(`⚠️  ${pkg} - error resolving: ${error.message}`);
+      }
     }
   } else {
     // Package not in package.json
@@ -128,15 +135,15 @@ if (missing.length > 0) {
 console.log('\n✅ All required packages are installed!');
 console.log('   Your backend render service is ready.\n');
 
-// Check node_modules size
+// Check if node_modules exists
 try {
   const nodeModulesPath = path.join(process.cwd(), 'node_modules');
   if (fs.existsSync(nodeModulesPath)) {
     console.log('💡 Tip: Make sure node_modules is deployed with your backend');
     console.log('   (Railway auto-installs packages, but other platforms may need configuration)\n');
   }
-} catch (e) {
-  // Ignore
+} catch (error) {
+  // Ignore errors checking node_modules
 }
 
 process.exit(0);
