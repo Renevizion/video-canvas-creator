@@ -3,8 +3,6 @@ import {
   AbsoluteFill, 
   useCurrentFrame, 
   useVideoConfig, 
-  interpolate,
-  spring,
 } from 'remotion';
 import { ProgressBar } from '../elements/ProgressBar';
 

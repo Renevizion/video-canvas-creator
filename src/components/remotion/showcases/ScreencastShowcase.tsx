@@ -7,7 +7,6 @@ import {
   spring,
 } from 'remotion';
 import { CodeEditor } from '../elements/CodeEditor';
-import { Laptop3D } from '../elements/Laptop3D';
 
 interface ScreencastShowcaseProps {
   code?: string;
