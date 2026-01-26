@@ -27,7 +27,7 @@ import { Trail } from '@remotion/motion-blur';
 import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 import { getLength, getPointAtLength, evolvePath } from '@remotion/paths';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
-import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard, AnimatedText } from './elements';
+import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard, AnimatedText, PhoneMockup, LogoGrid, DataVisualization } from './elements';
 
 interface DynamicVideoProps {
   plan: VideoPlan;
@@ -903,6 +903,21 @@ const ElementRenderer: React.FC<{
   
   if (styleType === '3d-card' || content.includes('3d card') || content.includes('perspective card')) {
     return wrapWithMotionBlur(<Perspective3DCard element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // Phone mockup / device frame
+  if (element.type === 'phone-mockup' || styleType === 'phone' || styleType === 'iphone' || content.includes('phone') || content.includes('iphone') || content.includes('device mockup')) {
+    return wrapWithMotionBlur(<PhoneMockup element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // Logo grid with scrolling/alignment
+  if (element.type === 'logo-grid' || styleType === 'logos' || content.includes('logo grid') || content.includes('company logos')) {
+    return wrapWithMotionBlur(<LogoGrid element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // Data visualization (charts)
+  if (element.type === 'data-viz' || element.type === 'chart' || styleType === 'chart' || content.includes('bar chart') || content.includes('line chart') || content.includes('pie chart')) {
+    return wrapWithMotionBlur(<DataVisualization element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
   // Check for animated text (character-by-character reveal)
