@@ -65,6 +65,67 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
         </div>
       )}
 
+      {/* Image Source and AI Generation */}
+      {element.type === 'image' && (
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs text-muted-foreground">Image URL or Description</Label>
+            <Input
+              value={element.content || ''}
+              onChange={(e) => onUpdate({ content: e.target.value })}
+              className="mt-1"
+              placeholder="https://... or describe image for AI generation"
+            />
+            <p className="text-[10px] text-muted-foreground/70 mt-1">
+              * Enter URL for existing image, or description to generate with AI
+            </p>
+          </div>
+          
+          {/* Image Style for AI Generation */}
+          {element.content && !element.content.startsWith('http') && (
+            <div>
+              <Label className="text-xs text-muted-foreground">AI Image Style</Label>
+              <Select
+                value={(style.imageStyle as string) || 'photorealistic'}
+                onValueChange={(value) => onUpdate({ style: { ...style, imageStyle: value } })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                  <SelectItem value="digital-art">Digital Art</SelectItem>
+                  <SelectItem value="illustration">Illustration</SelectItem>
+                  <SelectItem value="3d-render">3D Render</SelectItem>
+                  <SelectItem value="anime">Anime/Manga</SelectItem>
+                  <SelectItem value="watercolor">Watercolor</SelectItem>
+                  <SelectItem value="sketch">Sketch/Drawing</SelectItem>
+                  <SelectItem value="abstract">Abstract</SelectItem>
+                  <SelectItem value="minimalist">Minimalist</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Image Preview */}
+          {element.content && element.content.startsWith('http') && (
+            <div className="mt-2">
+              <Label className="text-xs text-muted-foreground mb-2 block">Preview</Label>
+              <div className="aspect-video bg-muted/30 rounded-lg overflow-hidden">
+                <img 
+                  src={element.content} 
+                  alt="Preview" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Position */}
       <div className="grid grid-cols-2 gap-3">
         <div>

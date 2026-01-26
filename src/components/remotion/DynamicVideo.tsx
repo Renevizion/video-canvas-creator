@@ -11,7 +11,6 @@ import { measureText } from '@remotion/layout-utils';
 import { loadFont } from '@remotion/google-fonts/Inter';
 import { Trail } from '@remotion/motion-blur';
 import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
-import { evolvePath, getLength, getPointAtLength } from '@remotion/paths';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
 
