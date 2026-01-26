@@ -471,12 +471,13 @@ const ElementRenderer: React.FC<{
   const needsMotionBlur = animation && [
     'slideInLeft', 'slideInRight', 'slideInUp', 'slideInDown',
     'rotate', 'spin'
-  ].includes(animation.pattern as string);
+  ].includes(animation.name || '');
   
   // Wrapper function to optionally add motion blur
+  // Trail requires: layers (number of ghost layers), lagInFrames (delay between layers), trailOpacity (0-1)
   const wrapWithMotionBlur = (content: React.ReactNode) => {
     if (needsMotionBlur) {
-      return <Trail samples={5}>{content}</Trail>;
+      return <Trail layers={5} lagInFrames={2} trailOpacity={0.5}>{content}</Trail>;
     }
     return content;
   };

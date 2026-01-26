@@ -4,13 +4,23 @@
  * This is future-proof - it automatically adapts to new features without manual updates
  */
 
-import type { VideoPlan, PlannedElement, AnimationPattern } from '@/types/video';
+import type { VideoPlan, AnimationPattern } from '@/types/video';
+
+/**
+ * Package configuration interface
+ */
+interface PackageConfig {
+  package: string;
+  imports: string[];
+  alwaysInclude?: boolean;
+  condition?: (plan: VideoPlan) => boolean;
+}
 
 /**
  * Available Remotion package imports
  * Add new packages here and they'll be automatically included when needed
  */
-const REMOTION_PACKAGES = {
+const REMOTION_PACKAGES: Record<string, PackageConfig> = {
   // Core Remotion
   core: {
     package: 'remotion',
@@ -22,7 +32,7 @@ const REMOTION_PACKAGES = {
   transitions: {
     package: '@remotion/transitions',
     imports: ['TransitionSeries', 'linearTiming', 'springTiming'],
-    condition: (plan: VideoPlan) => plan.scenes.length > 1 || plan.scenes.some(s => s.transition),
+    condition: (plan: VideoPlan) => plan.scenes.length > 1 || plan.scenes.some(s => s.transition !== null),
   },
   transitionFade: {
     package: '@remotion/transitions/fade',
@@ -136,8 +146,8 @@ function hasAnimation(plan: VideoPlan, patterns: string[]): boolean {
       const animation = el.animation as AnimationPattern | undefined;
       if (!animation) return false;
       
-      const animPattern = (animation.pattern || animation.name || '').toLowerCase();
-      return patterns.some(p => animPattern.includes(p.toLowerCase()));
+      const animName = (animation.name || '').toLowerCase();
+      return patterns.some(p => animName.includes(p.toLowerCase()));
     })
   );
 }
@@ -287,8 +297,8 @@ export function getPlanFeatureSummary(plan: VideoPlan): {
       
       const animation = element.animation as AnimationPattern | undefined;
       if (animation) {
-        const pattern = animation.pattern || animation.name || 'unknown';
-        animationTypes.add(pattern);
+        const animName = animation.name || 'unknown';
+        animationTypes.add(animName);
       }
     }
     
@@ -335,5 +345,4 @@ export function ensureRemotionImports(code: string, plan: VideoPlan): string {
   const after = code.slice(insertIndex);
   
   return before + requiredImports + '\n' + after;
-}
 }

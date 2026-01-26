@@ -267,12 +267,10 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
       <div className="pt-4 border-t border-border/50">
         <Label className="text-xs text-muted-foreground">Animation Pattern</Label>
         <Select
-          value={animation?.pattern || 'fadeIn'}
+          value={animation?.name || 'fadeIn'}
           onValueChange={(value) =>
             onUpdate({
               animation: {
-                ...animation,
-                pattern: value,
                 type: value.includes('slide') ? 'slide' : value.includes('scale') || value.includes('pop') ? 'scale' : value.includes('rotate') ? 'rotate' : 'fade',
                 duration: animation?.duration || 0.5,
                 delay: animation?.delay || 0,

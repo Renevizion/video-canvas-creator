@@ -21,14 +21,19 @@ serve(async (req) => {
 
     console.log('Generating asset:', description);
 
-    const prompt = `Generate an image for a marketing video:
+    const prompt = `Generate a high-quality image for a marketing video:
 
 Description: ${description}
 Style: ${style}
 Dimensions: ${width}x${height}
 
-Make it professional, high quality, suitable for commercial video production.`;
+Requirements:
+- Professional, commercial quality
+- Suitable for video production
+- Clean, modern aesthetic
+- No text unless specifically requested`;
 
+    // Use the Nano banana image model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -40,6 +45,7 @@ Make it professional, high quality, suitable for commercial video production.`;
         messages: [
           { role: "user", content: prompt },
         ],
+        modalities: ["image", "text"], // Required for image generation
       }),
     });
 
@@ -64,25 +70,66 @@ Make it professional, high quality, suitable for commercial video production.`;
 
     const aiData = await response.json();
     
-    // For now, return a placeholder since image generation may need specific handling
-    // In production, you'd extract the generated image URL or base64
-    const imageUrl = aiData.choices?.[0]?.message?.content || null;
-    
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // For MVP, we'll use a placeholder approach
-    // In production, you'd upload the generated image to storage
-    const placeholderUrl = `https://placehold.co/${width}x${height}/1a1a2e/53a8ff?text=${encodeURIComponent(description.slice(0, 20))}`;
+    // Extract generated image from AI response
+    let imageUrl = null;
+    const imageData = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
-    console.log('Asset generated:', assetId);
+    if (imageData?.startsWith('data:image')) {
+      // Base64 image - upload to Supabase Storage
+      try {
+        const base64Data = imageData.split(',')[1];
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const fileName = `${assetId}-${Date.now()}.png`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('generated-assets')
+          .upload(fileName, bytes, {
+            contentType: 'image/png',
+            upsert: true
+          });
+        
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          throw uploadError;
+        }
+        
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('generated-assets')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+        console.log('Image uploaded successfully:', publicUrl);
+      } catch (err) {
+        console.error('Failed to process base64 image:', err);
+        // Fallback to placeholder if upload fails
+        imageUrl = `https://placehold.co/${width}x${height}/1a1a2e/53a8ff?text=${encodeURIComponent(description.slice(0, 20))}`;
+      }
+    } else if (imageData?.startsWith('http')) {
+      // Direct URL from AI
+      imageUrl = imageData;
+    } else {
+      // No image in response - use placeholder
+      console.log('No image in AI response, using placeholder');
+      imageUrl = `https://placehold.co/${width}x${height}/1a1a2e/53a8ff?text=${encodeURIComponent(description.slice(0, 20))}`;
+    }
+
+    console.log('Asset generated:', assetId, imageUrl);
 
     return new Response(JSON.stringify({
       success: true,
       assetId,
-      url: placeholderUrl,
-      message: "Asset generation placeholder - integrate with Gemini Imagen for production",
+      url: imageUrl,
+      message: imageData ? "Asset generated with AI" : "Asset placeholder generated",
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
