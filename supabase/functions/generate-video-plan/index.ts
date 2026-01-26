@@ -74,25 +74,47 @@ Use these brand elements in the video. Match the color scheme exactly.
 
     // Reference pattern context (from analyzed videos)
     let referenceContext = '';
+    let referenceMode = false;
     if (referencePattern) {
+      referenceMode = true;
       const refScenes = referencePattern.scenes || [];
+      const refColors = referencePattern.globalStyles?.colorPalette || [];
+      
       referenceContext = `
-REFERENCE VIDEO PATTERN (IMPORTANT - Use this as cinematic inspiration):
-This video should be styled like the reference commercial. Use similar:
-- Scene pacing and structure
-- Transition types: ${refScenes.map((s: any) => s.transition?.type).filter(Boolean).join(', ')}
-- Animation styles: ${refScenes.map((s: any) => s.animations?.[0]?.name).filter(Boolean).join(', ')}
-- Scene durations: ${refScenes.map((s: any) => `${s.duration}s`).join(', ')}
+⚠️ REFERENCE PATTERN MODE - THIS IS MANDATORY, NOT OPTIONAL ⚠️
 
-Reference Scene Descriptions (ADAPT these for the new content):
-${refScenes.slice(0, 5).map((s: any, i: number) => `Scene ${i + 1}: ${s.description}`).join('\n')}
+You MUST recreate the EXACT structure and style of this reference video, adapted for the new brand/content.
 
-CINEMATIC TECHNIQUES FROM REFERENCE:
-- Opening style: ${refScenes[0]?.description || 'Dramatic intro'}
-- Transitions used: ${[...new Set(refScenes.map((s: any) => s.transition?.type).filter(Boolean))].join(', ') || 'fade, cut'}
-- Color palette: ${referencePattern.globalStyles?.colorPalette?.join(', ') || 'dark cinematic'}
+SCENE-BY-SCENE TEMPLATE (YOU MUST FOLLOW THIS STRUCTURE):
+${refScenes.map((s: any, i: number) => `
+SCENE ${i + 1} (Duration: ${s.duration}s, Start: ${s.startTime}s):
+- Original: "${s.description}"
+- YOUR TASK: Create the SAME type of scene but for "${prompt}"
+- Transition to next: ${s.transition?.type || 'cut'} (${s.transition?.duration || 0.5}s)
+- Animation style: ${s.animations?.[0]?.name || 'fadeIn'}
+- Layer count: ${s.composition?.layers?.length || 3} layers
+- Layer types: ${s.composition?.layers?.map((l: any) => l.type).join(', ') || 'video, text'}
+`).join('\n')}
 
-ADAPT the cinematic style to the new prompt content. Match the ENERGY and PACING, not the exact content.
+MANDATORY REQUIREMENTS:
+1. Create EXACTLY ${refScenes.length} scenes (same as reference)
+2. Use the SAME transition types: ${[...new Set(refScenes.map((s: any) => s.transition?.type).filter(Boolean))].join(', ')}
+3. Match the scene durations: ${refScenes.map((s: any) => `${s.duration}s`).join(', ')}
+4. Use the SAME animation styles: ${[...new Set(refScenes.flatMap((s: any) => s.animations?.map((a: any) => a.name) || []))].join(', ')}
+5. Maintain the SAME visual complexity (layers per scene)
+
+REFERENCE COLOR PALETTE (use similar tones adapted for new brand):
+${refColors.join(', ')}
+
+REFERENCE TYPOGRAPHY:
+- Primary: ${referencePattern.globalStyles?.typography?.primary || 'Inter'}
+- Secondary: ${referencePattern.globalStyles?.typography?.secondary || 'JetBrains Mono'}
+
+CRITICAL: The output should feel like a REMAKE of the reference video with new content.
+If reference has "Futuristic opening with liquid gold" → Your output should have "Futuristic opening with [brand-specific element]"
+If reference has "Hyper-realistic food close-ups" → Your output should have "Hyper-realistic [product] close-ups"
+
+DO NOT create a generic motion graphics video. RECREATE the reference's cinematic approach.
 `;
     }
 
@@ -269,7 +291,36 @@ SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
 7. Animation variety: Don't just use popIn - mix scale, slide, fade, rotate based on what fits
 8. Color usage: Use the palette creatively - not just [0] for bg, [3] for text everywhere`;
 
-    console.log('Generating video plan for:', prompt);
+    console.log('Generating video plan for:', prompt, 'Reference mode:', referenceMode);
+
+    // Build user prompt based on whether we have a reference
+    const userPrompt = referenceMode 
+      ? `RECREATE this reference video style for: "${prompt}"
+
+YOU ARE IN REFERENCE MODE. You MUST:
+1. Follow the EXACT scene structure from the reference pattern
+2. Use the SAME transition types (morph, glitch, wipe, etc.)
+3. Match the scene count and durations
+4. Adapt the CONTENT for "${prompt}" but keep the CINEMATIC APPROACH identical
+5. If reference shows "futuristic food close-ups", you show "futuristic [new product] close-ups"
+6. If reference has "holographic menus", you have "holographic [relevant element]"
+
+This is NOT a generic video. This is a REMAKE with new content.
+
+Return ONLY the JSON structure, no other text.`
+      : `Create a unique, creative ${duration}-second video for: "${prompt}"
+
+IMPORTANT INSTRUCTIONS:
+- Analyze this prompt carefully and extract specific details
+- Determine content type: Is this tech/SaaS, product, service, brand, motion graphics, or explainer?
+- For MOTION GRAPHICS: Use geometric shapes (circles, triangles, stars, etc.) with dynamic animations
+- Create a video that REFLECTS THE UNIQUE ASPECTS of this prompt
+- Don't use generic templates - tailor everything to this specific content
+- Be creative with scene structures, animations, and element placement
+- Make it visually distinct and memorable
+- Use specific content from the prompt, not generic placeholders like "Your Headline Here"
+
+Return ONLY the JSON structure, no other text.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -283,19 +334,7 @@ SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
           { role: "system", content: systemPrompt },
           { 
             role: "user", 
-            content: `Create a unique, creative ${duration}-second video for: "${prompt}"
-
-IMPORTANT INSTRUCTIONS:
-- Analyze this prompt carefully and extract specific details
-- Determine content type: Is this tech/SaaS, product, service, brand, motion graphics, or explainer?
-- For MOTION GRAPHICS: Use geometric shapes (circles, triangles, stars, etc.) with dynamic animations
-- Create a video that REFLECTS THE UNIQUE ASPECTS of this prompt
-- Don't use generic templates - tailor everything to this specific content
-- Be creative with scene structures, animations, and element placement
-- Make it visually distinct and memorable
-- Use specific content from the prompt, not generic placeholders like "Your Headline Here"
-
-Return ONLY the JSON structure, no other text.` 
+            content: userPrompt
           },
         ],
         temperature: AI_CONFIG.temperature,
