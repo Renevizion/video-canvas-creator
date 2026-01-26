@@ -91,7 +91,7 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
           
           // Apply animation if exists
           const animProgress = element.animation 
-            ? getAnimationProgress(frame, fps, element.animation.delay || 0, element.animation.duration)
+            ? getAnimationProgress(frame, fps, element.animation.delay || 0, element.animation.duration || 1)
             : 1;
           
           const animOpacity = element.animation

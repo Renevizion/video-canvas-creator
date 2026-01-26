@@ -83,7 +83,7 @@ export class AIVideoService {
    * Map video type to sophisticated style
    */
   private mapVideoTypeToStyle(videoType: string): 'space-journey' | 'product-launch' | 'data-story' | 'cinematic' {
-    const styleMap: Record<string, any> = {
+    const styleMap: Record<string, 'space-journey' | 'product-launch' | 'data-story' | 'cinematic'> = {
       'product-demo': 'product-launch',
       'youtube': 'cinematic',
       'presentation': 'data-story',

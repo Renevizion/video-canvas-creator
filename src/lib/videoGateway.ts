@@ -595,7 +595,7 @@ export class VideoCreationGateway {
   /**
    * Infer motion style from input
    */
-  private inferMotionStyle(input: GatewayInput): any {
+  private inferMotionStyle(input: GatewayInput): 'cinematic' | 'tech' | 'corporate' | 'creative' | 'social' | 'minimal' {
     const prompt = (input.prompt || '').toLowerCase();
     
     if (prompt.includes('corporate') || prompt.includes('business')) return 'corporate';
