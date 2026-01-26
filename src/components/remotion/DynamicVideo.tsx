@@ -766,10 +766,21 @@ const ShapeElement: React.FC<{
   const shapeSize = typeof element.size?.width === 'number' ? element.size.width : 200;
   const shapeColor = (shapeStyle.color as string) || colors[1] || '#06b6d4';
   
-  // Render using @remotion/shapes for geometric shapes
+  // Render using @remotion/shapes for geometric shapes with MOTION GRAPHICS FLOW
+  // Using noise3D for organic, choreographed motion like prompt-to-motion-graphics template
+  
   if (isCircle) {
+    // Motion graphics: Add organic pulse and drift for "flow"
+    const pulse = 1 + noise3D('circle-pulse-' + element.id, sceneFrame * 0.08, 0, 0) * 0.15;
+    const driftX = noise3D('circle-drift-x-' + element.id, sceneFrame * 0.02, 0, 0) * 20;
+    const driftY = noise3D('circle-drift-y-' + element.id, 0, sceneFrame * 0.02, 0) * 15;
+    const rotateZ = noise3D('circle-rot-' + element.id, sceneFrame * 0.01, 0, 0) * 10;
+    
     return (
-      <div style={style}>
+      <div style={{
+        ...style,
+        transform: `${style.transform} translateX(${driftX}px) translateY(${driftY}px) scale(${pulse}) rotate(${rotateZ}deg)`,
+      }}>
         <Circle
           radius={shapeSize / 2}
           fill={shapeColor}
@@ -781,8 +792,15 @@ const ShapeElement: React.FC<{
   }
   
   if (isRect) {
+    // Motion graphics: Rotating and scaling with organic feel
+    const pulse = 1 + noise3D('rect-pulse-' + element.id, sceneFrame * 0.06, 0, 0) * 0.1;
+    const rotateZ = noise3D('rect-rot-' + element.id, sceneFrame * 0.015, 0, 0) * 15;
+    
     return (
-      <div style={style}>
+      <div style={{
+        ...style,
+        transform: `${style.transform} scale(${pulse}) rotate(${rotateZ}deg)`,
+      }}>
         <Rect
           width={shapeSize}
           height={shapeSize}
@@ -796,8 +814,15 @@ const ShapeElement: React.FC<{
   }
   
   if (isTriangle) {
+    // Motion graphics: Floating triangle with rotation
+    const floatY = noise3D('tri-float-' + element.id, 0, 0, sceneFrame * 0.025) * 25;
+    const rotateZ = noise3D('tri-rot-' + element.id, sceneFrame * 0.02, 0, 0) * 20;
+    
     return (
-      <div style={style}>
+      <div style={{
+        ...style,
+        transform: `${style.transform} translateY(${floatY}px) rotate(${rotateZ}deg)`,
+      }}>
         <Triangle
           length={shapeSize}
           fill={shapeColor}
@@ -810,8 +835,17 @@ const ShapeElement: React.FC<{
   }
   
   if (isStar) {
+    // Motion graphics: Pulsing, spinning star
+    const pulse = 1 + noise3D('star-pulse-' + element.id, sceneFrame * 0.1, 0, 0) * 0.2;
+    const spin = (sceneFrame * 0.5) % 360; // Continuous slow spin
+    const glow = 0.5 + noise3D('star-glow-' + element.id, sceneFrame * 0.05, 0, 0) * 0.3;
+    
     return (
-      <div style={style}>
+      <div style={{
+        ...style,
+        transform: `${style.transform} scale(${pulse}) rotate(${spin}deg)`,
+        filter: `drop-shadow(0 0 ${20 * glow}px ${shapeColor})`,
+      }}>
         <Star
           points={5}
           innerRadius={shapeSize * 0.4}
@@ -825,8 +859,15 @@ const ShapeElement: React.FC<{
   }
   
   if (isPolygon) {
+    // Motion graphics: Slow rotating polygon with breathing effect
+    const breathe = 1 + noise3D('poly-breathe-' + element.id, sceneFrame * 0.04, 0, 0) * 0.12;
+    const rotateZ = (sceneFrame * 0.3) % 360;
+    
     return (
-      <div style={style}>
+      <div style={{
+        ...style,
+        transform: `${style.transform} scale(${breathe}) rotate(${rotateZ}deg)`,
+      }}>
         <Polygon
           points={6}
           radius={shapeSize / 2}

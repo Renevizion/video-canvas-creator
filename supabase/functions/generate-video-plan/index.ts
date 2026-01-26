@@ -117,32 +117,41 @@ ADVANCED ELEMENT TYPES (USE CREATIVELY, NOT IN EVERY VIDEO):
 4. "3d-card" - Glassmorphic floating card. Best for feature showcases
 5. "laptop-mockup" - 3D rotating laptop frame. Best for product demos
 
-MOTION GRAPHICS ELEMENTS (FOR ABSTRACT/ANIMATED CONTENT):
-For motion graphics videos, use type: "shape" with these geometric elements:
-- "circle" or "dot" - Animated circles/dots with scale, pulse, bounce animations
-- "rect" or "square" - Rectangles and squares for grid patterns, transitions
-- "triangle" - Triangles for directional elements, arrows, pyramids
-- "star" - Star shapes for emphasis, sparkles, highlights
-- "polygon" or "hexagon" - Polygons for technical/geometric patterns
+MOTION GRAPHICS ELEMENTS (FOR ABSTRACT/ANIMATED CONTENT) - CRITICAL FOR FLOW:
+The system automatically adds ORGANIC MOTION (drift, pulse, rotation) to geometric shapes.
+For motion graphics videos, create MULTIPLE shapes with STAGGERED TIMING for visual flow:
+
+Shape types (use type: "shape" with content containing):
+- "circle" or "dot" - Circles with auto-pulse and drift. BEST for: backgrounds, particles, orbs
+- "rect" or "square" - Rectangles with rotation. BEST for: grids, frames, panels
+- "triangle" - Triangles with float animation. BEST for: directional elements, arrows
+- "star" - Stars with spin and glow. BEST for: emphasis, sparkles, highlights
+- "polygon" or "hexagon" - Polygons with breathing. BEST for: tech patterns, honeycomb
+
+MOTION GRAPHICS FLOW PATTERN (IMPORTANT):
+To create professional motion graphics "flow", follow this pattern:
+1. Create 4-8 geometric shapes per scene with VARIED sizes (small: 50-100, medium: 100-200, large: 200-400)
+2. Position shapes at DIFFERENT locations (x: 10-90%, y: 10-90%)
+3. Use STAGGERED delays (0.1s, 0.2s, 0.3s, 0.4s...) for choreographed entrance
+4. Mix shape TYPES (circles + triangles + stars) for visual interest
+5. Use VARIED colors from the palette for each shape
+6. Layer shapes with different z-index (z: 1, 2, 3) for depth
+
+Example motion graphics scene:
+"elements": [
+  { "id": "bg-circle-1", "type": "shape", "content": "circle", "position": { "x": 20, "y": 30, "z": 1 }, "size": { "width": 200 }, "style": { "color": "${colors[1]}" }, "animation": { "name": "popIn", "delay": 0 } },
+  { "id": "accent-star", "type": "shape", "content": "star", "position": { "x": 80, "y": 25, "z": 2 }, "size": { "width": 80 }, "style": { "color": "${colors[3]}" }, "animation": { "name": "popIn", "delay": 0.15 } },
+  { "id": "floating-tri", "type": "shape", "content": "triangle", "position": { "x": 65, "y": 70, "z": 2 }, "size": { "width": 120 }, "style": { "color": "${colors[1]}" }, "animation": { "name": "slideUp", "delay": 0.3 } },
+  { "id": "hex-pattern", "type": "shape", "content": "hexagon", "position": { "x": 35, "y": 65, "z": 1 }, "size": { "width": 150 }, "style": { "color": "${colors[2]}" }, "animation": { "name": "fadeIn", "delay": 0.2 } }
+]
 
 For motion graphics with CUSTOM AI-GENERATED ASSETS:
 - Use type: "image" with descriptive prompts for AI-generated elements
 - Request abstract shapes, icons, illustrations, or patterns
 - Add to "requiredAssets" array with detailed specifications
-- Examples:
-  * "Abstract fluid gradient blob"
-  * "Geometric icon set with circles and triangles"
-  * "Animated particle texture"
-  * "Stylized tech icon - rocket ship"
-  * "Abstract background pattern - hexagonal grid"
+- Examples: "Abstract fluid gradient blob", "Geometric icon", "Particle texture"
 
-Motion Graphics Tips:
-- Combine multiple geometric shapes with staggered animations
-- Use scale, rotate, and translate animations for dynamic movement
-- Layer shapes with different sizes, colors, and opacities
-- Create patterns by duplicating shapes with varied positions
-- Mix geometric shapes with AI-generated assets for richer visuals
-- Excellent for: explainers, abstract intros, logo reveals, transitions
+KEY PRINCIPLE: More shapes + staggered timing + varied sizes = better "flow"
 
 EXAMPLE JSON STRUCTURE (USE AS REFERENCE, NOT TEMPLATE):
 NOTE: This is just showing the structure. Your actual content should be COMPLETELY DIFFERENT and tailored to the prompt.
