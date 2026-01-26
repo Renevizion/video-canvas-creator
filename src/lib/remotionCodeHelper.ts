@@ -188,6 +188,7 @@ export function generateRequiredImports(plan: VideoPlan): string {
 /**
  * Generates complete Remotion component code with dynamic imports
  * This replaces the old static approach
+ * Note: This generates CODE AS A STRING that will be sent to the backend
  */
 export function generateRemotionComponentCode(plan: VideoPlan): string {
   const imports = generateRequiredImports(plan);
@@ -207,15 +208,18 @@ export function generateRemotionComponentCode(plan: VideoPlan): string {
     ? `import { ${customElements.join(', ')} } from './elements';`
     : '';
 
+  // This generates a code string that will be sent to backend
+  // The backend will execute this code to render the video
   return `${imports}
 ${typeImports}
 ${customImports}
 
-// This component is auto-generated with all necessary imports
-// Imports are dynamically included based on what the video plan actually uses
-export const DynamicVideo = ({ plan }: { plan: VideoPlan }) => {
-  // Full implementation in src/components/remotion/DynamicVideo.tsx
-  return <DynamicVideo plan={plan} />;
+// Component code is generated here - this is sent to backend as a string
+// The actual rendering logic is in DynamicVideo.tsx
+export const VideoComposition = ({ plan }: { plan: VideoPlan }) => {
+  // Full DynamicVideo implementation would go here
+  // For now, this is a placeholder that the backend replaces with actual code
+  return <AbsoluteFill />;
 };
 `;
 }
