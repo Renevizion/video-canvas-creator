@@ -29,124 +29,182 @@ serve(async (req) => {
       .getPublicUrl(filePath);
 
     const videoUrl = urlData.publicUrl;
-    console.log('Analyzing video at:', videoUrl);
+    console.log('Video uploaded at:', videoUrl);
 
-    // Use Gemini's vision capabilities with the VIDEO URL directly
-    // Gemini can analyze video content from URLs
-    const analysisPrompt = `You are an expert video analyst and cinematographer. I'm sharing a video with you.
+    // IMPORTANT: The AI gateway only supports image formats (PNG, JPEG, WebP, GIF)
+    // For video analysis, we need to describe what we want instead of passing the video
+    // Users should describe their reference video or upload screenshots/frames
+    
+    const analysisPrompt = `You are an expert video production designer helping create a video pattern template.
 
-ANALYZE THIS VIDEO IN DETAIL. Watch it carefully and extract:
+The user has uploaded a reference video: "${fileName}"
 
-1. **Content Analysis**:
-   - What is actually happening in each scene?
-   - What objects, people, products, or environments are shown?
-   - What is the narrative or story being told?
-   - What brand/product is being advertised (if commercial)?
+Since I cannot directly view video files, I'll create a professional video pattern template based on the filename and common commercial/marketing video styles.
 
-2. **Visual Style**:
-   - Lighting style (cinematic, bright, dark, neon, natural)
-   - Color grading and dominant colors (extract actual hex codes if possible)
-   - Visual effects used (CGI, 3D graphics, particles, lens flares, etc.)
-   - Camera movements (pan, zoom, dolly, static, handheld)
+Based on the filename "${fileName}", create a detailed video production pattern that would match what this video likely contains.
 
-3. **Scene Structure** (for each distinct scene):
-   - What happens visually?
-   - Duration estimate
-   - Transition type between scenes (cut, fade, dissolve, wipe, or creative transitions)
-   - Key visual elements on screen
-
-4. **Technical Details**:
-   - Estimated total duration
-   - Aspect ratio (16:9, 9:16, 1:1)
-   - Frame rate feel (smooth 30fps, cinematic 24fps, etc.)
-
-5. **Mood & Tone**:
-   - Overall emotional tone
-   - Pacing (fast, slow, dynamic)
-   - Music/sound design feel (if noticeable)
-
-Return a DETAILED JSON pattern that captures the ACTUAL content of this video:
+Return a DETAILED JSON pattern:
 
 {
-  "duration": <actual video duration in seconds>,
+  "duration": 15,
   "fps": 30,
   "resolution": { "width": 1920, "height": 1080 },
-  "contentType": "<commercial|music-video|explainer|product-demo|social-media|cinematic|other>",
-  "brand": "<brand name if identifiable>",
-  "narrative": "<1-2 sentence summary of what happens in the video>",
+  "contentType": "<commercial|music-video|explainer|product-demo|social-media|cinematic>",
+  "brand": "<extract from filename if possible>",
+  "narrative": "<educated guess of what this video shows based on the name>",
   "visualStyle": {
-    "lighting": "<description>",
-    "colorGrade": "<warm|cool|neutral|stylized>",
-    "vfx": ["<list of VFX used: CGI, 3D, particles, etc.>"],
-    "cameraStyle": "<description of camera movement style>"
+    "lighting": "cinematic studio lighting with dramatic highlights",
+    "colorGrade": "stylized",
+    "vfx": ["3D graphics", "motion graphics", "particle effects"],
+    "cameraStyle": "dynamic with smooth transitions"
   },
   "scenes": [
     {
       "id": "scene_1",
       "startTime": 0,
-      "duration": <seconds>,
-      "description": "<DETAILED description of what ACTUALLY happens in this scene>",
-      "visualElements": ["<list of key visual elements shown>"],
-      "cameraMovement": "<pan-left|zoom-in|static|tracking|etc.>",
+      "duration": 3,
+      "description": "Opening hook - dramatic reveal with brand elements",
+      "visualElements": ["logo", "text overlay", "background graphics"],
+      "cameraMovement": "zoom-in",
       "composition": {
-        "layout": "center|split|grid|full",
+        "layout": "center",
         "layers": [
           {
-            "type": "video|image|text|shape|3d-object",
-            "description": "<what this layer shows>",
-            "position": { "x": 50, "y": 50, "z": 1 },
+            "type": "shape",
+            "description": "Animated background gradient",
+            "position": { "x": 50, "y": 50, "z": 0 },
             "size": { "width": 100, "height": 100 },
-            "style": {
-              "effect": "<glow|shadow|blur|none>",
-              "animation": "<float|pulse|rotate|static>"
-            }
+            "style": { "effect": "glow", "animation": "pulse" }
+          },
+          {
+            "type": "text",
+            "description": "Main headline",
+            "position": { "x": 50, "y": 40, "z": 2 },
+            "size": { "width": 80, "height": 20 },
+            "style": { "effect": "none", "animation": "slideUp" }
           }
         ]
       },
       "animations": [
-        {
-          "name": "<descriptive name>",
-          "type": "fade|slide|scale|rotate|custom",
-          "duration": 0.8,
-          "easing": "ease-out",
-          "delay": 0,
-          "properties": { "opacity": [0, 1] }
-        }
+        { "name": "fadeIn", "type": "fade", "duration": 0.8, "easing": "ease-out", "delay": 0, "properties": { "opacity": [0, 1] } }
       ],
-      "transition": { 
-        "type": "<cut|fade|dissolve|wipe|zoom|glitch|morph - only use if actually in video>", 
-        "duration": 0.5 
-      }
+      "transition": { "type": "fade", "duration": 0.5 }
+    },
+    {
+      "id": "scene_2",
+      "startTime": 3,
+      "duration": 5,
+      "description": "Main content - showcasing key features or product",
+      "visualElements": ["product image", "feature callouts", "icons"],
+      "cameraMovement": "pan-right",
+      "composition": {
+        "layout": "split",
+        "layers": [
+          {
+            "type": "image",
+            "description": "Hero product or feature visual",
+            "position": { "x": 35, "y": 50, "z": 1 },
+            "size": { "width": 50, "height": 70 },
+            "style": { "effect": "shadow", "animation": "float" }
+          },
+          {
+            "type": "text",
+            "description": "Feature description",
+            "position": { "x": 75, "y": 50, "z": 2 },
+            "size": { "width": 40, "height": 50 },
+            "style": { "effect": "none", "animation": "slideIn" }
+          }
+        ]
+      },
+      "animations": [
+        { "name": "slideIn", "type": "slide", "duration": 0.6, "easing": "ease-out", "delay": 0.2, "properties": { "translateX": [-50, 0] } }
+      ],
+      "transition": { "type": "slide", "duration": 0.4 }
+    },
+    {
+      "id": "scene_3",
+      "startTime": 8,
+      "duration": 4,
+      "description": "Supporting content - benefits or social proof",
+      "visualElements": ["icons", "statistics", "testimonials"],
+      "cameraMovement": "static",
+      "composition": {
+        "layout": "grid",
+        "layers": [
+          {
+            "type": "shape",
+            "description": "Feature cards",
+            "position": { "x": 50, "y": 50, "z": 1 },
+            "size": { "width": 90, "height": 60 },
+            "style": { "effect": "blur", "animation": "popIn" }
+          }
+        ]
+      },
+      "animations": [
+        { "name": "popIn", "type": "scale", "duration": 0.5, "easing": "ease-out", "delay": 0, "properties": { "scale": [0.8, 1] } }
+      ],
+      "transition": { "type": "dissolve", "duration": 0.5 }
+    },
+    {
+      "id": "scene_4",
+      "startTime": 12,
+      "duration": 3,
+      "description": "Call to action - final message with brand reinforcement",
+      "visualElements": ["logo", "CTA button", "tagline"],
+      "cameraMovement": "zoom-out",
+      "composition": {
+        "layout": "center",
+        "layers": [
+          {
+            "type": "image",
+            "description": "Logo",
+            "position": { "x": 50, "y": 35, "z": 2 },
+            "size": { "width": 30, "height": 15 },
+            "style": { "effect": "glow", "animation": "pulse" }
+          },
+          {
+            "type": "shape",
+            "description": "CTA button",
+            "position": { "x": 50, "y": 60, "z": 3 },
+            "size": { "width": 25, "height": 8 },
+            "style": { "effect": "glow", "animation": "pulse" }
+          },
+          {
+            "type": "text",
+            "description": "CTA text",
+            "position": { "x": 50, "y": 60, "z": 4 },
+            "size": { "width": 20, "height": 6 },
+            "style": { "effect": "none", "animation": "fadeIn" }
+          }
+        ]
+      },
+      "animations": [
+        { "name": "pulse", "type": "scale", "duration": 1, "easing": "ease-in-out", "delay": 0.5, "properties": { "scale": [1, 1.05, 1] } }
+      ],
+      "transition": { "type": "fade", "duration": 0.5 }
     }
   ],
   "globalStyles": {
-    "colorPalette": ["<actual hex colors from the video>"],
+    "colorPalette": ["#0f172a", "#3b82f6", "#f97316", "#ffffff"],
     "typography": {
-      "primary": "<font style observed>",
-      "secondary": "<secondary font if any>",
+      "primary": "Inter",
+      "secondary": "JetBrains Mono",
       "sizes": { "h1": 64, "h2": 40, "body": 18 }
     },
     "spacing": 24,
     "borderRadius": 16
   },
   "keyTakeaways": [
-    "<What makes this video effective?>",
-    "<Notable techniques used?>",
-    "<How to recreate this style?>"
+    "Professional commercial structure with 4 distinct scenes",
+    "Dynamic transitions between scenes",
+    "Strong call-to-action in finale"
   ]
 }
 
-IMPORTANT: 
-- Describe what you ACTUALLY SEE, not what you guess
-- If you see CGI food, say "CGI food"
-- If you see a robot, describe the robot
-- If you see UI mockups, describe them
-- Extract REAL colors from the video
-- Note ACTUAL transitions, not generic ones`;
+Customize this pattern based on what "${fileName}" suggests about the video content.`;
 
-    console.log('Sending video to Gemini Vision for analysis...');
+    console.log('Generating pattern based on filename...');
 
-    // Send video URL directly to Gemini - it can analyze video content
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -154,25 +212,14 @@ IMPORTANT:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro", // Use Pro for better video understanding
+        model: "google/gemini-2.5-flash",
         messages: [
           { 
             role: "user", 
-            content: [
-              {
-                type: "text",
-                text: analysisPrompt
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: videoUrl
-                }
-              }
-            ]
+            content: analysisPrompt
           },
         ],
-        temperature: 0.3, // Lower for more accurate analysis
+        temperature: 0.5,
       }),
     });
 
@@ -196,13 +243,13 @@ IMPORTANT:
     }
 
     const aiData = await response.json();
-    console.log('Gemini Vision response received');
+    console.log('AI response received');
     
     const content = aiData.choices?.[0]?.message?.content;
 
     if (!content) {
       console.error("No content in AI response:", aiData);
-      throw new Error("No response from AI vision model");
+      throw new Error("No response from AI model");
     }
 
     console.log('AI Analysis result (first 500 chars):', content.substring(0, 500));
@@ -216,7 +263,6 @@ IMPORTANT:
       pattern = JSON.parse(cleanJson);
     } catch (parseError) {
       console.error("Failed to parse AI response:", content);
-      // Try to extract any JSON-like structure
       const jsonStart = content.indexOf('{');
       const jsonEnd = content.lastIndexOf('}');
       if (jsonStart !== -1 && jsonEnd !== -1) {
@@ -251,7 +297,7 @@ IMPORTANT:
 
     console.log('Pattern stored with ID:', stored.id);
     console.log('Video narrative:', pattern.narrative);
-    console.log('Scenes analyzed:', pattern.scenes?.length || 0);
+    console.log('Scenes created:', pattern.scenes?.length || 0);
 
     return new Response(JSON.stringify({
       success: true,
@@ -263,7 +309,8 @@ IMPORTANT:
         sceneCount: pattern.scenes?.length || 0,
         contentType: pattern.contentType,
         keyTakeaways: pattern.keyTakeaways,
-      }
+      },
+      note: "Pattern generated based on filename. For more accurate patterns, describe your reference video in the Create page."
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
