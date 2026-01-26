@@ -178,5 +178,3 @@ export const PhoneMockup: React.FC<PhoneMockupProps> = ({
     </div>
   );
 };
-
-export default PhoneMockup;

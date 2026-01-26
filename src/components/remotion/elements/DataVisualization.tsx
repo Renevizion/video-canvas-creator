@@ -402,4 +402,4 @@ const PieChart: React.FC<{
   );
 };
 
-export default DataVisualization;
+

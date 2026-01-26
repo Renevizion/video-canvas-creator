@@ -233,5 +233,3 @@ const StaticGrid: React.FC<{
     </div>
   );
 };
-
-export default LogoGrid;

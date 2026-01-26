@@ -114,12 +114,6 @@ export function VideoAnalyzer({ onAnalysisComplete }: VideoAnalyzerProps) {
       // Store full analysis data
       setAnalysisData(analysisData);
       
-      // Show analysis results
-      console.log('FFmpeg Analysis Results:', analysisData);
-      console.log('Scene changes at:', analysisData.pattern?.sceneChanges);
-      console.log('Extracted colors:', analysisData.pattern?.colors);
-      console.log('Audio has beat:', analysisData.pattern?.audio?.hasBeat);
-      
       setAnalysisResult(analysisData.patternId || 'analysis-complete');
       toast.success('Video analyzed with FFmpeg! See results below.');
       onAnalysisComplete?.(analysisData.patternId || 'analysis-complete');
