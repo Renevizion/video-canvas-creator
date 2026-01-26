@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Series, Easing, Img, delayRender, continueRender } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Series, Easing, Img, delayRender, continueRender, random } from 'remotion';
 import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
@@ -17,6 +17,46 @@ import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from '
 interface DynamicVideoProps {
   plan: VideoPlan;
 }
+
+// ============================================================================
+// RANDOMNESS UTILITIES - Deterministic and Non-Deterministic Random Values
+// ============================================================================
+// Following Remotion best practices for using randomness:
+// - https://www.remotion.dev/docs/using-randomness
+// - https://www.remotion.dev/docs/random#accessing-true-randomness
+
+/**
+ * Get a deterministic random value based on a seed.
+ * Same seed always produces the same value - critical for consistent renders.
+ * 
+ * @example
+ * const offset = random('particle-1') * 100; // Always same value for this seed
+ * const color = colors[Math.floor(random('color-choice') * colors.length)];
+ */
+export const getSeededRandom = (seed: string): number => {
+  return random(seed);
+};
+
+/**
+ * Get a truly random value (non-deterministic).
+ * Use this ONLY when you explicitly want different values on each render,
+ * such as for the "Reevaluate" button in Remotion Studio.
+ * 
+ * @example
+ * const truelyRandomValue = random(null); // Different every time
+ */
+export const getTrueRandom = (): number => {
+  return random(null);
+};
+
+/**
+ * NEVER use Math.random() in Remotion components!
+ * It will cause flickering and non-deterministic renders.
+ * 
+ * ❌ BAD:  const x = Math.random() * 100;
+ * ✅ GOOD: const x = random('seed') * 100;
+ * ✅ GOOD: const x = noise3D('seed', frame, 0, 0) * 100;
+ */
 
 // ============================================================================
 // MAIN DYNAMIC VIDEO COMPONENT - Cinematic Quality Renderer

@@ -6,6 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// AI Configuration
+const AI_CONFIG = {
+  model: "google/gemini-3-flash-preview",
+  temperature: 0.7, // Higher = more creative. Range: 0.0-1.0. Adjust based on quality.
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -64,11 +70,27 @@ Use these brand elements in the video. Match the color scheme exactly.
 `;
     }
 
+    // Generate a unique seed for variation per video (using timestamp + random for better uniqueness)
+    const uniqueSeed = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
     const systemPrompt = `You are an expert video production planner creating CINEMATIC, broadcast-quality commercial videos.
 ${brandContext}
 CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 
-ASPECT RATIO OPTIMIZATION (IMPORTANT):
+🎬 CREATIVITY & UNIQUENESS (MOST IMPORTANT):
+- ANALYZE THE PROMPT DEEPLY: Extract specific details, emotions, and unique aspects
+- BE CREATIVE: Don't follow a template - make each video truly unique and tailored
+- VARY YOUR APPROACH: Different prompts should result in COMPLETELY different video structures
+- USE VARIETY: Mix different animation types, layouts, element types, transitions
+- ADD PERSONALITY: Match the tone and style to the specific content being described
+- Generation Seed: ${uniqueSeed} - Use this for creative variation:
+  * Different seed = different creative choices
+  * Vary animation timing slightly based on seed
+  * Choose different element positions/sizes
+  * Select different animation combinations
+  * Pick different accent colors from palette
+
+ASPECT RATIO OPTIMIZATION:
 - Video aspect ratio: ${aspectRatio} (${resolution.width}x${resolution.height})
 - FOR PORTRAIT (9:16 / TikTok/Reels): Place elements vertically centered, use Y positions 20-80%, stack content
 - FOR LANDSCAPE (16:9 / YouTube): Use wide horizontal layouts, cinematic framing
@@ -77,24 +99,54 @@ ASPECT RATIO OPTIMIZATION (IMPORTANT):
 VOICEOVER & CAPTIONS:
 - Add a "voiceover" field to EACH scene with short, punchy text (3-7 words)
 - This text will be displayed as TikTok-style captions
+- Make voiceovers SPECIFIC to the content, not generic
 - Examples: "Check this out" → "Mind-blowing results" → "Get started today"
 
-MANDATORY VISUAL QUALITY STANDARDS:
-- Every scene MUST have 4-8 layered elements for visual depth
-- Use dramatic scale animations (0.3 → 1.0) with spring easing
+VISUAL QUALITY STANDARDS:
+- Every scene should have 4-8 layered elements for visual depth
+- Use varied animations: scale, slide, fade, rotate, pulse, float
 - Stagger element delays by 0.15-0.3 seconds for professional flow
-- Include floating accent elements (orbs, particles, glows)
-- Add subtle parallax motion to backgrounds
-- Use glassmorphism effects with backdrop-blur
+- Include floating accent elements when appropriate (orbs, particles, glows)
+- Add subtle parallax motion to backgrounds when it fits
+- Use glassmorphism effects strategically, not everywhere
 
-ADVANCED ELEMENT TYPES (USE THESE):
-1. "code-editor" - 3D laptop with animated code. styleType: "code-editor", content: multi-line code
-2. "terminal" - Command line typing effect. styleType: "terminal", content: CLI commands
-3. "progress" - Animated progress indicator. styleType: "progress", style.progress: 0-100
-4. "3d-card" - Glassmorphic floating card. styleType: "3d-card" with perspective transforms
-5. "laptop-mockup" - 3D rotating laptop frame. styleType: "laptop-mockup"
+ADVANCED ELEMENT TYPES (USE CREATIVELY, NOT IN EVERY VIDEO):
+1. "code-editor" - 3D laptop with animated code. Best for tech/SaaS content
+2. "terminal" - Command line typing effect. Best for developer tools
+3. "progress" - Animated progress indicator. Best for showing metrics/growth
+4. "3d-card" - Glassmorphic floating card. Best for feature showcases
+5. "laptop-mockup" - 3D rotating laptop frame. Best for product demos
 
-MANDATORY JSON STRUCTURE:
+MOTION GRAPHICS ELEMENTS (FOR ABSTRACT/ANIMATED CONTENT):
+For motion graphics videos, use type: "shape" with these geometric elements:
+- "circle" or "dot" - Animated circles/dots with scale, pulse, bounce animations
+- "rect" or "square" - Rectangles and squares for grid patterns, transitions
+- "triangle" - Triangles for directional elements, arrows, pyramids
+- "star" - Star shapes for emphasis, sparkles, highlights
+- "polygon" or "hexagon" - Polygons for technical/geometric patterns
+
+For motion graphics with CUSTOM AI-GENERATED ASSETS:
+- Use type: "image" with descriptive prompts for AI-generated elements
+- Request abstract shapes, icons, illustrations, or patterns
+- Add to "requiredAssets" array with detailed specifications
+- Examples:
+  * "Abstract fluid gradient blob"
+  * "Geometric icon set with circles and triangles"
+  * "Animated particle texture"
+  * "Stylized tech icon - rocket ship"
+  * "Abstract background pattern - hexagonal grid"
+
+Motion Graphics Tips:
+- Combine multiple geometric shapes with staggered animations
+- Use scale, rotate, and translate animations for dynamic movement
+- Layer shapes with different sizes, colors, and opacities
+- Create patterns by duplicating shapes with varied positions
+- Mix geometric shapes with AI-generated assets for richer visuals
+- Excellent for: explainers, abstract intros, logo reveals, transitions
+
+EXAMPLE JSON STRUCTURE (USE AS REFERENCE, NOT TEMPLATE):
+NOTE: This is just showing the structure. Your actual content should be COMPLETELY DIFFERENT and tailored to the prompt.
+
 {
   "duration": ${duration},
   "fps": 30,
@@ -105,78 +157,50 @@ MANDATORY JSON STRUCTURE:
       "id": "scene_1",
       "startTime": 0,
       "duration": 3,
-      "description": "Cinematic opening",
-      "voiceover": "Check this out",
+      "description": "[Describe what actually happens in this specific scene]",
+      "voiceover": "[Specific 3-7 word caption for THIS content]",
       "elements": [
         {
-          "id": "bg_gradient",
+          "id": "bg_[unique]",
           "type": "shape",
-          "content": "Animated gradient background with floating orbs",
+          "content": "[Background description]",
           "position": { "x": 50, "y": 50, "z": 0 },
           "size": { "width": 100, "height": 100 },
           "style": { 
-            "background": "linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 50%, ${colors[0]} 100%)",
-            "overflow": "hidden"
+            "background": "linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 50%, ${colors[0]} 100%)"
           },
           "animation": { "name": "fadeIn", "type": "fade", "duration": 0.5, "easing": "ease-out", "delay": 0, "properties": { "opacity": [0, 1] } }
         },
         {
-          "id": "floating_orb_1",
-          "type": "shape",
-          "content": "Floating accent orb",
-          "position": { "x": 20, "y": 30, "z": 1 },
-          "size": { "width": 15, "height": 15 },
-          "style": { 
-            "background": "radial-gradient(circle, ${colors[3]}40 0%, transparent 70%)",
-            "borderRadius": "50%",
-            "filter": "blur(20px)"
-          },
-          "animation": { "name": "float", "type": "custom", "duration": 3, "easing": "ease-in-out", "delay": 0, "properties": { "y": [30, 35, 30] } }
-        },
-        {
-          "id": "main_title",
+          "id": "main_content",
           "type": "text",
-          "content": "Your Headline Here",
-          "position": { "x": 50, "y": 35, "z": 3 },
+          "content": "[ACTUAL CONTENT FROM PROMPT - NOT A PLACEHOLDER]",
+          "position": { "x": 50, "y": 40, "z": 3 },
           "size": { "width": 80, "height": 20 },
           "style": { 
-            "fontSize": 80, 
-            "fontWeight": 800, 
-            "color": "${colors[3]}",
-            "textShadow": "0 4px 30px ${colors[3]}40"
+            "fontSize": 72, 
+            "fontWeight": 700, 
+            "color": "${colors[3]}"
           },
-          "animation": { "name": "popIn", "type": "scale", "duration": 0.8, "easing": "spring", "delay": 0.2, "properties": { "scale": [0.3, 1], "opacity": [0, 1] } }
-        },
-        {
-          "id": "subtitle",
-          "type": "text",
-          "content": "Supporting tagline with key benefit",
-          "position": { "x": 50, "y": 55, "z": 3 },
-          "size": { "width": 70, "height": 10 },
-          "style": { 
-            "fontSize": 28, 
-            "fontWeight": 400, 
-            "color": "${colors[3]}cc"
-          },
-          "animation": { "name": "slideUp", "type": "slide", "duration": 0.6, "easing": "ease-out", "delay": 0.5, "properties": { "y": [10, 0], "opacity": [0, 1] } }
-        },
-        {
-          "id": "accent_line",
-          "type": "shape",
-          "content": "Decorative accent line",
-          "position": { "x": 50, "y": 65, "z": 2 },
-          "size": { "width": 20, "height": 0.5 },
-          "style": { 
-            "background": "linear-gradient(90deg, transparent, ${colors[3]}, transparent)"
-          },
-          "animation": { "name": "expandWidth", "type": "scale", "duration": 0.8, "easing": "ease-out", "delay": 0.7, "properties": { "scaleX": [0, 1] } }
+          "animation": { "name": "[Choose appropriate animation]", "type": "[scale/slide/fade/rotate]", "duration": 0.8, "easing": "spring", "delay": 0.2, "properties": {} }
         }
       ],
       "animations": [],
-      "transition": { "type": "fade", "duration": 0.3 }
+      "transition": { "type": "[fade/slide/wipe/cut based on content]", "duration": 0.3 }
     }
   ],
-  "requiredAssets": [],
+  "requiredAssets": [
+    {
+      "id": "asset_1",
+      "type": "image",
+      "description": "[AI-generated asset description - e.g., 'Abstract gradient blob', 'Geometric icon', 'Particle texture']",
+      "specifications": {
+        "width": 512,
+        "height": 512,
+        "style": "[photorealistic/illustration/abstract/icon/pattern]"
+      }
+    }
+  ],
   "style": {
     "colorPalette": ${JSON.stringify(colors)},
     "typography": { "primary": "${brandData?.fonts?.primary || 'Inter'}", "secondary": "JetBrains Mono", "sizes": { "h1": 80, "h2": 48, "body": 24 } },
@@ -185,17 +209,24 @@ MANDATORY JSON STRUCTURE:
   }
 }
 
-SCENE PLANNING RULES (FOLLOW EXACTLY):
-1. Create ${Math.ceil(duration / 2.5)} to ${Math.ceil(duration / 2)} scenes (more scenes = more dynamic)
-2. Scene 1: HERO - Logo/title with dramatic entrance, animated background, floating elements
-3. Middle scenes: Feature showcases with code-editor, terminal, or 3d-card elements
-4. Final scene: Strong CTA with button, contact info, and memorable closing animation
-5. EVERY scene needs: gradient background, 1-2 floating accent elements, main content, supporting text
-6. For SaaS/tech: ALWAYS include code-editor or terminal showing real product usage
-7. Animation delays: 0, 0.2, 0.4, 0.6, 0.8s stagger pattern
-8. Use "popIn" (scale 0.3→1) for headlines, "slideUp" for subtitles, "fadeIn" for backgrounds
-9. Include at least one element with "3d-card" styleType per feature scene
-10. Color palette: ${colors.join(', ')} - use [0] for bg, [1] for secondary, [3] for accents/text`;
+SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
+1. ANALYZE THE PROMPT: What is the video actually about? What's unique about it?
+2. DETERMINE SCENE COUNT: Create ${Math.ceil(duration / 2.5)} to ${Math.ceil(duration / 2)} scenes based on content needs
+3. STRUCTURE CREATIVELY:
+   - Opening: Match the energy and tone to the content (could be dramatic, playful, mysterious, energetic)
+   - Middle: Showcase the SPECIFIC features/benefits mentioned in the prompt
+   - Closing: Strong CTA that makes sense for the content
+4. VARY ELEMENTS BY CONTENT TYPE:
+   - Tech/SaaS: code-editor, terminal, metrics, progress bars
+   - Products: images, 3d-cards, mockups, product features
+   - Services: testimonials, benefits, process flows
+   - Brand/Lifestyle: lifestyle imagery, text focus, emotional appeal
+   - Motion Graphics: geometric shapes (circles, triangles, stars), abstract patterns, dynamic animations
+   - Explainer Videos: Mix of text, shapes, and icons with smooth transitions
+5. BE SPECIFIC: Use actual content from the prompt, not generic placeholders
+6. MIX IT UP: Every video should feel different - vary transitions, animation styles, layouts
+7. Animation variety: Don't just use popIn - mix scale, slide, fade, rotate based on what fits
+8. Color usage: Use the palette creatively - not just [0] for bg, [3] for text everywhere`;
 
     console.log('Generating video plan for:', prompt);
 
@@ -206,12 +237,27 @@ SCENE PLANNING RULES (FOLLOW EXACTLY):
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: AI_CONFIG.model,
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Create a ${duration}-second video for: "${prompt}"` },
+          { 
+            role: "user", 
+            content: `Create a unique, creative ${duration}-second video for: "${prompt}"
+
+IMPORTANT INSTRUCTIONS:
+- Analyze this prompt carefully and extract specific details
+- Determine content type: Is this tech/SaaS, product, service, brand, motion graphics, or explainer?
+- For MOTION GRAPHICS: Use geometric shapes (circles, triangles, stars, etc.) with dynamic animations
+- Create a video that REFLECTS THE UNIQUE ASPECTS of this prompt
+- Don't use generic templates - tailor everything to this specific content
+- Be creative with scene structures, animations, and element placement
+- Make it visually distinct and memorable
+- Use specific content from the prompt, not generic placeholders like "Your Headline Here"
+
+Return ONLY the JSON structure, no other text.` 
+          },
         ],
-        temperature: 0.4,
+        temperature: AI_CONFIG.temperature,
       }),
     });
 
