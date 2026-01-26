@@ -179,20 +179,23 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
           </div>
 
           {/* Player Preview */}
-          <div className="mb-6 rounded-xl overflow-hidden bg-black">
-            <div className="aspect-video">
-              <Player
-                ref={playerRef}
-                component={DynamicVideo}
-                inputProps={{ plan }}
-                durationInFrames={totalFrames}
-                compositionWidth={plan.resolution?.width || 1920}
-                compositionHeight={plan.resolution?.height || 1080}
-                fps={fps}
-                style={{ width: '100%', height: '100%' }}
-                controls
-              />
-            </div>
+          <div className="mb-6 rounded-xl overflow-hidden bg-black" style={{ width: '100%', height: 'auto', aspectRatio: '16/9' }}>
+            <Player
+              ref={playerRef}
+              component={DynamicVideo}
+              inputProps={{ plan }}
+              durationInFrames={totalFrames}
+              compositionWidth={plan.resolution?.width || 1920}
+              compositionHeight={plan.resolution?.height || 1080}
+              fps={fps}
+              style={{ width: '100%', height: '100%', display: 'block' }}
+              controls
+              renderLoading={() => (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: '#000' }}>
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              )}
+            />
           </div>
 
           {/* Progress Section */}
