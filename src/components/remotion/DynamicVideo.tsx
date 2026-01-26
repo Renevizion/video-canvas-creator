@@ -86,6 +86,42 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
     );
   }
 
+  // Use simple Sequence-based rendering for better compatibility
+  const useSimpleRendering = true; // Toggle for debugging
+
+  if (useSimpleRendering) {
+    return (
+      <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
+        {/* Animated background gradient */}
+        <AnimatedBackground colors={colors} />
+        
+        {/* Render scenes with simple Sequences */}
+        {plan.scenes.map((scene, index) => {
+          const startFrame = Math.round(scene.startTime * fps);
+          const durationFrames = Math.round(scene.duration * fps);
+          
+          return (
+            <Sequence
+              key={scene.id}
+              from={startFrame}
+              durationInFrames={durationFrames}
+            >
+              <SceneRenderer 
+                scene={scene} 
+                globalStyle={plan.style} 
+                sceneIndex={index}
+                totalScenes={plan.scenes.length}
+              />
+            </Sequence>
+          );
+        })}
+        
+        {/* Subtle vignette overlay */}
+        <Vignette />
+      </AbsoluteFill>
+    );
+  }
+
   return (
     <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
       {/* Animated background gradient */}
