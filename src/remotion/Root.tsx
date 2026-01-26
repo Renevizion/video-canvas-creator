@@ -10,6 +10,20 @@ import {
   RenderProgressShowcase 
 } from '../components/remotion/showcases';
 
+// NEW: Import all the working components you can test
+import { CommunityPackagesShowcase } from '../components/remotion/showcases/CommunityPackagesShowcase';
+import { AudioVisualizationDemo } from '../components/remotion/elements/AudioVisualization';
+import { 
+  AspectRatioDemo, 
+  VerticalVideoTemplate,
+  SquareVideoTemplate,
+} from '../components/remotion/elements/AspectRatioSupport';
+import {
+  ColorGradingDemo,
+  EffectsStackDemo,
+  BeforeAfterDemo,
+} from '../components/remotion/elements/ColorGrading';
+
 // Default video plan for testing
 const defaultPlan: VideoPlan = {
   id: 'default-composition',
@@ -255,6 +269,115 @@ export const RemotionRoot: React.FC = () => {
         id="RenderProgressShowcase"
         component={RenderProgressShowcase}
         durationInFrames={270}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* ========== NEW TESTABLE COMPOSITIONS ========== */}
+      
+      {/* Community Packages - Remotion transitions, Lottie, GIF, Google Fonts */}
+      <Composition
+        id="CommunityPackages"
+        component={CommunityPackagesShowcase}
+        durationInFrames={450}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* REAL Audio Visualization - Uses actual audio files (NOT SIMULATED) */}
+      <Composition
+        id="AudioVisualization"
+        component={AudioVisualizationDemo}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* Aspect Ratios - All 6 formats side by side */}
+      <Composition
+        id="AspectRatios"
+        component={AspectRatioDemo}
+        durationInFrames={180}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* Vertical Video (9:16) - TikTok/Reels/Shorts format */}
+      <Composition
+        id="VerticalVideo"
+        component={() => (
+          <VerticalVideoTemplate
+            title="TikTok Style"
+            subtitle="9:16 vertical format"
+            content={
+              <div style={{
+                fontSize: 80,
+                color: 'white',
+                textAlign: 'center'
+              }}>
+                📱 Vertical Content
+              </div>
+            }
+          />
+        )}
+        durationInFrames={180}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{}}
+      />
+
+      {/* Square Video (1:1) - Instagram format */}
+      <Composition
+        id="SquareVideo"
+        component={() => (
+          <SquareVideoTemplate
+            image="https://picsum.photos/1080/1080"
+            caption="Perfect for Instagram Feed 📸"
+          />
+        )}
+        durationInFrames={180}
+        fps={30}
+        width={1080}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* Color Grading - Cycles through 9 presets */}
+      <Composition
+        id="ColorGrading"
+        component={ColorGradingDemo}
+        durationInFrames={540}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* Professional Effects Stack - Cinematic + grain + vignette + bloom */}
+      <Composition
+        id="EffectsStack"
+        component={EffectsStackDemo}
+        durationInFrames={180}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* Before/After Color Grading Comparison */}
+      <Composition
+        id="BeforeAfter"
+        component={BeforeAfterDemo}
+        durationInFrames={120}
         fps={30}
         width={1920}
         height={1080}
