@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import type { PlannedElement } from '@/types/video';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { PlannedElement, AnimationPattern } from '@/types/video';
 
 interface ElementEditorProps {
   element: PlannedElement;
@@ -13,6 +14,7 @@ interface ElementEditorProps {
 
 export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps) {
   const style = element.style as Record<string, unknown>;
+  const animation = element.animation as AnimationPattern | undefined;
 
   return (
     <div className="space-y-4">
@@ -23,8 +25,36 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
         </Button>
       </div>
 
+      {/* Shape Type Selector (NEW) */}
+      {element.type === 'shape' && (
+        <div>
+          <Label className="text-xs text-muted-foreground">Shape Type</Label>
+          <Select
+            value={element.content || 'card'}
+            onValueChange={(value) => onUpdate({ content: value })}
+          >
+            <SelectTrigger className="mt-1">
+              <SelectValue placeholder="Select shape type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="card">Card (Glassmorphic)</SelectItem>
+              <SelectItem value="button">Button (CTA)</SelectItem>
+              <SelectItem value="circle">Circle</SelectItem>
+              <SelectItem value="rect">Rectangle</SelectItem>
+              <SelectItem value="triangle">Triangle</SelectItem>
+              <SelectItem value="star">Star</SelectItem>
+              <SelectItem value="polygon">Polygon/Hexagon</SelectItem>
+              <SelectItem value="device">Device/Phone</SelectItem>
+              <SelectItem value="globe">Globe/World</SelectItem>
+              <SelectItem value="arrow">Arrow</SelectItem>
+              <SelectItem value="cursor">Cursor</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* Content */}
-      {(element.type === 'text' || element.type === 'shape') && (
+      {element.type === 'text' && (
         <div>
           <Label className="text-xs text-muted-foreground">Content</Label>
           <Input
@@ -32,6 +62,67 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
             onChange={(e) => onUpdate({ content: e.target.value })}
             className="mt-1"
           />
+        </div>
+      )}
+
+      {/* Image Source and AI Generation */}
+      {element.type === 'image' && (
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs text-muted-foreground">Image URL or Description</Label>
+            <Input
+              value={element.content || ''}
+              onChange={(e) => onUpdate({ content: e.target.value })}
+              className="mt-1"
+              placeholder="https://... or describe image for AI generation"
+            />
+            <p className="text-[10px] text-muted-foreground/70 mt-1">
+              * Enter URL for existing image, or description to generate with AI
+            </p>
+          </div>
+          
+          {/* Image Style for AI Generation */}
+          {element.content && !element.content.startsWith('http') && (
+            <div>
+              <Label className="text-xs text-muted-foreground">AI Image Style</Label>
+              <Select
+                value={(style.imageStyle as string) || 'photorealistic'}
+                onValueChange={(value) => onUpdate({ style: { ...style, imageStyle: value } })}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select style" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="photorealistic">Photorealistic</SelectItem>
+                  <SelectItem value="digital-art">Digital Art</SelectItem>
+                  <SelectItem value="illustration">Illustration</SelectItem>
+                  <SelectItem value="3d-render">3D Render</SelectItem>
+                  <SelectItem value="anime">Anime/Manga</SelectItem>
+                  <SelectItem value="watercolor">Watercolor</SelectItem>
+                  <SelectItem value="sketch">Sketch/Drawing</SelectItem>
+                  <SelectItem value="abstract">Abstract</SelectItem>
+                  <SelectItem value="minimalist">Minimalist</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Image Preview */}
+          {element.content && element.content.startsWith('http') && (
+            <div className="mt-2">
+              <Label className="text-xs text-muted-foreground mb-2 block">Preview</Label>
+              <div className="aspect-video bg-muted/30 rounded-lg overflow-hidden">
+                <img 
+                  src={element.content} 
+                  alt="Preview" 
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -137,6 +228,15 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
       {element.type === 'shape' && (
         <>
           <div>
+            <Label className="text-xs text-muted-foreground">Shape Color</Label>
+            <Input
+              type="color"
+              value={(style.color as string) || '#06b6d4'}
+              onChange={(e) => onUpdate({ style: { ...style, color: e.target.value } })}
+              className="mt-1 h-10 p-1"
+            />
+          </div>
+          <div>
             <Label className="text-xs text-muted-foreground">Background</Label>
             <Input
               value={(style.background as string) || 'rgba(255,255,255,0.1)'}
@@ -165,41 +265,58 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
 
       {/* Animation */}
       <div className="pt-4 border-t border-border/50">
-        <Label className="text-xs text-muted-foreground">Animation</Label>
-        <select
-          value={(element.animation as any)?.type || 'fade'}
-          onChange={(e) =>
+        <Label className="text-xs text-muted-foreground">Animation Pattern</Label>
+        <Select
+          value={animation?.pattern || 'fadeIn'}
+          onValueChange={(value) =>
             onUpdate({
               animation: {
-                type: e.target.value as 'fade' | 'slide' | 'scale' | 'custom',
-                duration: 0.5,
-                delay: 0,
-                name: e.target.value,
+                ...animation,
+                pattern: value,
+                type: value.includes('slide') ? 'slide' : value.includes('scale') || value.includes('pop') ? 'scale' : value.includes('rotate') ? 'rotate' : 'fade',
+                duration: animation?.duration || 0.5,
+                delay: animation?.delay || 0,
+                name: value,
                 easing: 'ease-out',
                 properties: {},
-              },
+              } as AnimationPattern,
             })
           }
-          className="w-full mt-1 p-2 rounded-lg bg-muted/50 border border-border text-sm"
         >
-          <option value="fade">Fade In</option>
-          <option value="slide">Slide Up</option>
-          <option value="scale">Pop In</option>
-          <option value="custom">None</option>
-        </select>
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder="Select animation" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fadeIn">Fade In</SelectItem>
+            <SelectItem value="slideInLeft">Slide In Left (Motion Blur)</SelectItem>
+            <SelectItem value="slideInRight">Slide In Right (Motion Blur)</SelectItem>
+            <SelectItem value="slideInUp">Slide In Up (Motion Blur)</SelectItem>
+            <SelectItem value="slideInDown">Slide In Down (Motion Blur)</SelectItem>
+            <SelectItem value="scale">Scale/Pop In</SelectItem>
+            <SelectItem value="rotate">Rotate (Motion Blur)</SelectItem>
+            <SelectItem value="spin">Spin (Motion Blur)</SelectItem>
+            <SelectItem value="pulse">Pulse</SelectItem>
+            <SelectItem value="float">Float</SelectItem>
+            <SelectItem value="glow">Glow</SelectItem>
+            <SelectItem value="none">None</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-[10px] text-muted-foreground/70 mt-1">
+          * Motion Blur applied to fast animations automatically
+        </p>
       </div>
 
-      {element.animation && (
+      {animation && (
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-xs text-muted-foreground">
-              Delay: {((element.animation as any)?.delay || 0).toFixed(1)}s
+              Delay: {(animation?.delay || 0).toFixed(1)}s
             </Label>
             <Slider
-              value={[(element.animation as any)?.delay || 0]}
+              value={[animation?.delay || 0]}
               onValueChange={([delay]) =>
                 onUpdate({
-                  animation: { ...(element.animation as any), delay },
+                  animation: { ...animation, delay } as AnimationPattern,
                 })
               }
               min={0}
@@ -210,13 +327,13 @@ export function ElementEditor({ element, onUpdate, onClose }: ElementEditorProps
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">
-              Duration: {((element.animation as any)?.duration || 0.5).toFixed(1)}s
+              Duration: {(animation?.duration || 0.5).toFixed(1)}s
             </Label>
             <Slider
-              value={[(element.animation as any)?.duration || 0.5]}
+              value={[animation?.duration || 0.5]}
               onValueChange={([duration]) =>
                 onUpdate({
-                  animation: { ...(element.animation as any), duration },
+                  animation: { ...animation, duration } as AnimationPattern,
                 })
               }
               min={0.1}

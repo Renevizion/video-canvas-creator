@@ -113,6 +113,20 @@ npm run remotion:compositions
 
 For detailed documentation on video rendering, quality settings, and advanced options, see [REMOTION_GUIDE.md](./REMOTION_GUIDE.md).
 
+### AI-Powered Video Creation
+
+Remotion supports AI-powered video generation from text prompts:
+
+```sh
+# Generate motion graphics from prompts
+npx create-video@latest --prompt-to-motion-graphics
+
+# Or generate complete video compositions
+npx create-video@latest --prompt-to-video
+```
+
+This allows you to quickly prototype and create videos using natural language descriptions. See the [Remotion AI Templates](https://www.remotion.dev/templates) for examples, or check the [AI Documentation](https://www.remotion.dev/docs/ai/) for more details.
+
 ### Features
 
 - ✅ **Browser Preview**: Real-time video editing with `@remotion/player`

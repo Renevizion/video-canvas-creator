@@ -9,6 +9,8 @@ import { Audio } from '@remotion/media';
 import { OffthreadVideo } from 'remotion';
 import { measureText } from '@remotion/layout-utils';
 import { loadFont } from '@remotion/google-fonts/Inter';
+import { Trail } from '@remotion/motion-blur';
+import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
 
@@ -464,6 +466,21 @@ const ElementRenderer: React.FC<{
     filter: blur > 0 ? `blur(${blur}px)` : undefined,
   };
 
+  // Determine if element needs motion blur (fast animations)
+  const animation = element.animation;
+  const needsMotionBlur = animation && [
+    'slideInLeft', 'slideInRight', 'slideInUp', 'slideInDown',
+    'rotate', 'spin'
+  ].includes(animation.pattern as string);
+  
+  // Wrapper function to optionally add motion blur
+  const wrapWithMotionBlur = (content: React.ReactNode) => {
+    if (needsMotionBlur) {
+      return <Trail samples={5}>{content}</Trail>;
+    }
+    return content;
+  };
+
   // Check for advanced element types in content/style
   const content = element.content?.toLowerCase() || '';
   const styleType = (element.style as Record<string, unknown>)?.elementType as string;
@@ -471,48 +488,48 @@ const ElementRenderer: React.FC<{
   // Heuristics: some plans use shape placeholders like "Cursor" or "Arrow".
   // Treat those as real elements to avoid giant blocks + label text.
   if (element.type === 'shape' && content.includes('cursor')) {
-    return <CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />;
+    return wrapWithMotionBlur(<CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />);
   }
 
   if (element.type === 'shape' && content.includes('arrow')) {
-    return <ArrowElement element={element} style={baseStyle} colors={colors} />;
+    return wrapWithMotionBlur(<ArrowElement element={element} style={baseStyle} colors={colors} />);
   }
   
   // Route to advanced elements based on content keywords or explicit type
   if (styleType === 'code-editor' || content.includes('code') || content.includes('editor') || content.includes('syntax')) {
-    return <CodeEditor element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+    return wrapWithMotionBlur(<CodeEditor element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
   if (styleType === 'progress' || content.includes('progress') || content.includes('render') || content.includes('loading')) {
-    return <ProgressBar element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+    return wrapWithMotionBlur(<ProgressBar element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
   if (styleType === 'terminal' || content.includes('terminal') || content.includes('command') || content.includes('cli')) {
-    return <Terminal element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+    return wrapWithMotionBlur(<Terminal element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
   if (styleType === 'laptop' || content.includes('laptop') || content.includes('macbook')) {
-    return <Laptop3D element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+    return wrapWithMotionBlur(<Laptop3D element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
   if (styleType === '3d-card' || content.includes('3d card') || content.includes('perspective card')) {
-    return <Perspective3DCard element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+    return wrapWithMotionBlur(<Perspective3DCard element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
 
   // Render based on element type
   switch (element.type) {
     case 'text':
-      return <TextElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} />;
+      return wrapWithMotionBlur(<TextElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} />);
     case 'shape':
-      return <ShapeElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
+      return wrapWithMotionBlur(<ShapeElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
     case 'image':
-      return <ImageElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} />;
+      return wrapWithMotionBlur(<ImageElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} />);
     case 'audio':
       return <AudioElement element={element} />;
     case 'video':
-      return <VideoElement element={element} style={baseStyle} />;
+      return wrapWithMotionBlur(<VideoElement element={element} style={baseStyle} />);
     case 'cursor':
-      return <CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />;
+      return wrapWithMotionBlur(<CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />);
     default:
       return null;
   }
@@ -695,9 +712,90 @@ const ShapeElement: React.FC<{
   const isDevice = content.toLowerCase().includes('phone') || content.toLowerCase().includes('device') || content.toLowerCase().includes('mockup');
   const isGlobe = content.toLowerCase().includes('globe') || content.toLowerCase().includes('world');
   
+  // New: Detect @remotion/shapes types
+  const isCircle = content.toLowerCase().includes('circle') || content.toLowerCase().includes('dot');
+  const isRect = content.toLowerCase().includes('rect') || content.toLowerCase().includes('square');
+  const isTriangle = content.toLowerCase().includes('triangle') || content.toLowerCase().includes('arrow');
+  const isStar = content.toLowerCase().includes('star');
+  const isPolygon = content.toLowerCase().includes('polygon') || content.toLowerCase().includes('hexagon');
+  
   const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '300px';
   const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '200px';
   const borderRadius = (shapeStyle.borderRadius as number) || (globalStyle?.borderRadius) || 24;
+  const shapeSize = typeof element.size?.width === 'number' ? element.size.width : 200;
+  const shapeColor = (shapeStyle.color as string) || colors[1] || '#06b6d4';
+  
+  // Render using @remotion/shapes for geometric shapes
+  if (isCircle) {
+    return (
+      <div style={style}>
+        <Circle
+          radius={shapeSize / 2}
+          fill={shapeColor}
+          stroke={colors[0] || '#ffffff'}
+          strokeWidth={2}
+        />
+      </div>
+    );
+  }
+  
+  if (isRect) {
+    return (
+      <div style={style}>
+        <Rect
+          width={shapeSize}
+          height={shapeSize}
+          fill={shapeColor}
+          stroke={colors[0] || '#ffffff'}
+          strokeWidth={2}
+          cornerRadius={borderRadius}
+        />
+      </div>
+    );
+  }
+  
+  if (isTriangle) {
+    return (
+      <div style={style}>
+        <Triangle
+          length={shapeSize}
+          fill={shapeColor}
+          stroke={colors[0] || '#ffffff'}
+          strokeWidth={2}
+          direction="up"
+        />
+      </div>
+    );
+  }
+  
+  if (isStar) {
+    return (
+      <div style={style}>
+        <Star
+          points={5}
+          innerRadius={shapeSize * 0.4}
+          outerRadius={shapeSize}
+          fill={shapeColor}
+          stroke={colors[0] || '#ffffff'}
+          strokeWidth={2}
+        />
+      </div>
+    );
+  }
+  
+  if (isPolygon) {
+    return (
+      <div style={style}>
+        <Polygon
+          points={6}
+          radius={shapeSize / 2}
+          fill={shapeColor}
+          stroke={colors[0] || '#ffffff'}
+          strokeWidth={2}
+        />
+      </div>
+    );
+  }
   
   // Glassmorphic card
   if (isCard) {
