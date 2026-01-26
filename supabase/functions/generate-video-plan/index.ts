@@ -56,26 +56,26 @@ Use these brand elements in the video. Match the color scheme exactly.
 `;
     }
 
-    const systemPrompt = `You are an expert video production planner specializing in CINEMATIC, high-quality commercial videos.
+    const systemPrompt = `You are an expert video production planner creating CINEMATIC, broadcast-quality commercial videos.
 ${brandContext}
 CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 
-STYLE REQUIREMENTS - Create visually STUNNING videos like professional motion graphics:
-- Use dramatic entrances (scale from 0, slide from off-screen, fade with blur)
-- Layer multiple elements with staggered timing for depth
-- Include animated backgrounds with gradients and floating orbs
-- Use 3D perspective elements for tech products
-- Add micro-animations (pulse, float, glow) for visual interest
-- Create smooth scene transitions
+MANDATORY VISUAL QUALITY STANDARDS:
+- Every scene MUST have 4-8 layered elements for visual depth
+- Use dramatic scale animations (0.3 → 1.0) with spring easing
+- Stagger element delays by 0.15-0.3 seconds for professional flow
+- Include floating accent elements (orbs, particles, glows)
+- Add subtle parallax motion to backgrounds
+- Use glassmorphism effects with backdrop-blur
 
-ADVANCED ELEMENT TYPES (USE THESE - not basic shapes):
-1. "code-editor" - Animated code in a 3D laptop. styleType: "code-editor", content: code snippet
-2. "terminal" - Command line with typing effect. styleType: "terminal", content: commands
-3. "progress" - Animated progress bar. styleType: "progress", style.progress: 0-100
-4. "3d-card" - Glassmorphic perspective card. styleType: "3d-card"
-5. "laptop-mockup" - 3D laptop frame. styleType: "laptop-mockup"
+ADVANCED ELEMENT TYPES (USE THESE):
+1. "code-editor" - 3D laptop with animated code. styleType: "code-editor", content: multi-line code
+2. "terminal" - Command line typing effect. styleType: "terminal", content: CLI commands
+3. "progress" - Animated progress indicator. styleType: "progress", style.progress: 0-100
+4. "3d-card" - Glassmorphic floating card. styleType: "3d-card" with perspective transforms
+5. "laptop-mockup" - 3D rotating laptop frame. styleType: "laptop-mockup"
 
-JSON STRUCTURE:
+MANDATORY JSON STRUCTURE:
 {
   "duration": ${duration},
   "fps": 30,
@@ -85,25 +85,70 @@ JSON STRUCTURE:
       "id": "scene_1",
       "startTime": 0,
       "duration": 3,
-      "description": "Cinematic opening with logo reveal",
+      "description": "Cinematic opening",
       "elements": [
         {
-          "id": "bg_1",
+          "id": "bg_gradient",
           "type": "shape",
-          "content": "Animated gradient background",
+          "content": "Animated gradient background with floating orbs",
           "position": { "x": 50, "y": 50, "z": 0 },
           "size": { "width": 100, "height": 100 },
-          "style": { "background": "linear-gradient(135deg, ${colors[0]}, ${colors[1]})" },
-          "animation": { "name": "fadeIn", "type": "fade", "duration": 1, "easing": "ease-out", "delay": 0, "properties": { "opacity": [0, 1] } }
+          "style": { 
+            "background": "linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 50%, ${colors[0]} 100%)",
+            "overflow": "hidden"
+          },
+          "animation": { "name": "fadeIn", "type": "fade", "duration": 0.5, "easing": "ease-out", "delay": 0, "properties": { "opacity": [0, 1] } }
         },
         {
-          "id": "title_1",
+          "id": "floating_orb_1",
+          "type": "shape",
+          "content": "Floating accent orb",
+          "position": { "x": 20, "y": 30, "z": 1 },
+          "size": { "width": 15, "height": 15 },
+          "style": { 
+            "background": "radial-gradient(circle, ${colors[3]}40 0%, transparent 70%)",
+            "borderRadius": "50%",
+            "filter": "blur(20px)"
+          },
+          "animation": { "name": "float", "type": "custom", "duration": 3, "easing": "ease-in-out", "delay": 0, "properties": { "y": [30, 35, 30] } }
+        },
+        {
+          "id": "main_title",
           "type": "text",
-          "content": "Your Headline",
-          "position": { "x": 50, "y": 40, "z": 2 },
+          "content": "Your Headline Here",
+          "position": { "x": 50, "y": 35, "z": 3 },
           "size": { "width": 80, "height": 20 },
-          "style": { "fontSize": 72, "fontWeight": 800, "color": "${colors[3]}" },
-          "animation": { "name": "popIn", "type": "scale", "duration": 0.8, "easing": "ease-out", "delay": 0.3, "properties": { "scale": [0.5, 1] } }
+          "style": { 
+            "fontSize": 80, 
+            "fontWeight": 800, 
+            "color": "${colors[3]}",
+            "textShadow": "0 4px 30px ${colors[3]}40"
+          },
+          "animation": { "name": "popIn", "type": "scale", "duration": 0.8, "easing": "spring", "delay": 0.2, "properties": { "scale": [0.3, 1], "opacity": [0, 1] } }
+        },
+        {
+          "id": "subtitle",
+          "type": "text",
+          "content": "Supporting tagline with key benefit",
+          "position": { "x": 50, "y": 55, "z": 3 },
+          "size": { "width": 70, "height": 10 },
+          "style": { 
+            "fontSize": 28, 
+            "fontWeight": 400, 
+            "color": "${colors[3]}cc"
+          },
+          "animation": { "name": "slideUp", "type": "slide", "duration": 0.6, "easing": "ease-out", "delay": 0.5, "properties": { "y": [10, 0], "opacity": [0, 1] } }
+        },
+        {
+          "id": "accent_line",
+          "type": "shape",
+          "content": "Decorative accent line",
+          "position": { "x": 50, "y": 65, "z": 2 },
+          "size": { "width": 20, "height": 0.5 },
+          "style": { 
+            "background": "linear-gradient(90deg, transparent, ${colors[3]}, transparent)"
+          },
+          "animation": { "name": "expandWidth", "type": "scale", "duration": 0.8, "easing": "ease-out", "delay": 0.7, "properties": { "scaleX": [0, 1] } }
         }
       ],
       "animations": [],
@@ -113,23 +158,23 @@ JSON STRUCTURE:
   "requiredAssets": [],
   "style": {
     "colorPalette": ${JSON.stringify(colors)},
-    "typography": { "primary": "${brandData?.fonts?.primary || 'Inter'}", "secondary": "JetBrains Mono", "sizes": { "h1": 72, "h2": 48, "body": 18 } },
+    "typography": { "primary": "${brandData?.fonts?.primary || 'Inter'}", "secondary": "JetBrains Mono", "sizes": { "h1": 80, "h2": 48, "body": 24 } },
     "spacing": 24,
     "borderRadius": 16
   }
 }
 
-MANDATORY RULES:
-1. Create ${Math.ceil(duration / 3)} to ${Math.ceil(duration / 2)} CINEMATIC scenes
-2. Each scene: 2-4 seconds with DRAMATIC animations
-3. ALWAYS use advanced elements (code-editor, terminal, 3d-card, progress) for tech demos
-4. Use proper animation delays (0.2s stagger between elements)
-5. Color palette: ${colors.join(', ')}
-6. Scene 1: Hero intro with main headline and dramatic entrance
-7. Final scene: Strong CTA with contact info or button
-8. For SaaS/tech: Include at least one code-editor or terminal element
-9. Text animations: Use "popIn" or "slideUp" with scale, never just fade
-10. Background: Use gradient backgrounds, not solid colors`;
+SCENE PLANNING RULES (FOLLOW EXACTLY):
+1. Create ${Math.ceil(duration / 2.5)} to ${Math.ceil(duration / 2)} scenes (more scenes = more dynamic)
+2. Scene 1: HERO - Logo/title with dramatic entrance, animated background, floating elements
+3. Middle scenes: Feature showcases with code-editor, terminal, or 3d-card elements
+4. Final scene: Strong CTA with button, contact info, and memorable closing animation
+5. EVERY scene needs: gradient background, 1-2 floating accent elements, main content, supporting text
+6. For SaaS/tech: ALWAYS include code-editor or terminal showing real product usage
+7. Animation delays: 0, 0.2, 0.4, 0.6, 0.8s stagger pattern
+8. Use "popIn" (scale 0.3→1) for headlines, "slideUp" for subtitles, "fadeIn" for backgrounds
+9. Include at least one element with "3d-card" styleType per feature scene
+10. Color palette: ${colors.join(', ')} - use [0] for bg, [1] for secondary, [3] for accents/text`;
 
     console.log('Generating video plan for:', prompt);
 
