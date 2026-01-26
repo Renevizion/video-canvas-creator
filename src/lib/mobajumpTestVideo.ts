@@ -37,6 +37,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -56,6 +58,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0.4,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           // Decorative circles
@@ -74,6 +78,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 1.0,
               delay: 0.5,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -91,6 +97,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 1.0,
               delay: 0.7,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
         ],
@@ -126,6 +134,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.8,
               delay: 0,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -145,6 +155,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.8,
               delay: 0.3,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           // Animated triangles representing features
@@ -163,6 +175,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 1.0,
               delay: 0.6,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -180,6 +194,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 1.0,
               delay: 0.8,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
         ],
@@ -215,6 +231,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.8,
               delay: 0,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           // Feature icons as shapes
@@ -233,6 +251,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0.3,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -250,6 +270,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0.5,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -267,6 +289,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0.7,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -286,6 +310,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.8,
               delay: 0.9,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
         ],
@@ -321,6 +347,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.8,
               delay: 0,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -340,6 +368,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.8,
               delay: 0.3,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           // Explosive stars for emphasis
@@ -358,6 +388,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0.5,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -375,6 +407,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 0.6,
               delay: 0.7,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
           {
@@ -392,6 +426,8 @@ export function generateMobajumpVideo(): VideoPlan {
               type: 'fade',
               duration: 1.0,
               delay: 0.4,
+              easing: 'ease-out',
+              properties: { opacity: [0, 1] },
             },
           },
         ],

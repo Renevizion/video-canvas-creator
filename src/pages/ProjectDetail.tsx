@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw, Film, PenTool } from 'lucide-react';
+import { ArrowLeft, Play, Code, Layers, Image, Clock, CheckCircle, AlertCircle, Loader2, Download, RefreshCw, Film, PenTool, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Header } from '@/components/layout/Header';
@@ -10,6 +10,7 @@ import { AssetPreview } from '@/components/video/AssetPreview';
 import { CodePreview } from '@/components/video/CodePreview';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
 import { VideoExporter } from '@/components/video/VideoExporter';
+import { RenderHistory } from '@/components/video/RenderHistory';
 import { supabase } from '@/integrations/supabase/client';
 import { useGenerateRemotionCode, useRenderVideo } from '@/hooks/useVideoData';
 import type { VideoProject, VideoPlan, PlannedScene, AssetRequirement } from '@/types/video';
@@ -33,7 +34,7 @@ const ProjectDetail = () => {
   const [activeTab, setActiveTab] = useState('preview');
   const [activeSceneId, setActiveSceneId] = useState('');
   const [showExporter, setShowExporter] = useState(false);
-  
+  const [showHistory, setShowHistory] = useState(false);
   const generateCodeMutation = useGenerateRemotionCode();
   const renderVideoMutation = useRenderVideo();
 
@@ -143,6 +144,14 @@ const ProjectDetail = () => {
                 <Button variant="outline" onClick={fetchProject} className="gap-2">
                   <RefreshCw className="w-4 h-4" />
                   Refresh
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowHistory(true)} 
+                  className="gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  History
                 </Button>
                 {plan && (
                   <Button
@@ -295,6 +304,13 @@ const ProjectDetail = () => {
           <VideoExporter plan={plan} projectId={id} onClose={() => setShowExporter(false)} />
         )}
       </AnimatePresence>
+
+      {/* Render History Modal */}
+      <RenderHistory 
+        projectId={id} 
+        isOpen={showHistory} 
+        onClose={() => setShowHistory(false)} 
+      />
     </div>
   );
 };
