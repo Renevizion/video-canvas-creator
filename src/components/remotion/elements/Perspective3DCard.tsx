@@ -1,5 +1,5 @@
 import React from 'react';
-import { interpolate, spring, useVideoConfig } from 'remotion';
+import { interpolate, spring, useVideoConfig, interpolateColors } from 'remotion';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface Perspective3DCardProps {
@@ -39,9 +39,25 @@ export const Perspective3DCard: React.FC<Perspective3DCardProps> = ({
   const translateZ = interpolate(entrySpring, [0, 1], [-200, 0]);
   const scale = interpolate(entrySpring, [0, 1], [0.7, 1]);
   
-  // Hover-like floating animation
-  const floatOffset = Math.sin(sceneFrame * 0.03) * 8;
-  const floatRotate = Math.sin(sceneFrame * 0.02) * 2;
+  // Dynamic zoom effect
+  const zoomScale = interpolate(
+    sceneFrame,
+    [0, fps * 2, fps * 4],
+    [1, 1.05, 1],
+    { extrapolateRight: 'clamp' }
+  );
+  
+  // Hover-like floating animation with enhanced amplitude
+  const floatOffset = Math.sin(sceneFrame * 0.03) * 12;
+  const floatRotate = Math.sin(sceneFrame * 0.02) * 3;
+  
+  // Dynamic glow intensity
+  const glowIntensity = interpolate(
+    sceneFrame,
+    [0, fps * 2, fps * 4],
+    [0.3, 1, 0.5],
+    { extrapolateRight: 'clamp' }
+  );
   
   const width = element.size?.width || 400;
   const height = element.size?.height || 280;
@@ -68,6 +84,7 @@ export const Perspective3DCard: React.FC<Perspective3DCardProps> = ({
           boxShadow: `
             0 50px 100px rgba(0,0,0,0.3),
             0 20px 50px rgba(0,0,0,0.2),
+            0 0 ${60 * glowIntensity}px rgba(99, 102, 241, ${0.4 * glowIntensity}),
             inset 0 1px 0 rgba(255,255,255,0.1),
             inset 0 -1px 0 rgba(0,0,0,0.1)
           `,
@@ -77,7 +94,7 @@ export const Perspective3DCard: React.FC<Perspective3DCardProps> = ({
             rotateZ(${rotateZ}deg) 
             translateZ(${translateZ}px)
             translateY(${floatOffset}px)
-            scale(${scale})
+            scale(${scale * zoomScale})
           `,
           transformStyle: 'preserve-3d',
           display: 'flex',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { interpolate, spring, useCurrentFrame, useVideoConfig, interpolateColors } from 'remotion';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface CodeEditorProps {
@@ -120,6 +120,22 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
 
   const tokens = tokenize(codeContent);
   
+  // Dynamic zoom effect
+  const zoomProgress = spring({
+    fps,
+    frame: sceneFrame,
+    config: { damping: 80, stiffness: 60, mass: 1 },
+  });
+  const scale = interpolate(zoomProgress, [0, 1], [0.92, 1]);
+  
+  // Camera movement - slight pan
+  const panX = interpolate(
+    sceneFrame,
+    [0, fps * 5],
+    [0, -5],
+    { extrapolateRight: 'clamp' }
+  );
+  
   // Typing animation - reveal characters over time
   const typingSpeed = 3; // characters per frame
   const typingDelay = 15; // frames before typing starts
@@ -164,6 +180,14 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   
   const width = element.size?.width || 600;
   const height = element.size?.height || 400;
+  
+  // Dynamic glow effect
+  const glowIntensity = interpolate(
+    sceneFrame,
+    [0, fps * 2, fps * 4],
+    [0, 1, 0.6],
+    { extrapolateRight: 'clamp' }
+  );
 
   return (
     <div
@@ -171,6 +195,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
         ...style,
         perspective: '1500px',
         transformStyle: 'preserve-3d',
+        transform: `${style.transform} translateX(${panX}px) scale(${scale})`,
       }}
     >
       {/* Laptop/Editor container with 3D effect */}
@@ -183,6 +208,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
           boxShadow: `
             0 60px 120px rgba(0,0,0,0.5),
             0 20px 60px rgba(0,0,0,0.3),
+            0 0 ${50 * glowIntensity}px rgba(82, 139, 255, ${0.4 * glowIntensity}),
             inset 0 1px 0 rgba(255,255,255,0.05)
           `,
           transform: `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`,
