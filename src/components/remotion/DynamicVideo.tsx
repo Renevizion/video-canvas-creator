@@ -884,6 +884,7 @@ const ElementRenderer: React.FC<{
   
   // Check for animated text (character-by-character reveal)
   const elementStyle = element.style as Record<string, unknown>;
+  const elementStyle = element.style as Record<string, unknown> | undefined;
   if (element.type === 'text' && (styleType === 'animated-text' || content.toLowerCase().includes('animated') || elementStyle?.animated === true)) {
     return wrapWithMotionBlur(<AnimatedText element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
