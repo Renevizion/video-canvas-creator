@@ -125,11 +125,23 @@ For motion graphics videos, use type: "shape" with these geometric elements:
 - "star" - Star shapes for emphasis, sparkles, highlights
 - "polygon" or "hexagon" - Polygons for technical/geometric patterns
 
+For motion graphics with CUSTOM AI-GENERATED ASSETS:
+- Use type: "image" with descriptive prompts for AI-generated elements
+- Request abstract shapes, icons, illustrations, or patterns
+- Add to "requiredAssets" array with detailed specifications
+- Examples:
+  * "Abstract fluid gradient blob"
+  * "Geometric icon set with circles and triangles"
+  * "Animated particle texture"
+  * "Stylized tech icon - rocket ship"
+  * "Abstract background pattern - hexagonal grid"
+
 Motion Graphics Tips:
 - Combine multiple geometric shapes with staggered animations
 - Use scale, rotate, and translate animations for dynamic movement
 - Layer shapes with different sizes, colors, and opacities
 - Create patterns by duplicating shapes with varied positions
+- Mix geometric shapes with AI-generated assets for richer visuals
 - Excellent for: explainers, abstract intros, logo reveals, transitions
 
 EXAMPLE JSON STRUCTURE (USE AS REFERENCE, NOT TEMPLATE):
@@ -177,7 +189,18 @@ NOTE: This is just showing the structure. Your actual content should be COMPLETE
       "transition": { "type": "[fade/slide/wipe/cut based on content]", "duration": 0.3 }
     }
   ],
-  "requiredAssets": [],
+  "requiredAssets": [
+    {
+      "id": "asset_1",
+      "type": "image",
+      "description": "[AI-generated asset description - e.g., 'Abstract gradient blob', 'Geometric icon', 'Particle texture']",
+      "specifications": {
+        "width": 512,
+        "height": 512,
+        "style": "[photorealistic/illustration/abstract/icon/pattern]"
+      }
+    }
+  ],
   "style": {
     "colorPalette": ${JSON.stringify(colors)},
     "typography": { "primary": "${brandData?.fonts?.primary || 'Inter'}", "secondary": "JetBrains Mono", "sizes": { "h1": 80, "h2": 48, "body": 24 } },

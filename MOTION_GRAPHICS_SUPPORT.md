@@ -2,32 +2,70 @@
 
 ## Overview
 
-The video-canvas-creator system **fully supports motion graphics videos** using Remotion's `@remotion/shapes` library. You can create abstract, animated videos with geometric shapes, patterns, and dynamic movements.
+The video-canvas-creator system **fully supports motion graphics videos** using:
+1. **Remotion's `@remotion/shapes`** - Geometric shapes (Circle, Rect, Triangle, Star, Polygon)
+2. **AI-Generated Assets** - Custom illustrations, icons, textures, and abstract elements via Gemini 2.5 Flash Image
 
-## Supported Geometric Shapes
+You can create abstract, animated videos with geometric shapes, AI-generated elements, patterns, and dynamic movements.
 
-The system uses `@remotion/shapes` which provides:
+## Two Approaches to Motion Graphics
 
+### Approach 1: Geometric Shapes (Built-in)
+
+Use `@remotion/shapes` for pure geometric motion graphics:
+
+**Supported Shapes:**
 1. **Circle** - Circular shapes and dots
 2. **Rect** - Rectangles and squares
 3. **Triangle** - Triangular shapes and arrows
 4. **Star** - Star shapes with configurable points
 5. **Polygon** - Multi-sided shapes (hexagons, octagons, etc.)
 
+**Best for:**
+- Pure geometric patterns
+- Abstract backgrounds
+- Technical/minimalist aesthetics
+- Fast rendering (no asset generation delay)
+
+### Approach 2: AI-Generated Assets (Custom)
+
+Use AI image generation for custom motion graphics elements:
+
+**Supported Types:**
+- Abstract shapes and blobs
+- Custom icons and illustrations
+- Textures and patterns
+- Stylized elements
+- Particle effects
+- Gradient backgrounds
+
+**Best for:**
+- Unique, branded visuals
+- Complex illustrations
+- Organic/fluid shapes
+- Rich, detailed graphics
+- Custom style requirements
+
+### Hybrid Approach (Recommended)
+
+**Combine both** for maximum visual impact:
+- Geometric shapes for structure and patterns
+- AI-generated assets for hero elements and custom visuals
+- Result: Professional, unique motion graphics
+
 ## How It Works
 
-### 1. AI Recognition
+### 1. Geometric Shapes (Approach 1)
 
+**AI Recognition:**
 When you request a **"motion graphics video"**, the AI will:
-- Recognize it as a motion graphics request
 - Use `type: "shape"` elements with geometric descriptions
 - Apply dynamic animations (scale, rotate, translate)
-- Create layered compositions with multiple shapes
+- Create layered compositions
 - Use staggered timing for professional flow
 
-### 2. Shape Detection
-
-The rendering system automatically detects shape types from element content:
+**Shape Detection:**
+The rendering system automatically detects shape types:
 
 ```typescript
 // Content includes "circle" or "dot" → Renders Circle
@@ -37,8 +75,37 @@ The rendering system automatically detects shape types from element content:
 // Content includes "polygon" or "hexagon" → Renders Polygon
 ```
 
-### 3. Example Video Plan
+### 2. AI-Generated Assets (Approach 2)
 
+**Asset Request Process:**
+
+1. **AI identifies need** - During video plan generation, AI determines which elements need custom assets
+2. **Adds to requiredAssets** - Creates asset specifications with descriptions
+3. **Asset generation** - System calls `generate-asset` function with Gemini 2.5 Flash Image
+4. **Upload to Supabase** - Generated images stored in Supabase Storage
+5. **Inject into video** - URLs added to element `content` or `style.src`
+
+**Asset Specification:**
+```json
+{
+  "requiredAssets": [
+    {
+      "id": "hero_icon",
+      "type": "image",
+      "description": "Abstract fluid gradient blob in cyan and purple",
+      "specifications": {
+        "width": 512,
+        "height": 512,
+        "style": "abstract"
+      }
+    }
+  ]
+}
+```
+
+### 3. Example Video Plans
+
+#### Pure Geometric (Fast)
 ```json
 {
   "scenes": [
@@ -54,21 +121,8 @@ The rendering system automatically detects shape types from element content:
           "style": { "color": "#06b6d4" },
           "animation": { 
             "type": "scale", 
-            "properties": { "scale": [0, 1] },
             "duration": 1.0,
             "easing": "spring"
-          }
-        },
-        {
-          "id": "triangle_1",
-          "type": "shape",
-          "content": "Rotating triangle",
-          "position": { "x": 70, "y": 30, "z": 2 },
-          "size": { "width": 80, "height": 80 },
-          "style": { "color": "#8b5cf6" },
-          "animation": { 
-            "type": "rotate",
-            "duration": 2.0
           }
         }
       ]
@@ -77,31 +131,109 @@ The rendering system automatically detects shape types from element content:
 }
 ```
 
+#### With AI-Generated Assets (Rich)
+```json
+{
+  "scenes": [
+    {
+      "id": "intro",
+      "elements": [
+        {
+          "id": "bg_texture",
+          "type": "image",
+          "content": "Abstract particle texture background",
+          "position": { "x": 50, "y": 50, "z": 0 },
+          "size": { "width": 100, "height": 100 },
+          "animation": { 
+            "type": "fade",
+            "duration": 0.8
+          }
+        },
+        {
+          "id": "hero_icon",
+          "type": "image",
+          "content": "Stylized rocket ship icon in flat style",
+          "position": { "x": 50, "y": 40, "z": 2 },
+          "size": { "width": 30, "height": 30 },
+          "animation": { 
+            "type": "scale",
+            "properties": { "scale": [0, 1] },
+            "duration": 1.2,
+            "easing": "spring"
+          }
+        }
+      ]
+    }
+  ],
+  "requiredAssets": [
+    {
+      "id": "bg_texture",
+      "type": "image",
+      "description": "Abstract particle texture background",
+      "specifications": { "width": 1920, "height": 1080, "style": "abstract" }
+    },
+    {
+      "id": "hero_icon",
+      "type": "image",
+      "description": "Stylized rocket ship icon in flat style",
+      "specifications": { "width": 512, "height": 512, "style": "illustration" }
+    }
+  ]
+}
+```
+
 ## Prompt Examples
 
-### Basic Motion Graphics
+### Geometric Only (Fast Rendering)
 ```
 "Create a 10-second motion graphics video with colorful geometric shapes"
+→ Uses built-in Circle, Rect, Triangle shapes
+→ No asset generation delay
 ```
 
-### Abstract Pattern
+### With AI Assets (Rich Visuals)
 ```
-"Motion graphics video with hexagons forming a grid pattern"
-```
-
-### Logo Reveal
-```
-"Motion graphics logo reveal using circles and triangles"
+"Motion graphics video with custom abstract icons and fluid shapes"
+→ AI generates custom icons, abstract shapes
+→ Combines with geometric elements
+→ Richer, unique visuals
 ```
 
-### Explainer Style
+### Hybrid Examples
+
+**Abstract Pattern:**
 ```
-"Motion graphics explainer video with animated icons and shapes"
+"Motion graphics video with hexagons and AI-generated gradient blobs"
+→ Hexagons: Built-in Polygon shapes
+→ Gradient blobs: AI-generated abstract images
 ```
 
-### Technical/Tech
+**Logo Reveal:**
 ```
-"Abstract motion graphics video with geometric patterns for a tech company"
+"Motion graphics logo reveal with circles, triangles, and custom brand icon"
+→ Circles/Triangles: Built-in shapes
+→ Brand icon: AI-generated based on description
+```
+
+**Explainer Style:**
+```
+"Motion graphics explainer video with geometric backgrounds and AI-generated icons for each feature"
+→ Backgrounds: Built-in geometric shapes
+→ Feature icons: AI-generated illustrations
+```
+
+**Tech/SaaS:**
+```
+"Abstract motion graphics video with geometric patterns and AI-generated tech icons"
+→ Patterns: Built-in shapes
+→ Tech icons: AI-generated custom graphics
+```
+
+**Product Showcase:**
+```
+"Motion graphics showcasing app features with custom UI elements and geometric transitions"
+→ Transitions: Built-in shapes
+→ UI elements: AI-generated mockups/screenshots
 ```
 
 ## Animation Capabilities
@@ -139,20 +271,109 @@ In the video creation interface, use prompts like:
 ### Step 2: AI Generates the Plan
 The AI will:
 - Recognize the motion graphics intent
-- Create scenes with geometric shape elements
+- Determine if custom assets are needed
+- Create scenes with geometric shapes and/or AI-generated elements
+- Add asset specifications to `requiredAssets` array
 - Apply appropriate animations
 - Use layered composition for depth
 
-### Step 3: Preview in Remotion Studio
+**For AI-Generated Assets:**
+The system automatically:
+1. Identifies elements needing custom graphics
+2. Generates assets using Gemini 2.5 Flash Image model
+3. Uploads to Supabase Storage
+4. Injects URLs into video plan
+
+### Step 3: Asset Generation (if applicable)
+If video uses AI-generated assets:
+- System calls `generate-asset` function
+- AI creates custom images based on descriptions
+- Images optimized for motion graphics:
+  - Vibrant colors for abstract elements
+  - Clean lines for icons
+  - Seamless patterns for textures
+  - Transparent backgrounds when appropriate
+- Processing time: ~3-10 seconds per asset
+
+### Step 4: Preview in Remotion Studio
 - Open Remotion Studio: `npm run dev:studio`
 - View the generated composition
-- See shapes animate in real-time
+- See shapes and AI assets animate in real-time
 - Adjust timing and properties as needed
 
-### Step 4: Export
+### Step 5: Export
 - Use the export functionality
 - Renders at 30fps with smooth animations
-- All shapes are vector-based (crisp at any resolution)
+- Geometric shapes: vector-based (crisp at any resolution)
+- AI assets: high-quality raster images
+
+## AI Asset Generation Details
+
+### Supported Asset Types
+
+1. **Abstract Shapes**
+   - Fluid blobs and organic forms
+   - Gradient overlays
+   - Particle effects
+   - Examples: "Abstract fluid gradient blob", "Organic shape with smooth curves"
+
+2. **Icons & Illustrations**
+   - Flat design icons
+   - Line art illustrations
+   - Stylized graphics
+   - Examples: "Rocket ship icon in flat style", "Shopping cart illustration"
+
+3. **Patterns & Textures**
+   - Repeatable backgrounds
+   - Grid patterns
+   - Noise textures
+   - Examples: "Hexagonal grid pattern", "Abstract particle texture"
+
+4. **Custom Elements**
+   - Branded graphics
+   - Product visuals
+   - UI mockups
+   - Examples: "App interface screenshot", "Product packaging mockup"
+
+### Asset Generation Model
+
+**Model:** Google Gemini 2.5 Flash Image  
+**Capabilities:**
+- High-quality image generation
+- Multiple styles (photorealistic, illustration, abstract, icon)
+- Custom dimensions
+- Fast generation (~3-5 seconds)
+- Suitable for commercial use
+
+**Generation Process:**
+```typescript
+// System automatically calls this for each required asset
+generateAsset({
+  description: "Abstract fluid gradient blob in cyan and purple",
+  width: 512,
+  height: 512,
+  style: "abstract"
+})
+→ Returns: Supabase Storage URL
+```
+
+### Optimization Tips
+
+**For Fast Rendering:**
+- Use geometric shapes when possible
+- Limit AI assets to 2-3 key elements per video
+- Use appropriate dimensions (512x512 for icons, 1920x1080 for backgrounds)
+
+**For Rich Visuals:**
+- Request specific styles ("flat design", "abstract", "illustration")
+- Describe colors to match brand palette
+- Mix AI assets with geometric shapes for depth
+
+**For Best Results:**
+- Be specific in asset descriptions
+- Request transparent backgrounds for icons
+- Use consistent style across all assets
+- Consider animation timing with asset complexity
 
 ## Technical Details
 
@@ -245,8 +466,26 @@ The referenced template (https://www.remotion.dev/templates/prompt-to-motion-gra
 - Geometric shapes and patterns
 - Dynamic animations
 
-**Our implementation provides the same capabilities:**
+**Our implementation provides the same capabilities PLUS MORE:**
 - ✅ AI-powered generation
+- ✅ Geometric shapes (Circle, Rect, Triangle, Star, Polygon)
+- ✅ Dynamic animations (scale, rotate, translate, pulse, float)
+- ✅ Layered compositions
+- ✅ Staggered timing
+- ✅ Professional motion graphics output
+- ✅ **AI-generated custom assets** (icons, illustrations, textures) 🆕
+- ✅ **Hybrid approach** (geometric + custom assets) 🆕
+- ✅ **Brand integration** with color extraction 🆕
+
+**Additional advantages:**
+- ✅ Integrated with full video creation suite
+- ✅ Mix motion graphics with other content types (text, code, 3D)
+- ✅ Brand color integration via Firecrawl
+- ✅ Multiple export options
+- ✅ Real-time preview in Remotion Studio
+- ✅ Custom asset generation with Gemini 2.5 Flash Image
+- ✅ Supabase storage for generated assets
+- ✅ Template-free, unique outputs every time
 - ✅ Geometric shapes (Circle, Rect, Triangle, Star, Polygon)
 - ✅ Dynamic animations (scale, rotate, translate, pulse, float)
 - ✅ Layered compositions
@@ -311,11 +550,40 @@ Result:
 
 ## Summary
 
-The video-canvas-creator system **fully supports motion graphics** with:
+The video-canvas-creator system **fully supports motion graphics** with two powerful approaches:
+
+### Approach 1: Pure Geometric (Built-in Shapes)
+- ✅ 5 geometric shape types (Circle, Rect, Triangle, Star, Polygon)
+- ✅ Instant rendering (no asset generation)
+- ✅ Vector-based (crisp at any resolution)
+- ✅ Perfect for abstract patterns and minimal aesthetics
+
+### Approach 2: AI-Generated Assets (Custom Graphics)
+- ✅ Unlimited custom illustrations, icons, textures
+- ✅ AI-powered with Gemini 2.5 Flash Image
+- ✅ Automatic Supabase storage
+- ✅ Perfect for branded, unique visuals
+
+### Hybrid Approach (Best of Both)
+- ✅ Combine geometric shapes with AI assets
+- ✅ Rich, professional motion graphics
+- ✅ Unique output every time
+- ✅ Brand-aware color palettes
+
+**Features:**
 - ✅ AI-powered generation
-- ✅ 5 geometric shape types
-- ✅ Dynamic animations
-- ✅ Professional results
+- ✅ Dynamic animations (scale, rotate, translate, pulse, float)
+- ✅ Layered compositions
+- ✅ Staggered timing
+- ✅ Professional, commercial-quality results
+- ✅ Real-time preview in Remotion Studio
 - ✅ Easy to use
 
 **Just ask for a "motion graphics video" and the AI will handle the rest!**
+
+Whether you want:
+- Fast geometric patterns → Use built-in shapes
+- Custom branded elements → Use AI-generated assets
+- Rich, unique visuals → Use hybrid approach
+
+The system automatically determines the best approach based on your prompt.

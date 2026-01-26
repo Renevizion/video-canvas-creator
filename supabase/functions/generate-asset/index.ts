@@ -29,9 +29,13 @@ Dimensions: ${width}x${height}
 
 Requirements:
 - Professional, commercial quality
-- Suitable for video production
+- Suitable for video production and motion graphics
 - Clean, modern aesthetic
-- No text unless specifically requested`;
+- No text unless specifically requested
+- If abstract/geometric: use vibrant colors and smooth shapes
+- If icon/illustration: use clean lines and solid colors
+- If pattern/texture: create seamless, repeatable design
+- Transparent background when appropriate (icons, shapes)`;
 
     // Use the Nano banana image model
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
