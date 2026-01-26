@@ -32,6 +32,7 @@ export const RemotionPlayerWrapper = forwardRef<HTMLDivElement, RemotionPlayerWr
           controls
           autoPlay
           loop
+          acknowledgeRemotionLicense={true}
         />
       </div>
     );

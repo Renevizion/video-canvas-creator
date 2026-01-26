@@ -180,7 +180,7 @@ const SceneRenderer: React.FC<{
 // ============================================================================
 // SCENE BACKGROUND - Contextual backgrounds based on scene description
 // ============================================================================
-const SceneBackground: React.FC<{ description: string }> = ({ description }) => {
+const SceneBackground: React.FC<{ description: string }> = React.memo(({ description }) => {
   const frame = useCurrentFrame();
   const desc = description.toLowerCase();
   
@@ -190,6 +190,8 @@ const SceneBackground: React.FC<{ description: string }> = ({ description }) => 
   const isEnding = desc.includes('outro') || desc.includes('closing') || desc.includes('cta') || desc.includes('end');
   
   if (isIntro) {
+    // Throttle rotation to every 4th frame for performance
+    const throttledFrame = Math.floor(frame / 4) * 4;
     return (
       <AbsoluteFill>
         {/* Starburst effect for intros */}
@@ -200,7 +202,7 @@ const SceneBackground: React.FC<{ description: string }> = ({ description }) => 
             left: '50%',
             width: 1200,
             height: 1200,
-            transform: `translate(-50%, -50%) rotate(${frame * 0.5}deg)`,
+            transform: `translate(-50%, -50%) rotate(${throttledFrame * 0.5}deg)`,
             background: 'conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.03) 10deg, transparent 20deg)',
             borderRadius: '50%',
           }}
@@ -229,7 +231,7 @@ const SceneBackground: React.FC<{ description: string }> = ({ description }) => 
   }
   
   return null;
-};
+});
 
 // ============================================================================
 // SPARKLE ELEMENT - For decorative stars
@@ -439,7 +441,7 @@ const TextElement: React.FC<{
   style: React.CSSProperties;
   globalStyle: VideoPlan['style'];
   colors: string[];
-}> = ({ element, style, globalStyle, colors }) => {
+}> = React.memo(({ element, style, globalStyle, colors }) => {
   const textStyle = element.style as Record<string, unknown>;
   const content = element.content || '';
   
@@ -477,7 +479,7 @@ const TextElement: React.FC<{
       {content}
     </div>
   );
-};
+});
 
 // ============================================================================
 // SHAPE ELEMENT - Glassmorphic cards and UI elements
@@ -488,7 +490,7 @@ const ShapeElement: React.FC<{
   globalStyle: VideoPlan['style'];
   colors: string[];
   sceneFrame: number;
-}> = ({ element, style, globalStyle, colors, sceneFrame }) => {
+}> = React.memo(({ element, style, globalStyle, colors, sceneFrame }) => {
   const shapeStyle = element.style as Record<string, unknown>;
   // NOTE: We intentionally do NOT render element.content as visible text for shapes.
   // Many plans use content as a semantic label (e.g. "Background", "Arrow", "UI Card")
@@ -598,7 +600,9 @@ const ShapeElement: React.FC<{
   
   // Globe/World element
   if (isGlobe) {
-    const rotation = sceneFrame * 0.5;
+    // Throttle rotation to every 4th frame for performance
+    const throttledFrame = Math.floor(sceneFrame / 4) * 4;
+    const rotation = throttledFrame * 0.5;
     return (
       <div
         style={{
@@ -656,7 +660,7 @@ const ShapeElement: React.FC<{
       {/* intentionally no label text */}
     </div>
   );
-};
+});
 
 // ============================================================================
 // ARROW ELEMENT - Render a proper arrow icon instead of a label block
@@ -665,7 +669,7 @@ const ArrowElement: React.FC<{
   element: PlannedElement;
   style: React.CSSProperties;
   colors: string[];
-}> = ({ element, style, colors }) => {
+}> = React.memo(({ element, style, colors }) => {
   const width = element.size?.width
     ? element.size.width <= 100
       ? `${element.size.width}%`
@@ -707,7 +711,7 @@ const ArrowElement: React.FC<{
       </svg>
     </div>
   );
-};
+});
 
 // ============================================================================
 // IMAGE ELEMENT - Stylized image placeholders
@@ -717,7 +721,7 @@ const ImageElement: React.FC<{
   style: React.CSSProperties;
   globalStyle: VideoPlan['style'];
   colors: string[];
-}> = ({ element, style, colors }) => {
+}> = React.memo(({ element, style, colors }) => {
   const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '300px';
   const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '200px';
   
@@ -745,7 +749,7 @@ const ImageElement: React.FC<{
       </svg>
     </div>
   );
-};
+});
 
 // ============================================================================
 // CURSOR ELEMENT - Animated cursor with click effect
@@ -755,7 +759,7 @@ const CursorElement: React.FC<{
   style: React.CSSProperties;
   sceneFrame: number;
   fps: number;
-}> = ({ element, style, sceneFrame, fps }) => {
+}> = React.memo(({ element, style, sceneFrame, fps }) => {
   const anim = element.animation as AnimationPattern | undefined;
   
   // Smooth cursor movement using spring
@@ -835,6 +839,6 @@ const CursorElement: React.FC<{
       </div>
     </>
   );
-};
+});
 
 export default DynamicVideo;
