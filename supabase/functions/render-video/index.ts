@@ -30,6 +30,10 @@ interface Scene {
   duration: number;
   description?: string;
   elements?: Element[];
+  transition?: {
+    type?: 'cut' | 'fade' | 'slide' | 'wipe' | 'zoom';
+    duration?: number;
+  } | null;
 }
 
 interface Element {
@@ -327,8 +331,135 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
           </div>`;
       }
       
-      // SHAPE ELEMENT (backgrounds, orbs, glows)
+      // SHAPE ELEMENT - Use @remotion/shapes for geometric shapes
       if (el.type === 'shape') {
+        const content = (el.content || '').toLowerCase();
+        const shapeSize = typeof el.size?.width === 'number' ? el.size.width : 200;
+        const shapeColor = (elStyle.color as string) || colors[1] || '#06b6d4';
+        const strokeColor = colors[0] || '#ffffff';
+        
+        // Detect shape type from content
+        const isCircle = content.includes('circle') || content.includes('orb');
+        const isRect = content.includes('rect') || content.includes('square') || content.includes('box') || content.includes('card');
+        const isTriangle = content.includes('triangle');
+        const isStar = content.includes('star');
+        const isPolygon = content.includes('polygon') || content.includes('hexagon');
+        
+        // If it's a recognized geometric shape, use @remotion/shapes
+        if (isCircle) {
+          return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${spring_${idx}_${elIdx}})\`,
+              opacity: spring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+            }}
+          >
+            <Circle
+              radius={${shapeSize / 2}}
+              fill="${shapeColor}"
+              stroke="${strokeColor}"
+              strokeWidth={2}
+            />
+          </div>`;
+        }
+        
+        if (isRect) {
+          const borderRadius = (elStyle.borderRadius as number) || 24;
+          return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${spring_${idx}_${elIdx}})\`,
+              opacity: spring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+            }}
+          >
+            <Rect
+              width={${shapeSize}}
+              height={${shapeSize}}
+              fill="${shapeColor}"
+              stroke="${strokeColor}"
+              strokeWidth={2}
+              cornerRadius={${borderRadius}}
+            />
+          </div>`;
+        }
+        
+        if (isTriangle) {
+          return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${spring_${idx}_${elIdx}})\`,
+              opacity: spring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+            }}
+          >
+            <Triangle
+              length={${shapeSize}}
+              fill="${shapeColor}"
+              stroke="${strokeColor}"
+              strokeWidth={2}
+              direction="up"
+            />
+          </div>`;
+        }
+        
+        if (isStar) {
+          return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${spring_${idx}_${elIdx}})\`,
+              opacity: spring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+              filter: \`drop-shadow(0 0 20px ${shapeColor})\`,
+            }}
+          >
+            <Star
+              points={5}
+              innerRadius={${shapeSize * 0.4}}
+              outerRadius={${shapeSize}}
+              fill="${shapeColor}"
+              stroke="${strokeColor}"
+              strokeWidth={2}
+            />
+          </div>`;
+        }
+        
+        if (isPolygon) {
+          return `
+          <div
+            style={{
+              position: 'absolute',
+              left: '${posX}%',
+              top: '${posY}%',
+              transform: \`translate(-50%, -50%) scale(\${spring_${idx}_${elIdx}})\`,
+              opacity: spring_${idx}_${elIdx},
+              zIndex: ${zIndex},
+            }}
+          >
+            <Polygon
+              points={6}
+              radius={${shapeSize / 2}}
+              fill="${shapeColor}"
+              stroke="${strokeColor}"
+              strokeWidth={2}
+            />
+          </div>`;
+        }
+        
+        // Fallback to basic div for non-geometric shapes (backgrounds, glows, etc.)
         const w = getSize(el.size?.width, 100, true);
         const h = getSize(el.size?.height, 100, true);
         const borderRadius = (elStyle.borderRadius as number) || 0;
@@ -363,14 +494,26 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
       return `const spring_${idx}_${elIdx} = spring({ fps, frame: Math.max(0, sceneFrame - ${delayFrames}), config: { damping: 25, stiffness: 100, mass: 0.6 } });`;
     }).join('\n    ');
 
+    // Add fade in/out for scene transitions
+    const transitionDuration = scene.transition?.duration || 0.3;
+    const transitionFrames = Math.round(transitionDuration * fps);
+    const fadeIn = idx > 0; // Fade in all scenes except first
+    const fadeOut = idx < scenes.length - 1; // Fade out all scenes except last
+
     return `
       {/* Scene ${idx + 1}: ${scene.description || ''} */}
       <Sequence from={${startFrame}} durationInFrames={${sceneDuration}}>
         {(() => {
           const sceneFrame = frame - ${startFrame};
           ${springVars}
+          
+          // Scene transition fade
+          const sceneFadeIn = ${fadeIn} ? interpolate(sceneFrame, [0, ${transitionFrames}], [0, 1], { extrapolateRight: 'clamp' }) : 1;
+          const sceneFadeOut = ${fadeOut} ? interpolate(sceneFrame, [${sceneDuration - transitionFrames}, ${sceneDuration}], [1, 0], { extrapolateLeft: 'clamp' }) : 1;
+          const sceneOpacity = Math.min(sceneFadeIn, sceneFadeOut);
+          
           return (
-            <AbsoluteFill>
+            <AbsoluteFill style={{ opacity: sceneOpacity }}>
               ${elementsCode || '/* No elements in this scene */'}
             </AbsoluteFill>
           );
@@ -385,6 +528,7 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
 
   return `import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Composition, registerRoot } from 'remotion';
+import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 
 const DynamicVideo: React.FC = () => {
   const frame = useCurrentFrame();
