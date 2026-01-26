@@ -1,5 +1,6 @@
 import React from 'react';
 import { interpolate, spring, useVideoConfig, interpolateColors } from 'remotion';
+import { noise2D } from '@remotion/noise';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface Perspective3DCardProps {
@@ -59,6 +60,11 @@ export const Perspective3DCard: React.FC<Perspective3DCardProps> = ({
     { extrapolateRight: 'clamp' }
   );
   
+  // Add organic noise-based movement
+  const noiseOffsetX = noise2D('card-x', sceneFrame * 0.02, 0) * 5;
+  const noiseOffsetY = noise2D('card-y', sceneFrame * 0.02, 1) * 5;
+  const noiseRotation = noise2D('card-rot', sceneFrame * 0.015, 2) * 1.5;
+  
   const width = element.size?.width || 400;
   const height = element.size?.height || 280;
   const borderRadius = (cardStyle.borderRadius as number) || 24;
@@ -89,11 +95,12 @@ export const Perspective3DCard: React.FC<Perspective3DCardProps> = ({
             inset 0 -1px 0 rgba(0,0,0,0.1)
           `,
           transform: `
-            rotateX(${rotateX + floatRotate}deg) 
+            rotateX(${rotateX + floatRotate + noiseRotation}deg) 
             rotateY(${rotateY}deg) 
             rotateZ(${rotateZ}deg) 
             translateZ(${translateZ}px)
-            translateY(${floatOffset}px)
+            translateX(${noiseOffsetX}px)
+            translateY(${floatOffset + noiseOffsetY}px)
             scale(${scale * zoomScale})
           `,
           transformStyle: 'preserve-3d',

@@ -1,5 +1,6 @@
 import React from 'react';
 import { interpolate, spring, useCurrentFrame, useVideoConfig, interpolateColors } from 'remotion';
+import { noise2D } from '@remotion/noise';
 import type { PlannedElement, VideoPlan } from '@/types/video';
 
 interface TerminalProps {
@@ -36,6 +37,10 @@ export const Terminal: React.FC<TerminalProps> = ({
     [0, 1, 0.7],
     { extrapolateRight: 'clamp' }
   );
+  
+  // Organic subtle movement using noise
+  const noiseX = noise2D('terminal-x', sceneFrame * 0.01, 0) * 3;
+  const noiseY = noise2D('terminal-y', sceneFrame * 0.01, 1) * 3;
   
   // Typing animation
   const typingSpeed = 2;
@@ -94,7 +99,7 @@ export const Terminal: React.FC<TerminalProps> = ({
       style={{
         ...style,
         opacity: entrySpring,
-        transform: `${style.transform} translateY(${slideUp}px) scale(${scale})`,
+        transform: `${style.transform} translateY(${slideUp}px) translateX(${noiseX}px) translateY(${noiseY}px) scale(${scale})`,
       }}
     >
       <div

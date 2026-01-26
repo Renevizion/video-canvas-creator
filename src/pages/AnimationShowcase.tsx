@@ -221,11 +221,56 @@ const perspective3DDemoPlan: VideoPlan = {
   },
 };
 
+const animatedTextDemoPlan: VideoPlan = {
+  id: 'demo-animated-text',
+  duration: 5,
+  fps: 30,
+  resolution: { width: 1920, height: 1080 },
+  scenes: [
+    {
+      id: 'scene-1',
+      startTime: 0,
+      duration: 5,
+      description: 'Animated text demo',
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Dynamic Text',
+          position: { x: 50, y: 40, z: 1 },
+          size: { width: 800, height: 100 },
+          style: { fontSize: 72, fontWeight: 800, animated: true },
+          animation: { name: 'fadeIn', type: 'fade', duration: 0.3, delay: 0, easing: 'ease-out', properties: {} },
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'Character Animations',
+          position: { x: 50, y: 60, z: 1 },
+          size: { width: 700, height: 60 },
+          style: { fontSize: 48, fontWeight: 600, animated: true },
+          animation: { name: 'fadeIn', type: 'fade', duration: 0.3, delay: 0.8, easing: 'ease-out', properties: {} },
+        },
+      ],
+      animations: [],
+      transition: null,
+    },
+  ],
+  requiredAssets: [],
+  style: {
+    colorPalette: ['#ffffff', '#8b5cf6', '#1e293b', '#0a0a1a'],
+    typography: { primary: 'Inter', secondary: 'Inter', sizes: {} },
+    spacing: 16,
+    borderRadius: 16,
+  },
+};
+
 const demos = [
   { id: 'code', label: 'Code Editor', icon: Code2, plan: codeEditorDemoPlan },
   { id: 'progress', label: 'Progress Bar', icon: Layers, plan: progressBarDemoPlan },
   { id: 'terminal', label: 'Terminal', icon: TerminalIcon, plan: terminalDemoPlan },
   { id: '3d', label: '3D Cards', icon: Monitor, plan: perspective3DDemoPlan },
+  { id: 'text', label: 'Animated Text', icon: Monitor, plan: animatedTextDemoPlan },
 ];
 
 const AnimationShowcase = () => {
@@ -262,7 +307,7 @@ const AnimationShowcase = () => {
 
           {/* Demo selector */}
           <Tabs value={activeDemo} onValueChange={setActiveDemo} className="mb-8">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               {demos.map(demo => (
                 <TabsTrigger key={demo.id} value={demo.id} className="gap-2">
                   <demo.icon className="w-4 h-4" />
