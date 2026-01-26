@@ -338,7 +338,7 @@ const useElementAnimation = (
       break;
       
     case 'pulse': {
-      const pulseScale = 1 + random('pulse-' + element.id) * 0.1 * Math.abs(Math.sin(sceneFrame * 0.15));
+      const pulseScale = 1 + noise3D('pulse-' + element.id, sceneFrame * 0.15, 0, 0) * 0.05;
       scale = pulseScale;
       break;
     }
