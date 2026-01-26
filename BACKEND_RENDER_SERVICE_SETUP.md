@@ -128,6 +128,45 @@ npm list @remotion/motion-blur
 # Should show version ^4.0.409 for all
 ```
 
+#### Automated Package Checker
+
+Use the provided validation script to check all packages at once:
+
+```bash
+# Copy check-backend-packages.js from video-canvas-creator repo to your backend
+# Then run:
+node check-backend-packages.js
+```
+
+This script will:
+- ✅ Check all required packages are in package.json
+- ✅ Verify packages are actually installed in node_modules
+- ❌ List any missing packages
+- 📝 Provide installation commands for missing packages
+
+Example output:
+```
+🔍 Checking backend render service packages...
+
+📦 Project: video-render-service
+
+✅ react - ^18.3.1
+✅ react-dom - ^18.3.1
+✅ remotion - ^4.0.409
+✅ @remotion/shapes - ^4.0.409
+✅ @remotion/captions - ^4.0.409
+...
+
+====================================================================
+Summary:
+====================================================================
+✅ Installed: 17
+❌ Missing: 0
+
+✅ All required packages are installed!
+   Your backend render service is ready.
+```
+
 ## Why All These Packages Are Required
 
 The frontend generates dynamic Remotion code that may use any of these features:
@@ -262,7 +301,17 @@ npm install
 
 ### Verifying Package Installation
 
-Run this script to check all required packages:
+**Option 1: Use the automated checker (recommended)**
+
+```bash
+# Copy check-backend-packages.js from video-canvas-creator repo
+# Run in your backend directory:
+node check-backend-packages.js
+```
+
+The script will show you exactly what's missing and how to fix it.
+
+**Option 2: Manual verification script**
 
 ```javascript
 // check-packages.js
