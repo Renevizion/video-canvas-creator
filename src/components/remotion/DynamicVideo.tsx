@@ -1,8 +1,9 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, Img, delayRender, continueRender } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Series, Easing, Img, delayRender, continueRender } from 'remotion';
 import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
+import { wipe } from '@remotion/transitions/wipe';
 import { noise3D } from '@remotion/noise';
 import { Audio } from '@remotion/media';
 import { OffthreadVideo } from 'remotion';
@@ -44,17 +45,20 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
       
       {/* Render scenes with TransitionSeries */}
       <TransitionSeries>
-        {plan.scenes.map((scene, index) => {
+        {plan.scenes.flatMap((scene, index) => {
           const durationFrames = Math.round(scene.duration * fps);
           
           // Determine transition based on scene.transition property
           const transitionType = scene.transition?.type || 'fade';
+          const transitionDuration = scene.transition?.duration || 0.3;
           
           let transition;
           switch (transitionType) {
             case 'slide':
-            case 'wipe':
               transition = slide({ direction: 'from-right' });
+              break;
+            case 'wipe':
+              transition = wipe({ direction: 'from-right' });
               break;
             case 'zoom':
               transition = fade(); // Use fade for zoom (can be extended with custom transition)
@@ -67,16 +71,11 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
               transition = fade();
           }
 
-          return (
+          const elements: React.ReactNode[] = [
             <TransitionSeries.Sequence 
               key={scene.id}
               durationInFrames={durationFrames}
-              style={{ flexDirection: 'row' }}
             >
-              <TransitionSeries.Transition
-                presentation={transition}
-                timing={springTiming({ config: { damping: 200, stiffness: 100 } })}
-              />
               <SceneRenderer 
                 scene={scene} 
                 globalStyle={plan.style} 
@@ -84,7 +83,40 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
                 totalScenes={plan.scenes.length}
               />
             </TransitionSeries.Sequence>
-          );
+          ];
+
+          // Add transition AFTER the sequence (between scenes)
+          if (index < plan.scenes.length - 1) {
+            const nextScene = plan.scenes[index + 1];
+            const nextDurationFrames = Math.round(nextScene.duration * fps);
+            
+            // Calculate transition duration in frames
+            let transitionDurationFrames = transitionType === 'cut' 
+              ? Math.round(fps * 0.1) // Very quick for cuts
+              : Math.round(fps * transitionDuration);
+            
+            // Ensure transition doesn't exceed either adjacent sequence duration
+            // Rule: Transition must be <= min(current sequence, next sequence)
+            const maxAllowedDuration = Math.min(durationFrames, nextDurationFrames);
+            transitionDurationFrames = Math.min(transitionDurationFrames, Math.floor(maxAllowedDuration * 0.9)); // Use 90% to be safe
+            
+            const timing = transitionType === 'cut' 
+              ? linearTiming({ durationInFrames: transitionDurationFrames })
+              : springTiming({ 
+                  config: { damping: 200, stiffness: 100 },
+                  durationInFrames: transitionDurationFrames
+                });
+            
+            elements.push(
+              <TransitionSeries.Transition
+                key={`${scene.id}-transition`}
+                presentation={transition}
+                timing={timing}
+              />
+            );
+          }
+
+          return elements;
         })}
       </TransitionSeries>
       
