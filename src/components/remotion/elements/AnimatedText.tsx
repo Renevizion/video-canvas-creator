@@ -70,15 +70,16 @@ export const AnimatedText: React.FC<AnimatedTextProps> = ({
           { extrapolateRight: 'clamp' }
         );
         
+        const elStyle = element.style as Record<string, unknown> | undefined;
         return (
           <span
             key={i}
             style={{
               display: 'inline-block',
-              fontSize: element.style?.fontSize || 72,
-              fontWeight: element.style?.fontWeight || 800,
-              fontFamily: element.style?.fontFamily || "'Inter', system-ui, sans-serif",
-              color: element.style?.color || `hsl(${hue}, 80%, 60%)`,
+              fontSize: (elStyle?.fontSize as number) || 72,
+              fontWeight: (elStyle?.fontWeight as number) || 800,
+              fontFamily: (elStyle?.fontFamily as string) || "'Inter', system-ui, sans-serif",
+              color: (elStyle?.color as string) || `hsl(${hue}, 80%, 60%)`,
               opacity,
               transform: `
                 scale(${scale}) 
