@@ -393,6 +393,61 @@ curl -X POST https://your-supabase-url/functions/v1/generate-video-plan \
 
 ---
 
+## 7. Backend Render Service - Required npm Packages
+
+### CRITICAL: Install @remotion/shapes and other Remotion packages
+
+The backend render service (e.g., `Renevizion/remorender` or your Railway deployment) MUST have all required Remotion packages installed. The generated code imports from these packages, and if they're missing, you'll get **"Module not found"** errors.
+
+**Update your backend render service's `package.json`:**
+
+```json
+{
+  "dependencies": {
+    "remotion": "^4.0.409",
+    "@remotion/bundler": "^4.0.409",
+    "@remotion/cli": "^4.0.409",
+    "@remotion/renderer": "^4.0.409",
+    "@remotion/player": "^4.0.409",
+    "@remotion/shapes": "^4.0.409",
+    "@remotion/transitions": "^4.0.409",
+    "@remotion/motion-blur": "^4.0.409",
+    "@remotion/noise": "^4.0.409",
+    "@remotion/paths": "^4.0.409",
+    "@remotion/media": "^4.0.409",
+    "@remotion/media-utils": "^4.0.409",
+    "@remotion/layout-utils": "^4.0.409",
+    "@remotion/google-fonts": "^4.0.409",
+    "@remotion/captions": "^4.0.409",
+    "@remotion/animated-emoji": "^4.0.409",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}
+```
+
+**After updating package.json, run:**
+```bash
+npm install
+```
+
+### Common Error Messages if Packages Are Missing:
+
+```
+❌ Module not found: Error: Can't resolve '@remotion/shapes'
+❌ Module not found: Error: Can't resolve '@remotion/captions'
+❌ Module not found: Error: Can't resolve '@remotion/motion-blur'
+```
+
+**Solution:** Install the missing package in your backend render service:
+```bash
+npm install @remotion/shapes@^4.0.409
+npm install @remotion/captions@^4.0.409
+npm install @remotion/motion-blur@^4.0.409
+```
+
+---
+
 ## Summary of Changes
 
 **Files to Update in Backend:**
@@ -401,6 +456,7 @@ curl -X POST https://your-supabase-url/functions/v1/generate-video-plan \
 3. ✅ `supabase/functions/generate-asset/index.ts` - Fix image generation (real images, not placeholders)
 4. ✅ Supabase Storage - Create `generated-assets` bucket
 5. ✅ Database - Run SQL migration for aspect_ratio column
+6. ✅ **Backend Render Service `package.json`** - Install all required Remotion packages (CRITICAL!)
 
 **What This Enables:**
 - ✅ Portrait videos for TikTok/Instagram Reels

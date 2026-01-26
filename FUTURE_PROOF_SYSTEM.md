@@ -294,10 +294,43 @@ condition: (plan) => hasElementType(plan, 'exact-type-name')
 
 ### Issue: Backend render fails
 
-**Check**: 
-1. All packages installed? `npm install`
-2. Backend has same packages? Check remorender/package.json
-3. Code validation passes? Use `validatePlanCompatibility(plan)`
+**Error message:** `Module not found: Error: Can't resolve '@remotion/shapes'`
+
+**Root cause:** Backend render service (Railway/custom server) is missing required npm packages.
+
+**Solution:**
+
+1. **Check if packages are installed in backend:**
+   - The backend render service needs ALL @remotion/* packages
+   - Check `remorender/package.json` or your backend's package.json
+   - See [BACKEND_RENDER_SERVICE_SETUP.md](./BACKEND_RENDER_SERVICE_SETUP.md) for complete package list
+
+2. **Install missing packages in backend:**
+   ```bash
+   # In your backend render service directory (not this repo!)
+   npm install @remotion/shapes@^4.0.409
+   npm install @remotion/captions@^4.0.409
+   npm install @remotion/motion-blur@^4.0.409
+   # ... see BACKEND_RENDER_SERVICE_SETUP.md for full list
+   ```
+
+3. **Verify installation:**
+   ```bash
+   npm list @remotion/shapes
+   # Should show: @remotion/shapes@4.0.409
+   ```
+
+4. **Keep versions in sync:**
+   - Backend should use same @remotion/* versions as this frontend
+   - Check this repo's package.json for current versions
+   - Currently using: `^4.0.409`
+
+**Prevention:**
+- Always install ALL @remotion/* packages in backend, even if not immediately used
+- The generated code dynamically imports features based on video content
+- Missing packages cause runtime errors when specific features are used
+
+**Quick Fix:** See complete backend setup guide in [BACKEND_RENDER_SERVICE_SETUP.md](./BACKEND_RENDER_SERVICE_SETUP.md)
 
 ## Summary
 
