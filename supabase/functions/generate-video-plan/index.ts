@@ -18,12 +18,14 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, duration, style, brandData, aspectRatio = 'landscape' } = await req.json();
+    const { prompt, duration, style, brandData, aspectRatio = 'landscape', generateImages = false, imageStyle = 'illustration' } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    console.log('Generate images:', generateImages, 'Image style:', imageStyle);
 
     // Aspect ratio configurations
     const aspectRatios: Record<string, { width: number; height: number }> = {
@@ -145,11 +147,16 @@ Example motion graphics scene:
   { "id": "hex-pattern", "type": "shape", "content": "hexagon", "position": { "x": 35, "y": 65, "z": 1 }, "size": { "width": 150 }, "style": { "color": "${colors[2]}" }, "animation": { "name": "fadeIn", "delay": 0.2 } }
 ]
 
-For motion graphics with CUSTOM AI-GENERATED ASSETS:
-- Use type: "image" with descriptive prompts for AI-generated elements
-- Request abstract shapes, icons, illustrations, or patterns
-- Add to "requiredAssets" array with detailed specifications
-- Examples: "Abstract fluid gradient blob", "Geometric icon", "Particle texture"
+CUSTOM AI-GENERATED ASSETS:
+${generateImages ? `
+IMAGE GENERATION IS ENABLED with style: "${imageStyle}"
+For this video, you MUST generate relevant image assets. Add entries to "requiredAssets" array with:
+- Descriptive prompts for AI image generation
+- Style: "${imageStyle}" (user selected)
+- Common assets to generate: product images, icons, illustrations, backgrounds, patterns
+- For known brands: Generate their product imagery (ice cream cone, coffee cup, etc.)
+- Be specific in descriptions: "A ${imageStyle} style ice cream cone with vanilla swirl and sprinkles" NOT "ice cream"
+` : 'Image generation is disabled. Use geometric shapes and text only.'}
 
 KEY PRINCIPLE: More shapes + staggered timing + varied sizes = better "flow"
 
@@ -199,16 +206,16 @@ NOTE: This is just showing the structure. Your actual content should be COMPLETE
     }
   ],
   "requiredAssets": [
-    {
-      "id": "asset_1",
+    ${generateImages ? `{
+      "id": "generated_asset_1",
       "type": "image",
-      "description": "[AI-generated asset description - e.g., 'Abstract gradient blob', 'Geometric icon', 'Particle texture']",
+      "description": "[Detailed ${imageStyle} style description of the main product/subject]",
       "specifications": {
         "width": 512,
         "height": 512,
-        "style": "[photorealistic/illustration/abstract/icon/pattern]"
+        "style": "${imageStyle}"
       }
-    }
+    }` : '// No assets when image generation is disabled'}
   ],
   "style": {
     "colorPalette": ${JSON.stringify(colors)},
@@ -341,6 +348,53 @@ Return ONLY the JSON structure, no other text.`
     }
 
     console.log('Video plan stored with ID:', stored.id);
+
+    // If image generation is enabled and there are required assets, generate them
+    if (generateImages && plan.requiredAssets && plan.requiredAssets.length > 0) {
+      console.log('Generating AI images for', plan.requiredAssets.length, 'assets...');
+      
+      // Generate assets in parallel
+      const assetPromises = plan.requiredAssets.map(async (asset: any) => {
+        try {
+          const generateAssetResponse = await fetch(`${supabaseUrl}/functions/v1/generate-asset`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              assetId: asset.id,
+              description: asset.description,
+              width: asset.specifications?.width || 512,
+              height: asset.specifications?.height || 512,
+              style: asset.specifications?.style || imageStyle,
+            }),
+          });
+          
+          if (generateAssetResponse.ok) {
+            const assetData = await generateAssetResponse.json();
+            console.log('Generated asset:', asset.id, assetData.url);
+            
+            // Store the generated asset
+            await supabase.from('generated_assets').insert({
+              plan_id: stored.id,
+              requirement_id: asset.id,
+              type: 'image',
+              url: assetData.url,
+              description: asset.description,
+            });
+            
+            return { ...asset, url: assetData.url };
+          }
+        } catch (err) {
+          console.error('Failed to generate asset:', asset.id, err);
+        }
+        return asset;
+      });
+      
+      await Promise.all(assetPromises);
+      console.log('All assets generated');
+    }
 
     return new Response(JSON.stringify({
       success: true,

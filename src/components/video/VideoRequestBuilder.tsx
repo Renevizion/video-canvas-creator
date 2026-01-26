@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Wand2, Clock, Palette, Sparkles, Loader2, Globe, X, Monitor, Smartphone, Square } from 'lucide-react';
+import { Wand2, Clock, Palette, Sparkles, Loader2, Globe, X, Monitor, Smartphone, Square, Image, Paintbrush } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useGenerateVideoPlan } from '@/hooks/useVideoData';
 import { toast } from 'sonner';
@@ -40,6 +41,7 @@ interface BrandData {
 }
 
 type AspectRatioType = 'landscape' | 'portrait' | 'square';
+type ImageStyleType = 'illustration' | 'isometric' | 'realistic' | 'cartoon' | '3d-render' | 'minimal';
 
 const aspectRatioPresets = [
   { id: 'landscape' as AspectRatioType, name: 'YouTube', icon: Monitor, dimensions: '1920×1080', ratio: '16:9' },
@@ -54,6 +56,15 @@ const stylePresets = [
   { id: 'minimal', name: 'Minimal', colors: ['#fafafa', '#171717', '#737373'] },
   { id: 'gradient', name: 'Gradient', colors: ['#667eea', '#764ba2', '#f43f5e'] },
   { id: 'nature', name: 'Nature', colors: ['#f0fdf4', '#166534', '#84cc16'] },
+];
+
+const imageStylePresets: { id: ImageStyleType; name: string; description: string }[] = [
+  { id: 'illustration', name: 'Illustration', description: 'Flat, clean vector style' },
+  { id: 'isometric', name: 'Isometric', description: '3D-like angled view' },
+  { id: 'realistic', name: 'Realistic', description: 'Photo-realistic imagery' },
+  { id: 'cartoon', name: 'Cartoon', description: 'Fun, playful style' },
+  { id: '3d-render', name: '3D Render', description: 'Polished 3D graphics' },
+  { id: 'minimal', name: 'Minimal', description: 'Simple, iconic shapes' },
 ];
 
 // Detect URL in prompt
@@ -76,6 +87,8 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [isExtractingBrand, setIsExtractingBrand] = useState(false);
   const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
+  const [generateImages, setGenerateImages] = useState(false);
+  const [imageStyle, setImageStyle] = useState<ImageStyleType>('illustration');
   
   const generateMutation = useGenerateVideoPlan();
 
@@ -120,6 +133,8 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
         style: brandData ? 'brand' : selectedStyle,
         brandData: brandData ? (brandData as unknown as Record<string, unknown>) : undefined,
         aspectRatio: selectedAspectRatio,
+        generateImages,
+        imageStyle: generateImages ? imageStyle : undefined,
       });
       
       if (result?.planId) {
@@ -312,6 +327,56 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
           </div>
         </div>
       )}
+
+      {/* AI Image Generation Toggle */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="flex items-center gap-2 text-foreground">
+            <Image className="w-4 h-4 text-primary" />
+            Generate AI Images
+          </Label>
+          <Switch
+            checked={generateImages}
+            onCheckedChange={setGenerateImages}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Creates product visuals, icons, and branded assets using AI. Uses extra tokens.
+        </p>
+        
+        {/* Image Style Options - only show when toggle is on */}
+        {generateImages && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-2 pt-2"
+          >
+            <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Paintbrush className="w-3 h-3" />
+              Image Style
+            </Label>
+            <div className="grid grid-cols-3 gap-2">
+              {imageStylePresets.map((preset) => (
+                <motion.button
+                  key={preset.id}
+                  onClick={() => setImageStyle(preset.id)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`p-2 rounded-lg border transition-all text-left ${
+                    imageStyle === preset.id
+                      ? 'border-primary bg-primary/10'
+                      : 'border-border bg-card hover:border-primary/50'
+                  }`}
+                >
+                  <span className="text-xs font-medium block">{preset.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{preset.description}</span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </div>
 
       {/* Generate Button */}
       <Button
