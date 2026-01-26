@@ -1,5 +1,6 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, Img, random } from 'remotion';
+import { noise3D } from '@remotion/noise';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
 
@@ -141,16 +142,17 @@ const SceneRenderer: React.FC<{
   });
 
   // Scene exit animation
-  const exitStart = durationFrames - fps * 0.5;
-  const exitProgress = interpolate(
+  const exit = spring({
+    fps,
     frame,
-    [exitStart, durationFrames],
-    [1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-  );
+    config: { damping: 40, stiffness: 100, mass: 0.8 },
+    durationInFrames: Math.round(fps * 0.5),
+    delay: durationFrames - Math.round(fps * 0.5),
+  });
+  const combinedProgress = Math.min(entryProgress, 1 - exit);
 
-  const combinedOpacity = Math.min(entryProgress, exitProgress);
-  const entryScale = interpolate(entryProgress, [0, 1], [0.95, 1]);
+  const combinedOpacity = combinedProgress;
+  const entryScale = interpolate(entryProgress, [0, 1], [0.95, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill
@@ -287,12 +289,12 @@ const useElementAnimation = (
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
 
-  let opacity = springProgress;
+  const opacity = springProgress;
   let translateX = 0;
-  let translateY = interpolate(springProgress, [0, 1], [30, 0]);
-  let scale = interpolate(springProgress, [0, 1], [0.9, 1]);
+  let translateY = interpolate(springProgress, [0, 1], [30, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  let scale = interpolate(springProgress, [0, 1], [0.9, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   let rotate = 0;
-  let blur = interpolate(springProgress, [0, 0.3], [4, 0], { extrapolateRight: 'clamp' });
+  const blur = interpolate(springProgress, [0, 0.3], [4, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   const animType = anim?.type || anim?.name || 'fade';
   const props = anim?.properties || {};
@@ -309,11 +311,11 @@ const useElementAnimation = (
     case 'slideUp':
       if (props.y) {
         const [fromY, toY] = Array.isArray(props.y) ? props.y : [60, 0];
-        translateY = interpolate(springProgress, [0, 1], [fromY as number, toY as number]);
+        translateY = interpolate(springProgress, [0, 1], [fromY as number, toY as number], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       }
       if (props.x) {
         const [fromX, toX] = Array.isArray(props.x) ? props.x : [0, 0];
-        translateX = interpolate(springProgress, [0, 1], [fromX as number, toX as number]);
+        translateX = interpolate(springProgress, [0, 1], [fromX as number, toX as number], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       }
       break;
       
@@ -323,25 +325,26 @@ const useElementAnimation = (
     case 'pop':
       if (props.scale) {
         const [fromScale, toScale] = Array.isArray(props.scale) ? props.scale : [0.5, 1];
-        scale = interpolate(springProgress, [0, 1], [fromScale as number, toScale as number]);
+        scale = interpolate(springProgress, [0, 1], [fromScale as number, toScale as number], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       } else {
-        scale = interpolate(springProgress, [0, 1], [0.5, 1]);
+        scale = interpolate(springProgress, [0, 1], [0.5, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       }
-      translateY = interpolate(springProgress, [0, 1], [20, 0]);
+      translateY = interpolate(springProgress, [0, 1], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       break;
       
     case 'rotate':
     case 'spin':
-      rotate = interpolate(linearProgress, [0, 1], [0, 360]);
+      rotate = interpolate(linearProgress, [0, 1], [0, 360], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       break;
       
-    case 'pulse':
-      const pulseScale = 1 + Math.sin(sceneFrame * 0.15) * 0.05;
+    case 'pulse': {
+      const pulseScale = 1 + random('pulse-' + element.id) * 0.1 * Math.abs(Math.sin(sceneFrame * 0.15));
       scale = pulseScale;
       break;
+    }
       
     case 'float':
-      translateY = Math.sin(sceneFrame * 0.08) * 15;
+      translateY = noise3D('float-' + element.id, 0, 0, sceneFrame * 0.02) * 15;
       break;
       
     case 'glow':
@@ -746,7 +749,7 @@ const ImageElement: React.FC<{
           overflow: 'hidden',
         }}
       >
-        <img
+        <Img
           src={imageUrl}
           alt=""
           style={{
