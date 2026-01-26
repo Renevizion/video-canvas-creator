@@ -12,6 +12,8 @@ import {
 
 // NEW: Import all the working components you can test
 import { CommunityPackagesShowcase } from '../components/remotion/showcases/CommunityPackagesShowcase';
+import { CompleteExampleVideo, CompleteExampleLandscape } from '../components/remotion/showcases/CompleteExampleVideo';
+import { UltimateMegaVideo } from '../components/remotion/showcases/UltimateMegaVideo';
 import { AudioVisualizationDemo } from '../components/remotion/elements/AudioVisualization';
 import { 
   AspectRatioDemo, 
@@ -378,6 +380,30 @@ export const RemotionRoot: React.FC = () => {
         id="BeforeAfter"
         component={BeforeAfterDemo}
         durationInFrames={120}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* ========== COMPLETE EXAMPLE VIDEOS (USE ALL FEATURES) ========== */}
+      
+      {/* COMPLETE VERTICAL VIDEO - Uses EVERYTHING */}
+      <Composition
+        id="CompleteVerticalVideo"
+        component={CompleteExampleVideo}
+        durationInFrames={270}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{}}
+      />
+
+      {/* COMPLETE LANDSCAPE VIDEO - Uses EVERYTHING */}
+      <Composition
+        id="CompleteLandscapeVideo"
+        component={CompleteExampleLandscape}
+        durationInFrames={260}
         fps={30}
         width={1920}
         height={1080}
