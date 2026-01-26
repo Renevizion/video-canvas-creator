@@ -94,9 +94,19 @@ export interface PlannedElement {
     | 'laptop' 
     | '3d-card' 
     | 'caption'
-    | 'particle-field'  // NEW: Animated particle system
-    | 'path'            // NEW: Animated SVG path
-    | 'lottie';         // NEW: Lottie animation
+    | 'particle-field'
+    | 'path'
+    | 'lottie'
+    | 'phone-mockup'
+    | 'logo-grid'
+    | 'data-viz'
+    | 'chart'
+    | 'audio-visualization'
+    | 'real-audio-viz'
+    | 'music-visualization'
+    | 'tiktok-captions'
+    | 'stats-counter'
+    | 'progress';
   content: string;
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };

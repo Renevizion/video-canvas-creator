@@ -45,10 +45,11 @@ export const RenderProgressShowcase: React.FC<RenderProgressShowcaseProps> = ({
       <ProgressBar
         element={{
           id: 'render-progress',
-          type: 'progress',
+          type: 'progress-bar',
           content: fileName,
           position: { x: 50, y: 50, z: 1 },
           size: { width: 400, height: 150 },
+          style: {},
         }}
         style={{
           position: 'absolute',
