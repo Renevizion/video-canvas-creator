@@ -1,5 +1,14 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Series, Easing, Img, delayRender, continueRender } from 'remotion';
+import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
+import { fade } from '@remotion/transitions/fade';
+import { slide } from '@remotion/transitions/slide';
+import { wipe } from '@remotion/transitions/wipe';
+import { noise3D } from '@remotion/noise';
+import { Audio } from '@remotion/media';
+import { OffthreadVideo } from 'remotion';
+import { measureText } from '@remotion/layout-utils';
+import { loadFont } from '@remotion/google-fonts/Inter';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
 
@@ -34,22 +43,82 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
       {/* Animated background gradient */}
       <AnimatedBackground colors={colors} />
       
-      {/* Render each scene */}
-      {plan.scenes.map((scene, index) => {
-        const startFrame = Math.round(scene.startTime * fps);
-        const durationFrames = Math.round(scene.duration * fps);
+      {/* Render scenes with TransitionSeries */}
+      <TransitionSeries>
+        {plan.scenes.flatMap((scene, index) => {
+          const durationFrames = Math.round(scene.duration * fps);
+          
+          // Determine transition based on scene.transition property
+          const transitionType = scene.transition?.type || 'fade';
+          const transitionDuration = scene.transition?.duration || 0.3;
+          
+          let transition;
+          switch (transitionType) {
+            case 'slide':
+              transition = slide({ direction: 'from-right' });
+              break;
+            case 'wipe':
+              transition = wipe({ direction: 'from-right' });
+              break;
+            case 'zoom':
+              transition = fade(); // Use fade for zoom (can be extended with custom transition)
+              break;
+            case 'cut':
+              // For cut transitions, use very short fade
+              transition = fade();
+              break;
+            default:
+              transition = fade();
+          }
 
-        return (
-          <Sequence key={scene.id} from={startFrame} durationInFrames={durationFrames}>
-            <SceneRenderer 
-              scene={scene} 
-              globalStyle={plan.style} 
-              sceneIndex={index}
-              totalScenes={plan.scenes.length}
-            />
-          </Sequence>
-        );
-      })}
+          const elements: React.ReactNode[] = [
+            <TransitionSeries.Sequence 
+              key={scene.id}
+              durationInFrames={durationFrames}
+            >
+              <SceneRenderer 
+                scene={scene} 
+                globalStyle={plan.style} 
+                sceneIndex={index}
+                totalScenes={plan.scenes.length}
+              />
+            </TransitionSeries.Sequence>
+          ];
+
+          // Add transition AFTER the sequence (between scenes)
+          if (index < plan.scenes.length - 1) {
+            const nextScene = plan.scenes[index + 1];
+            const nextDurationFrames = Math.round(nextScene.duration * fps);
+            
+            // Calculate transition duration in frames
+            let transitionDurationFrames = transitionType === 'cut' 
+              ? Math.round(fps * 0.1) // Very quick for cuts
+              : Math.round(fps * transitionDuration);
+            
+            // Ensure transition doesn't exceed either adjacent sequence duration
+            // Rule: Transition must be <= min(current sequence, next sequence)
+            const maxAllowedDuration = Math.min(durationFrames, nextDurationFrames);
+            transitionDurationFrames = Math.min(transitionDurationFrames, Math.floor(maxAllowedDuration * 0.9)); // Use 90% to be safe
+            
+            const timing = transitionType === 'cut' 
+              ? linearTiming({ durationInFrames: transitionDurationFrames })
+              : springTiming({ 
+                  config: { damping: 200, stiffness: 100 },
+                  durationInFrames: transitionDurationFrames
+                });
+            
+            elements.push(
+              <TransitionSeries.Transition
+                key={`${scene.id}-transition`}
+                presentation={transition}
+                timing={timing}
+              />
+            );
+          }
+
+          return elements;
+        })}
+      </TransitionSeries>
       
       {/* Subtle vignette overlay */}
       <Vignette />
@@ -58,11 +127,21 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
 };
 
 // ============================================================================
-// ANIMATED BACKGROUND - Static gradient (optimized for performance)
+// ANIMATED BACKGROUND - Organic gradient with noise3D motion
 // ============================================================================
 const AnimatedBackground: React.FC<{ colors: string[] }> = React.memo(({ colors }) => {
+  const frame = useCurrentFrame();
   const primary = colors[1] || '#06b6d4';
   const secondary = colors[2] || '#1e293b';
+  
+  // Use noise3D for smooth organic motion of orbs
+  const orb1X = 60 + noise3D('orb1-x', frame * 0.01, 0, 0) * 20;
+  const orb1Y = 20 + noise3D('orb1-y', 0, frame * 0.01, 0) * 15;
+  const orb1Rotation = noise3D('orb1-rot', frame * 0.005, 0, 0) * 30;
+  
+  const orb2X = 30 + noise3D('orb2-x', frame * 0.008, 0, 0) * 15;
+  const orb2Y = 70 + noise3D('orb2-y', 0, frame * 0.008, 0) * 20;
+  const orb2Rotation = noise3D('orb2-rot', frame * 0.006, 0, 0) * 25;
   
   return (
     <AbsoluteFill>
@@ -75,30 +154,30 @@ const AnimatedBackground: React.FC<{ colors: string[] }> = React.memo(({ colors 
         }}
       />
       
-      {/* Static orbs - no per-frame animation */}
+      {/* Animated orbs with noise3D motion */}
       <div
         style={{
           position: 'absolute',
-          top: '20%',
-          left: '60%',
+          top: `${orb1Y}%`,
+          left: `${orb1X}%`,
           width: 600,
           height: 600,
           borderRadius: '50%',
           background: `radial-gradient(circle, ${primary}20 0%, transparent 70%)`,
-          transform: 'translate(-50%, -50%)',
+          transform: `translate(-50%, -50%) rotate(${orb1Rotation}deg)`,
           filter: 'blur(60px)',
         }}
       />
       <div
         style={{
           position: 'absolute',
-          top: '70%',
-          left: '30%',
+          top: `${orb2Y}%`,
+          left: `${orb2X}%`,
           width: 500,
           height: 500,
           borderRadius: '50%',
           background: 'radial-gradient(circle, #8b5cf620 0%, transparent 70%)',
-          transform: 'translate(-50%, -50%)',
+          transform: `translate(-50%, -50%) rotate(${orb2Rotation}deg)`,
           filter: 'blur(80px)',
         }}
       />
@@ -141,16 +220,17 @@ const SceneRenderer: React.FC<{
   });
 
   // Scene exit animation
-  const exitStart = durationFrames - fps * 0.5;
-  const exitProgress = interpolate(
+  const exit = spring({
+    fps,
     frame,
-    [exitStart, durationFrames],
-    [1, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
-  );
+    config: { damping: 40, stiffness: 100, mass: 0.8 },
+    durationInFrames: Math.round(fps * 0.5),
+    delay: durationFrames - Math.round(fps * 0.5),
+  });
+  const combinedProgress = Math.min(entryProgress, 1 - exit);
 
-  const combinedOpacity = Math.min(entryProgress, exitProgress);
-  const entryScale = interpolate(entryProgress, [0, 1], [0.95, 1]);
+  const combinedOpacity = combinedProgress;
+  const entryScale = interpolate(entryProgress, [0, 1], [0.95, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill
@@ -162,7 +242,7 @@ const SceneRenderer: React.FC<{
       {/* Scene background effects based on description */}
       <SceneBackground description={scene.description} />
       
-      {/* Render elements with staggered animations */}
+      {/* Render elements - each with its own staggered timing */}
       {scene.elements?.map((element, idx) => (
         <ElementRenderer
           key={element.id}
@@ -287,12 +367,12 @@ const useElementAnimation = (
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
 
-  let opacity = springProgress;
+  const opacity = springProgress;
   let translateX = 0;
-  let translateY = interpolate(springProgress, [0, 1], [30, 0]);
-  let scale = interpolate(springProgress, [0, 1], [0.9, 1]);
+  let translateY = interpolate(springProgress, [0, 1], [30, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+  let scale = interpolate(springProgress, [0, 1], [0.9, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   let rotate = 0;
-  let blur = interpolate(springProgress, [0, 0.3], [4, 0], { extrapolateRight: 'clamp' });
+  const blur = interpolate(springProgress, [0, 0.3], [4, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 
   const animType = anim?.type || anim?.name || 'fade';
   const props = anim?.properties || {};
@@ -309,11 +389,11 @@ const useElementAnimation = (
     case 'slideUp':
       if (props.y) {
         const [fromY, toY] = Array.isArray(props.y) ? props.y : [60, 0];
-        translateY = interpolate(springProgress, [0, 1], [fromY as number, toY as number]);
+        translateY = interpolate(springProgress, [0, 1], [fromY as number, toY as number], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       }
       if (props.x) {
         const [fromX, toX] = Array.isArray(props.x) ? props.x : [0, 0];
-        translateX = interpolate(springProgress, [0, 1], [fromX as number, toX as number]);
+        translateX = interpolate(springProgress, [0, 1], [fromX as number, toX as number], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       }
       break;
       
@@ -323,25 +403,26 @@ const useElementAnimation = (
     case 'pop':
       if (props.scale) {
         const [fromScale, toScale] = Array.isArray(props.scale) ? props.scale : [0.5, 1];
-        scale = interpolate(springProgress, [0, 1], [fromScale as number, toScale as number]);
+        scale = interpolate(springProgress, [0, 1], [fromScale as number, toScale as number], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       } else {
-        scale = interpolate(springProgress, [0, 1], [0.5, 1]);
+        scale = interpolate(springProgress, [0, 1], [0.5, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       }
-      translateY = interpolate(springProgress, [0, 1], [20, 0]);
+      translateY = interpolate(springProgress, [0, 1], [20, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       break;
       
     case 'rotate':
     case 'spin':
-      rotate = interpolate(linearProgress, [0, 1], [0, 360]);
+      rotate = interpolate(linearProgress, [0, 1], [0, 360], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
       break;
       
-    case 'pulse':
-      const pulseScale = 1 + Math.sin(sceneFrame * 0.15) * 0.05;
+    case 'pulse': {
+      const pulseScale = 1 + noise3D('pulse-' + element.id, sceneFrame * 0.15, 0, 0) * 0.05;
       scale = pulseScale;
       break;
+    }
       
     case 'float':
-      translateY = Math.sin(sceneFrame * 0.08) * 15;
+      translateY = noise3D('float-' + element.id, 0, 0, sceneFrame * 0.02) * 15;
       break;
       
     case 'glow':
@@ -426,6 +507,10 @@ const ElementRenderer: React.FC<{
       return <ShapeElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />;
     case 'image':
       return <ImageElement element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} />;
+    case 'audio':
+      return <AudioElement element={element} />;
+    case 'video':
+      return <VideoElement element={element} style={baseStyle} />;
     case 'cursor':
       return <CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />;
     default:
@@ -434,7 +519,76 @@ const ElementRenderer: React.FC<{
 };
 
 // ============================================================================
-// TEXT ELEMENT - Kinetic typography with gradients
+// AUDIO ELEMENT - Renders audio with volume control
+// ============================================================================
+const AudioElement: React.FC<{
+  element: PlannedElement;
+}> = ({ element }) => {
+  const audioStyle = element.style as Record<string, unknown>;
+  const content = element.content || '';
+  
+  // Get audio source from content or style
+  const audioSrc = content.startsWith('http') || content.startsWith('data:') 
+    ? content 
+    : (audioStyle?.src as string) || '';
+  
+  if (!audioSrc) return null;
+  
+  return (
+    <Audio 
+      src={audioSrc} 
+      volume={typeof audioStyle?.volume === 'number' ? audioStyle.volume : 1}
+    />
+  );
+};
+
+// ============================================================================
+// VIDEO ELEMENT - Renders video using OffthreadVideo
+// ============================================================================
+const VideoElement: React.FC<{
+  element: PlannedElement;
+  style: React.CSSProperties;
+}> = ({ element, style }) => {
+  const videoStyle = element.style as Record<string, unknown>;
+  const content = element.content || '';
+  
+  // Get video source from content or style
+  const videoSrc = content.startsWith('http') || content.startsWith('data:') 
+    ? content 
+    : (videoStyle?.src as string) || '';
+  
+  if (!videoSrc) return null;
+  
+  const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '640px';
+  const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '360px';
+  
+  return (
+    <div
+      style={{
+        ...style,
+        width,
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <OffthreadVideo
+        src={videoSrc}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          borderRadius: (videoStyle?.borderRadius as number) || 12,
+        }}
+      />
+    </div>
+  );
+};
+
+// ============================================================================
+// TEXT ELEMENT - Kinetic typography with gradients and font loading
 // ============================================================================
 const TextElement: React.FC<{
   element: PlannedElement;
@@ -445,9 +599,47 @@ const TextElement: React.FC<{
   const textStyle = element.style as Record<string, unknown>;
   const content = element.content || '';
   
+  // Load Inter font
+  const { fontFamily } = loadFont();
+  const [handle] = React.useState(() => delayRender());
+  const [fontLoaded, setFontLoaded] = React.useState(false);
+
+  React.useEffect(() => {
+    // Font loading is handled by @remotion/google-fonts automatically
+    // We just need to mark rendering as ready
+    setFontLoaded(true);
+    continueRender(handle);
+  }, [handle]);
+  
   // Detect if this is a headline or subtext
   const fontSize = (textStyle.fontSize as number) || 48;
   const isHeadline = fontSize >= 48;
+  
+  // Calculate text dimensions if size constraints exist
+  const maxWidth = element.size?.width 
+    ? (element.size.width <= 100 ? window.innerWidth * (element.size.width / 100) : element.size.width)
+    : window.innerWidth * 0.8;
+  
+  let adjustedFontSize = fontSize;
+  
+  if (fontLoaded && content) {
+    try {
+      const measurement = measureText({
+        text: content,
+        fontFamily: (textStyle.fontFamily as string) || fontFamily || 'Inter, system-ui, sans-serif',
+        fontSize,
+        fontWeight: String((textStyle.fontWeight as number) || (isHeadline ? 800 : 500)),
+      });
+      
+      // Scale down if text is too wide
+      if (measurement.width > maxWidth) {
+        adjustedFontSize = fontSize * (maxWidth / measurement.width) * 0.95;
+      }
+    } catch (e) {
+      // Fallback if measureText fails
+      console.warn('measureText failed:', e);
+    }
+  }
   
   // Gradient text for headlines
   const useGradient = isHeadline && !textStyle.color;
@@ -456,13 +648,13 @@ const TextElement: React.FC<{
     <div
       style={{
         ...style,
-        fontFamily: (textStyle.fontFamily as string) || globalStyle?.typography?.primary || 'Inter, system-ui, sans-serif',
-        fontSize,
+        fontFamily: (textStyle.fontFamily as string) || fontFamily || globalStyle?.typography?.primary || 'Inter, system-ui, sans-serif',
+        fontSize: adjustedFontSize,
         fontWeight: (textStyle.fontWeight as number) || (isHeadline ? 800 : 500),
         letterSpacing: isHeadline ? '-0.02em' : '0',
         lineHeight: 1.1,
         textAlign: 'center',
-        maxWidth: '80%',
+        maxWidth: `${maxWidth}px`,
         ...(useGradient
           ? {
               background: `linear-gradient(135deg, ${colors[0]} 0%, ${colors[1]} 100%)`,
@@ -746,7 +938,7 @@ const ImageElement: React.FC<{
           overflow: 'hidden',
         }}
       >
-        <img
+        <Img
           src={imageUrl}
           alt=""
           style={{
