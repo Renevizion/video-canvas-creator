@@ -136,7 +136,17 @@ export class ProductionQualityStandards {
     // Calculate overall score
     const criticalCount = issues.filter(i => i.severity === 'critical').length;
     const warningCount = issues.filter(i => i.severity === 'warning').length;
-    const score = Math.max(0, 100 - (criticalCount * 20) - (warningCount * 10));
+    const infoCount = issues.filter(i => i.severity === 'info').length;
+    
+    // Base score: deduct for critical and warning issues (info issues don't affect score)
+    let score = Math.max(0, 100 - (criticalCount * 20) - (warningCount * 10));
+    
+    // Bonus points for excellence: if no critical/warning issues, we can achieve 95-100
+    if (criticalCount === 0 && warningCount === 0) {
+      // Perfect base = 100 points
+      // Deduct small amounts for info issues (they're suggestions, not problems)
+      score = Math.max(95, 100 - (infoCount * 1));
+    }
     
     let overall: QualityReport['overall'];
     if (score >= 90) overall = 'excellent';

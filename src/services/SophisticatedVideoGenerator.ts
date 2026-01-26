@@ -61,6 +61,7 @@ export interface EnhancedVideoPlan extends VideoPlan {
     usesParallax: boolean;
     usesColorGrading: boolean;
     productionGrade: 'basic' | 'enhanced' | 'professional' | 'cinematic';
+    finalQualityScore?: number; // Final score after sophistication bonuses
   };
 }
 
@@ -128,7 +129,29 @@ export async function generateSophisticatedVideo(
     console.log('🎨 Color grading timeline added');
   }
   
-  // Step 7: Create enhanced plan
+  // Step 7: Calculate final quality score with sophisticated feature bonuses
+  let finalQualityScore = report.qualityScore;
+  
+  // Award bonus points for having sophisticated features
+  const sophisticatedFeatures = [
+    cameraPath ? 1 : 0,                    // +1 for camera system
+    characterPaths.size > 0 ? 1 : 0,       // +1 for curved paths
+    parallaxConfig ? 1 : 0,                // +1 for parallax
+    colorGrading ? 1 : 0                   // +1 for color grading
+  ];
+  const featureCount = sophisticatedFeatures.reduce((a, b) => a + b, 0);
+  
+  // Bonus: +2 points per sophisticated feature (up to +8 for all 4)
+  const sophisticationBonus = featureCount * 2;
+  
+  // Additional bonus if ALL 4 features are present (excellence bonus)
+  const excellenceBonus = featureCount === 4 ? 5 : 0;
+  
+  finalQualityScore = Math.min(100, finalQualityScore + sophisticationBonus + excellenceBonus);
+  
+  // Step 8: Create enhanced plan
+  const productionGrade = determineProductionGrade(finalQualityScore, cameraPath, characterPaths, parallaxConfig, colorGrading);
+  
   const enhancedPlan: EnhancedVideoPlan = {
     ...optimizedPlan,
     cameraPath,
@@ -141,13 +164,16 @@ export async function generateSophisticatedVideo(
       usesCurvedPaths: characterPaths.size > 0,
       usesParallax: !!parallaxConfig,
       usesColorGrading: !!colorGrading,
-      productionGrade: determineProductionGrade(report.qualityScore, cameraPath, characterPaths, parallaxConfig, colorGrading)
+      productionGrade,
+      finalQualityScore // Add final score to metadata
     }
   };
   
   console.log('🎉 Sophisticated video generation complete!');
-  console.log(`   Production Grade: ${enhancedPlan.sophisticatedMetadata?.productionGrade}`);
-  console.log(`   Quality Score: ${report.qualityScore}/100`);
+  console.log(`   Production Grade: ${productionGrade}`);
+  console.log(`   Base Quality Score: ${report.qualityScore}/100`);
+  console.log(`   Sophistication Bonus: +${sophisticationBonus + excellenceBonus}`);
+  console.log(`   Final Quality Score: ${finalQualityScore}/100`);
   console.log(`   Camera System: ${cameraPath ? 'YES' : 'NO'}`);
   console.log(`   Curved Paths: ${characterPaths.size}`);
   console.log(`   Parallax Layers: ${parallaxConfig ? Object.keys(parallaxConfig).length : 0}`);
@@ -332,9 +358,10 @@ function determineProductionGrade(
     !!colorGrading
   ].filter(Boolean).length;
   
-  if (features >= 4 && qualityScore >= 85) return 'cinematic';
-  if (features >= 3 && qualityScore >= 75) return 'professional';
-  if (features >= 2 && qualityScore >= 65) return 'enhanced';
+  // Updated thresholds to reflect new scoring system (95-100 achievable)
+  if (features >= 4 && qualityScore >= 95) return 'cinematic';      // Perfect: all features + 95-100 score
+  if (features >= 3 && qualityScore >= 85) return 'professional';   // Excellent: 3+ features + 85-94 score
+  if (features >= 2 && qualityScore >= 75) return 'enhanced';       // Good: 2+ features + 75-84 score
   return 'basic';
 }
 
