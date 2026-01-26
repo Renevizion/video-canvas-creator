@@ -169,10 +169,13 @@ MANDATORY RULES:
     }
 
     const aiData = await response.json();
+    console.log('AI Response:', JSON.stringify(aiData, null, 2));
+    
     const content = aiData.choices?.[0]?.message?.content;
 
     if (!content) {
-      throw new Error("No response from AI");
+      console.error("AI response missing content. Full response:", aiData);
+      throw new Error(`No response from AI. Response structure: ${JSON.stringify(aiData)}`);
     }
 
     // Parse JSON from response
