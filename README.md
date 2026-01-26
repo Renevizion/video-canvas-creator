@@ -6,6 +6,12 @@ If you see errors like `Module not found: Error: Can't resolve '@remotion/shapes
 
 **Quick fix:** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for a 2-minute solution.
 
+## 🎨 Using Remotion Components
+
+Custom components (Terminal, Laptop3D, Perspective3DCard) have been replaced with simpler implementations using Remotion's official packages. 
+
+**See:** [USING_REMOTION_PACKAGES.md](./USING_REMOTION_PACKAGES.md) for migration guide and examples.
+
 ---
 
 ## Project info
