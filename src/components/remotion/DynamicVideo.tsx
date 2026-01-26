@@ -8,7 +8,6 @@ import { noise3D } from '@remotion/noise';
 import { Audio } from '@remotion/media';
 import { OffthreadVideo } from 'remotion';
 import { measureText } from '@remotion/layout-utils';
-import { loadFont } from '@remotion/google-fonts/Inter';
 import { Trail } from '@remotion/motion-blur';
 import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
@@ -64,6 +63,13 @@ export const getTrueRandom = (): number => {
 export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
+
+  // Debug logging
+  React.useEffect(() => {
+    console.log('DynamicVideo plan:', plan);
+    console.log('Scenes:', plan?.scenes?.length);
+    console.log('Frame:', frame);
+  }, [plan, frame]);
 
   // Extract global colors
   const colors = plan.style?.colorPalette || ['#ffffff', '#06b6d4', '#1e293b', '#0f172a'];
@@ -657,17 +663,8 @@ const TextElement: React.FC<{
   const textStyle = element.style as Record<string, unknown>;
   const content = element.content || '';
   
-  // Load Inter font
-  const { fontFamily } = loadFont();
-  const [handle] = React.useState(() => delayRender());
-  const [fontLoaded, setFontLoaded] = React.useState(false);
-
-  React.useEffect(() => {
-    // Font loading is handled by @remotion/google-fonts automatically
-    // We just need to mark rendering as ready
-    setFontLoaded(true);
-    continueRender(handle);
-  }, [handle]);
+  // Use system fonts as fallback - don't block rendering for Google Fonts
+  const fontFamily = (textStyle.fontFamily as string) || 'system-ui, -apple-system, sans-serif';
   
   // Detect if this is a headline or subtext
   const fontSize = (textStyle.fontSize as number) || 48;
@@ -680,11 +677,12 @@ const TextElement: React.FC<{
   
   let adjustedFontSize = fontSize;
   
-  if (fontLoaded && content) {
+  // Try to measure text, but don't block if it fails
+  if (content) {
     try {
       const measurement = measureText({
         text: content,
-        fontFamily: (textStyle.fontFamily as string) || fontFamily || 'Inter, system-ui, sans-serif',
+        fontFamily,
         fontSize,
         fontWeight: String((textStyle.fontWeight as number) || (isHeadline ? 800 : 500)),
       });
@@ -694,8 +692,8 @@ const TextElement: React.FC<{
         adjustedFontSize = fontSize * (maxWidth / measurement.width) * 0.95;
       }
     } catch (e) {
-      // Fallback if measureText fails
-      console.warn('measureText failed:', e);
+      // Fallback if measureText fails - just use original fontSize
+      console.warn('measureText failed, using original fontSize:', e);
     }
   }
   

@@ -11,6 +11,7 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Editor from "./pages/Editor";
 import AnimationShowcase from "./pages/AnimationShowcase";
+import TestVideo from "./pages/TestVideo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/editor/:id" element={<Editor />} />
           <Route path="/showcase" element={<AnimationShowcase />} />
+          <Route path="/test-video" element={<TestVideo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
