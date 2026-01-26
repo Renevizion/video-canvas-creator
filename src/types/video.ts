@@ -81,7 +81,22 @@ export interface PlannedScene {
 
 export interface PlannedElement {
   id: string;
-  type: 'text' | 'image' | 'shape' | 'cursor' | 'video' | 'audio' | 'code-editor' | 'progress-bar' | 'terminal' | 'laptop' | '3d-card' | 'caption'; // Added caption type
+  type: 
+    | 'text' 
+    | 'image' 
+    | 'shape' 
+    | 'cursor' 
+    | 'video' 
+    | 'audio' 
+    | 'code-editor' 
+    | 'progress-bar' 
+    | 'terminal' 
+    | 'laptop' 
+    | '3d-card' 
+    | 'caption'
+    | 'particle-field'  // NEW: Animated particle system
+    | 'path'            // NEW: Animated SVG path
+    | 'lottie';         // NEW: Lottie animation
   content: string;
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };

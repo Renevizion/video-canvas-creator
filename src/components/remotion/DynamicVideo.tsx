@@ -1,5 +1,20 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Series, Easing, Img, delayRender, continueRender, random } from 'remotion';
+import { 
+  AbsoluteFill, 
+  useCurrentFrame, 
+  useVideoConfig, 
+  interpolate, 
+  spring, 
+  Sequence, 
+  Series, 
+  Easing, 
+  Img, 
+  delayRender, 
+  continueRender, 
+  random,
+  Loop,
+  Freeze,
+} from 'remotion';
 import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { slide } from '@remotion/transitions/slide';
@@ -10,6 +25,7 @@ import { OffthreadVideo } from 'remotion';
 import { measureText } from '@remotion/layout-utils';
 import { Trail } from '@remotion/motion-blur';
 import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
+import { getLength, getPointAtLength, evolvePath } from '@remotion/paths';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
 
@@ -58,8 +74,224 @@ export const getTrueRandom = (): number => {
  */
 
 // ============================================================================
-// MAIN DYNAMIC VIDEO COMPONENT - Cinematic Quality Renderer
+// ADVANCED EASING FUNCTIONS - From Remotion Easing module
+// Provides more organic, natural-feeling animations
 // ============================================================================
+
+/**
+ * Get an easing function by name
+ * Supports: linear, ease, quad, cubic, elastic, bounce, back, bezier
+ */
+export const getEasingFunction = (name: string): ((t: number) => number) => {
+  switch (name?.toLowerCase()) {
+    case 'linear':
+      return Easing.linear;
+    case 'ease':
+    case 'ease-out':
+      return Easing.out(Easing.ease);
+    case 'ease-in':
+      return Easing.in(Easing.ease);
+    case 'ease-in-out':
+      return Easing.inOut(Easing.ease);
+    case 'quad':
+      return Easing.out(Easing.quad);
+    case 'cubic':
+      return Easing.out(Easing.cubic);
+    case 'elastic':
+      return Easing.out(Easing.elastic(1));
+    case 'bounce':
+      return Easing.out(Easing.bounce);
+    case 'back':
+      return Easing.out(Easing.back(1.5));
+    case 'spring':
+      // For spring, we return linear and let the spring() function handle it
+      return Easing.linear;
+    default:
+      return Easing.out(Easing.ease);
+  }
+};
+
+// ============================================================================
+// PARTICLE SYSTEM - Looping animated particles for visual richness
+// Uses <Loop> component for seamless repetition
+// ============================================================================
+
+interface ParticleProps {
+  id: string;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  speed: number;
+  type: 'circle' | 'star' | 'dot';
+}
+
+const Particle: React.FC<ParticleProps> = React.memo(({ id, x, y, size, color, speed, type }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  
+  // Organic floating motion using noise
+  const floatX = noise3D(`particle-x-${id}`, frame * speed * 0.01, 0, 0) * 30;
+  const floatY = noise3D(`particle-y-${id}`, 0, frame * speed * 0.01, 0) * 30;
+  const opacity = 0.3 + noise3D(`particle-o-${id}`, frame * speed * 0.02, 0, 0) * 0.4;
+  const scale = 0.8 + noise3D(`particle-s-${id}`, 0, 0, frame * speed * 0.01) * 0.4;
+  
+  if (type === 'star') {
+    return (
+      <div style={{
+        position: 'absolute',
+        left: `${x + floatX}%`,
+        top: `${y + floatY}%`,
+        opacity,
+        transform: `translate(-50%, -50%) scale(${scale})`,
+      }}>
+        <Star
+          points={4}
+          innerRadius={size * 0.4}
+          outerRadius={size}
+          fill={color}
+        />
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{
+      position: 'absolute',
+      left: `${x + floatX}%`,
+      top: `${y + floatY}%`,
+      width: size,
+      height: size,
+      borderRadius: '50%',
+      background: color,
+      opacity,
+      transform: `translate(-50%, -50%) scale(${scale})`,
+      filter: type === 'dot' ? undefined : 'blur(1px)',
+    }} />
+  );
+});
+
+/**
+ * ParticleField - Creates a field of animated particles
+ * Uses <Loop> for seamless infinite animation
+ */
+export const ParticleField: React.FC<{
+  count: number;
+  colors: string[];
+  types?: ('circle' | 'star' | 'dot')[];
+}> = React.memo(({ count, colors, types = ['circle', 'star', 'dot'] as const }) => {
+  const { fps, durationInFrames } = useVideoConfig();
+  
+  // Generate deterministic particles
+  const particles: ParticleProps[] = React.useMemo(() => {
+    return Array.from({ length: count }, (_, i) => {
+      const typeIndex = Math.floor(random(`pt-${i}`) * types.length);
+      return {
+        id: `p-${i}`,
+        x: random(`px-${i}`) * 100,
+        y: random(`py-${i}`) * 100,
+        size: 4 + random(`ps-${i}`) * 12,
+        color: colors[Math.floor(random(`pc-${i}`) * colors.length)] + '40',
+        speed: 0.5 + random(`psp-${i}`) * 1.5,
+        type: types[typeIndex],
+      };
+    });
+  }, [count, colors, types]);
+  
+  // Wrap in Loop for seamless repetition
+  const loopDuration = Math.min(durationInFrames, fps * 5); // 5 second loops
+  
+  return (
+    <Loop durationInFrames={loopDuration}>
+      <AbsoluteFill style={{ pointerEvents: 'none' }}>
+        {particles.map(p => <Particle key={p.id} {...p} />)}
+      </AbsoluteFill>
+    </Loop>
+  );
+});
+
+// ============================================================================
+// SVG PATH ANIMATION - For morphing and path-following animations
+// ============================================================================
+
+/**
+ * AnimatedPath - Draws an SVG path over time
+ * Great for line reveals, signature effects, and path morphing
+ */
+export const AnimatedPath: React.FC<{
+  d: string;
+  stroke: string;
+  strokeWidth?: number;
+  duration?: number;
+  delay?: number;
+}> = React.memo(({ d, stroke, strokeWidth = 2, duration = 1, delay = 0 }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  
+  const pathLength = React.useMemo(() => {
+    try {
+      return getLength(d);
+    } catch {
+      return 100;
+    }
+  }, [d]);
+  
+  const progress = interpolate(
+    frame,
+    [delay * fps, (delay + duration) * fps],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.ease) }
+  );
+  
+  const evolvedPath = React.useMemo(() => {
+    try {
+      return evolvePath(progress, d);
+    } catch {
+      return { strokeDasharray: `${pathLength}`, strokeDashoffset: `${pathLength * (1 - progress)}` };
+    }
+  }, [progress, d, pathLength]);
+  
+  return (
+    <svg style={{ position: 'absolute', width: '100%', height: '100%', overflow: 'visible' }}>
+      <path
+        d={d}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...evolvedPath}
+      />
+    </svg>
+  );
+});
+
+// ============================================================================
+// FREEZE FRAME WRAPPER - For dramatic pauses
+// ============================================================================
+
+/**
+ * DramaticPause - Freezes children at a specific frame for emphasis
+ */
+export const DramaticPause: React.FC<{
+  children: React.ReactNode;
+  freezeAtFrame: number;
+  pauseDuration: number; // in seconds
+}> = ({ children, freezeAtFrame, pauseDuration }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  
+  const pauseStart = freezeAtFrame;
+  const pauseEnd = freezeAtFrame + pauseDuration * fps;
+  
+  const shouldFreeze = frame >= pauseStart && frame < pauseEnd;
+  
+  if (shouldFreeze) {
+    return <Freeze frame={pauseStart}>{children}</Freeze>;
+  }
+  
+  return <>{children}</>;
+};
 export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -211,9 +443,9 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
 };
 
 // ============================================================================
-// ANIMATED BACKGROUND - Organic gradient with noise3D motion
+// ANIMATED BACKGROUND - Organic gradient with noise3D motion + particles
 // ============================================================================
-const AnimatedBackground: React.FC<{ colors: string[] }> = React.memo(({ colors }) => {
+const AnimatedBackground: React.FC<{ colors: string[]; showParticles?: boolean }> = React.memo(({ colors, showParticles = true }) => {
   const frame = useCurrentFrame();
   const primary = colors[1] || '#06b6d4';
   const secondary = colors[2] || '#1e293b';
@@ -265,6 +497,15 @@ const AnimatedBackground: React.FC<{ colors: string[] }> = React.memo(({ colors 
           filter: 'blur(80px)',
         }}
       />
+      
+      {/* Optional particle field for extra visual richness */}
+      {showParticles && (
+        <ParticleField 
+          count={15} 
+          colors={[primary, colors[3] || '#8b5cf6', '#ffffff']} 
+          types={['circle', 'star', 'dot']}
+        />
+      )}
     </AbsoluteFill>
   );
 });
@@ -512,6 +753,71 @@ const useElementAnimation = (
     case 'glow':
       // Handled in element rendering
       break;
+    
+    // NEW: Advanced easing animations
+    case 'bounce':
+    case 'bounceIn': {
+      const bounceProgress = interpolate(
+        sceneFrame,
+        [baseDelay, baseDelay + duration],
+        [0, 1],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.bounce) }
+      );
+      scale = interpolate(bounceProgress, [0, 1], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      translateY = interpolate(bounceProgress, [0, 1], [-50, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      break;
+    }
+    
+    case 'elastic':
+    case 'elasticIn': {
+      const elasticProgress = interpolate(
+        sceneFrame,
+        [baseDelay, baseDelay + duration],
+        [0, 1],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.elastic(1)) }
+      );
+      scale = interpolate(elasticProgress, [0, 1], [0.3, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      break;
+    }
+    
+    case 'back':
+    case 'backIn': {
+      const backProgress = interpolate(
+        sceneFrame,
+        [baseDelay, baseDelay + duration],
+        [0, 1],
+        { extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: Easing.out(Easing.back(1.5)) }
+      );
+      scale = interpolate(backProgress, [0, 1], [0.7, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      translateY = interpolate(backProgress, [0, 1], [30, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      break;
+    }
+    
+    case 'slideLeft':
+    case 'slideInLeft': {
+      translateX = interpolate(springProgress, [0, 1], [-100, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      translateY = 0;
+      break;
+    }
+    
+    case 'slideRight':
+    case 'slideInRight': {
+      translateX = interpolate(springProgress, [0, 1], [100, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      translateY = 0;
+      break;
+    }
+    
+    case 'slideDown':
+    case 'slideInDown': {
+      translateY = interpolate(springProgress, [0, 1], [-60, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      break;
+    }
+    
+    case 'flipIn': {
+      rotate = interpolate(springProgress, [0, 1], [90, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      scale = interpolate(springProgress, [0, 0.5, 1], [0.5, 1.1, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+      break;
+    }
   }
 
   return { opacity, translateX, translateY, scale, rotate, blur };
@@ -613,6 +919,28 @@ const ElementRenderer: React.FC<{
       return wrapWithMotionBlur(<VideoElement element={element} style={baseStyle} />);
     case 'cursor':
       return wrapWithMotionBlur(<CursorElement element={element} style={baseStyle} sceneFrame={sceneFrame} fps={fps} />);
+    case 'particle-field':
+      // Render a field of animated particles
+      const particleStyle = element.style as { count?: number; types?: ('circle' | 'star' | 'dot')[] };
+      return (
+        <ParticleField 
+          count={particleStyle.count || 20} 
+          colors={colors} 
+          types={particleStyle.types}
+        />
+      );
+    case 'path':
+      // Render an animated SVG path
+      const pathStyle = element.style as { stroke?: string; strokeWidth?: number; duration?: number; delay?: number };
+      return (
+        <AnimatedPath
+          d={element.content}
+          stroke={pathStyle.stroke || colors[1]}
+          strokeWidth={pathStyle.strokeWidth || 2}
+          duration={pathStyle.duration || 1}
+          delay={pathStyle.delay || 0}
+        />
+      );
     default:
       return null;
   }
