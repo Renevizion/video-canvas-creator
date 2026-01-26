@@ -3,7 +3,7 @@
  * Analyzes user prompts to determine video content type and provide helpful hints
  */
 
-// Keyword arrays for content type detection
+// Keyword arrays for content type detection - expanded for better motion graphics recognition
 const MOTION_GRAPHICS_KEYWORDS = [
   'motion graphics',
   'motion graphic',
@@ -17,6 +17,13 @@ const MOTION_GRAPHICS_KEYWORDS = [
   'geometric shapes',
   'abstract shapes',
   'animated pattern',
+  'abstract intro',
+  'logo animation',
+  'animated intro',
+  'particles',
+  'floating shapes',
+  'animated background',
+  'dynamic shapes',
 ];
 
 const TECH_SAAS_KEYWORDS = [
@@ -84,23 +91,25 @@ export function detectMotionGraphics(prompt: string): boolean {
 export function detectContentType(prompt: string): ContentTypeResult {
   const lowerPrompt = prompt.toLowerCase();
   
-  // Motion Graphics detection
+  // Motion Graphics detection - higher confidence and better suggestions
   if (detectMotionGraphics(lowerPrompt)) {
     return {
       type: 'motion-graphics',
-      confidence: 0.9,
+      confidence: 0.95,
       suggestedElements: [
-        'Geometric shapes (circles, triangles, stars)',
-        'Abstract patterns and textures',
-        'AI-generated icons and illustrations',
-        'Dynamic scale/rotate/translate animations',
-        'Staggered timing for visual interest',
+        'Multiple geometric shapes (4-8 per scene) with staggered timing',
+        'Circles, triangles, stars, and polygons with varied sizes',
+        'AI-generated abstract assets (blobs, icons, patterns)',
+        'Dynamic scale, rotate, and float animations',
+        'Layered elements with different z-indexes for depth',
+        'Coordinated color palette from brand or style',
       ],
       hints: [
-        'Use vibrant colors and smooth animations',
-        'Combine geometric shapes with AI-generated assets for rich visuals',
-        'Consider adding abstract backgrounds or particle effects',
-        'Great for logo reveals, intros, and explainer videos',
+        '🎨 Create 4-8 shapes per scene with delays 0.1s, 0.2s, 0.3s for "flow"',
+        '⚡ Shapes auto-animate with pulse, drift, and rotation',
+        '📐 Mix shape types: circles + triangles + stars for variety',
+        '🌊 Use varied sizes (small 50px, medium 150px, large 300px)',
+        '✨ Staggered entrance creates professional choreography',
       ],
     };
   }
