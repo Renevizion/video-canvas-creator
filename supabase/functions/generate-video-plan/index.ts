@@ -6,6 +6,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// AI Configuration
+const AI_CONFIG = {
+  model: "google/gemini-3-flash-preview",
+  temperature: 0.7, // Higher = more creative. Range: 0.0-1.0. Adjust based on quality.
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -64,8 +70,8 @@ Use these brand elements in the video. Match the color scheme exactly.
 `;
     }
 
-    // Generate a unique seed for variation per video
-    const uniqueSeed = Math.random().toString(36).substring(7);
+    // Generate a unique seed for variation per video (using timestamp + random for better uniqueness)
+    const uniqueSeed = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
     
     const systemPrompt = `You are an expert video production planner creating CINEMATIC, broadcast-quality commercial videos.
 ${brandContext}
@@ -77,7 +83,12 @@ CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 - VARY YOUR APPROACH: Different prompts should result in COMPLETELY different video structures
 - USE VARIETY: Mix different animation types, layouts, element types, transitions
 - ADD PERSONALITY: Match the tone and style to the specific content being described
-- Generation Seed: ${uniqueSeed} - Use this to ensure variety in creative choices
+- Generation Seed: ${uniqueSeed} - Use this for creative variation:
+  * Different seed = different creative choices
+  * Vary animation timing slightly based on seed
+  * Choose different element positions/sizes
+  * Select different animation combinations
+  * Pick different accent colors from palette
 
 ASPECT RATIO OPTIMIZATION:
 - Video aspect ratio: ${aspectRatio} (${resolution.width}x${resolution.height})
@@ -186,7 +197,7 @@ SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: AI_CONFIG.model,
         messages: [
           { role: "system", content: systemPrompt },
           { 
@@ -204,7 +215,7 @@ IMPORTANT INSTRUCTIONS:
 Return ONLY the JSON structure, no other text.` 
           },
         ],
-        temperature: 0.7, // Increased for more creativity and variety
+        temperature: AI_CONFIG.temperature,
       }),
     });
 
