@@ -272,16 +272,26 @@ npx remotion browser ensure
 
 ## AI-Powered Video Creation
 
-Remotion supports AI-powered motion graphics generation. You can create videos from text prompts using:
+Remotion supports AI-powered video generation from text prompts. You can quickly create videos using:
 
 ```bash
+# Generate motion graphics from prompts
 npx create-video@latest --prompt-to-motion-graphics
+
+# Or generate video compositions
+npx create-video@latest --prompt-to-video
 ```
 
 This allows you to:
 - Generate video compositions from natural language descriptions
 - Create motion graphics automatically
 - Rapidly prototype video ideas
+- Test different styles and layouts quickly
+
+### AI Templates
+- [Prompt to Motion Graphics](https://www.remotion.dev/templates/prompt-to-motion-graphics) - Generate animated motion graphics from text descriptions
+- [Prompt to Video](https://www.remotion.dev/templates/prompt-to-video) - Create complete video compositions from prompts
+- [All Templates](https://www.remotion.dev/templates) - Browse all available Remotion templates
 
 ### AI Resources
 - [AI Documentation](https://www.remotion.dev/docs/ai/)
@@ -291,11 +301,17 @@ This allows you to:
 
 ### Core Documentation
 - [Remotion Documentation](https://www.remotion.dev/docs)
+- [Remotion Core](https://www.remotion.dev/docs/remotion) - Core package documentation
 - [Remotion API Reference](https://www.remotion.dev/docs/api)
 - [CLI Options](https://www.remotion.dev/docs/cli)
 - [Performance Guide](https://www.remotion.dev/docs/performance)
 - [Terminology](https://www.remotion.dev/docs/terminology)
 - [Studio Guide](https://www.remotion.dev/docs/terminology/studio)
+
+### Graphics and Visual Effects
+- [Motion Blur](https://www.remotion.dev/docs/motion-blur/) - Add realistic motion blur to animations
+- [Shapes](https://www.remotion.dev/docs/shapes/) - Built-in shape components
+- [Paths](https://www.remotion.dev/docs/paths/) - SVG path utilities and animations
 
 ### Advanced Features
 - [Measuring](https://www.remotion.dev/docs/measuring)
@@ -339,6 +355,54 @@ This allows you to:
 
 ### Templates
 - [Remotion Templates](https://www.remotion.dev/templates)
+
+## Available Remotion Packages
+
+This project can be extended with additional Remotion packages for advanced functionality:
+
+### Core Packages
+- **remotion** - Core framework for creating videos with React
+- **@remotion/bundler** - Bundle Remotion projects
+- **@remotion/cli** - Command-line interface (already installed)
+
+### Animation and Effects
+- **@remotion/animation-utils** - Animation utilities (already installed)
+- **@remotion/motion-blur** - Add realistic motion blur effects
+- **@remotion/animated-emoji** - Animated emoji components
+
+### Media and Assets
+- **@remotion/media** - Audio and video components (already installed)
+- **@remotion/media-parser** - Parse and analyze media files
+- **@remotion/media-utils** - Media manipulation utilities
+- **@remotion/gif** - GIF support (already installed)
+- **@remotion/lottie** - Lottie animation support (already installed)
+
+### Text and Fonts
+- **@remotion/fonts** - Font loading API (already installed)
+- **@remotion/google-fonts** - Google Fonts integration (already installed)
+- **@remotion/captions** - Subtitle and caption utilities
+
+### Layout and Styling
+- **@remotion/layout-utils** - Text measurement and layout (already installed)
+- **@remotion/enable-scss** - SCSS/SASS support
+
+### Cloud and Rendering
+- **@remotion/lambda** - Render videos on AWS Lambda
+- **@remotion/cloudrun** - Render videos on Google Cloud Run
+- **@remotion/licensing** - License key management
+
+### Audio Processing
+- **@remotion/install-whisper-cpp** - Install Whisper for audio transcription
+
+### Installation Example
+To add any package, use:
+```bash
+npm install <package-name>
+# Example:
+npm install @remotion/motion-blur @remotion/shapes
+```
+
+For more information on each package, visit the [Remotion documentation](https://www.remotion.dev/docs).
 
 ## License
 
