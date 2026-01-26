@@ -144,20 +144,6 @@ const ProjectDetail = () => {
                   <RefreshCw className="w-4 h-4" />
                   Refresh
                 </Button>
-                {!project.generated_code && (
-                  <Button 
-                    onClick={handleGenerateCode}
-                    disabled={generateCodeMutation.isPending}
-                    className="gap-2"
-                  >
-                    {generateCodeMutation.isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Code className="w-4 h-4" />
-                    )}
-                    Generate Code
-                  </Button>
-                )}
                 {plan && (
                   <Button
                     variant="outline"
@@ -288,22 +274,13 @@ const ProjectDetail = () => {
                 ) : (
                   <div className="text-center py-12">
                     <Code className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">Generate Remotion Code</h3>
+                    <h3 className="font-semibold text-foreground mb-2">Video Plan JSON</h3>
                     <p className="text-sm text-muted-foreground mb-6">
-                      Get the exportable React/Remotion code for this video
+                      The video is rendered directly from the plan. Use "Export Video" to get an MP4.
                     </p>
-                    <Button
-                      onClick={handleGenerateCode}
-                      disabled={generateCodeMutation.isPending}
-                      className="gap-2"
-                    >
-                      {generateCodeMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Download className="w-4 h-4" />
-                      )}
-                      Generate Exportable Code
-                    </Button>
+                    {plan && (
+                      <CodePreview code={JSON.stringify(plan, null, 2)} />
+                    )}
                   </div>
                 )}
               </motion.div>

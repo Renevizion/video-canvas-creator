@@ -714,7 +714,7 @@ const ArrowElement: React.FC<{
 });
 
 // ============================================================================
-// IMAGE ELEMENT - Stylized image placeholders
+// IMAGE ELEMENT - Renders actual images from URLs
 // ============================================================================
 const ImageElement: React.FC<{
   element: PlannedElement;
@@ -722,9 +722,47 @@ const ImageElement: React.FC<{
   globalStyle: VideoPlan['style'];
   colors: string[];
 }> = React.memo(({ element, style, colors }) => {
+  const content = element.content || '';
+  const imageStyle = element.style as Record<string, unknown>;
+  
+  // Detect if content is a URL
+  const isUrl = content.startsWith('http') || content.startsWith('data:');
+  const imageUrl = isUrl ? content : (imageStyle?.src as string) || '';
+  
   const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '300px';
   const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '200px';
   
+  // If we have a valid image URL, render the actual image
+  if (imageUrl) {
+    return (
+      <div
+        style={{
+          ...style,
+          width,
+          height,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={imageUrl}
+          alt=""
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+            filter: (imageStyle?.filter as string) || undefined,
+            borderRadius: (imageStyle?.borderRadius as number) || 12,
+            boxShadow: '0 15px 40px rgba(0,0,0,0.3)',
+          }}
+        />
+      </div>
+    );
+  }
+  
+  // Fallback: placeholder if no URL
   return (
     <div
       style={{
@@ -741,7 +779,6 @@ const ImageElement: React.FC<{
         overflow: 'hidden',
       }}
     >
-      {/* Image icon placeholder */}
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" opacity="0.3">
         <rect x="3" y="3" width="18" height="18" rx="3" stroke="white" strokeWidth="1.5" />
         <circle cx="8.5" cy="8.5" r="1.5" fill="white" />
