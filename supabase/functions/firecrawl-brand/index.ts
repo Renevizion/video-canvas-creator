@@ -27,10 +27,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format URL
+    // Extract URL from input (user might paste a prompt with URL embedded)
     let formattedUrl = url.trim();
-    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
-      formattedUrl = `https://${formattedUrl}`;
+    
+    // Try to extract a URL if the input contains one
+    const urlMatch = formattedUrl.match(/https?:\/\/[^\s"'<>]+/i);
+    if (urlMatch) {
+      formattedUrl = urlMatch[0];
+    } else {
+      // Check if it looks like a domain without protocol
+      const domainMatch = formattedUrl.match(/(?:^|\s)([a-zA-Z0-9][-a-zA-Z0-9]*(?:\.[a-zA-Z0-9][-a-zA-Z0-9]*)+)(?:\s|$|\/)/);
+      if (domainMatch) {
+        formattedUrl = `https://${domainMatch[1]}`;
+      } else if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+        // Last resort: assume it's a domain
+        formattedUrl = `https://${formattedUrl}`;
+      }
+    }
+    
+    // Validate it's a proper URL
+    try {
+      new URL(formattedUrl);
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Could not find a valid URL in your input. Please enter just the website URL (e.g., mobajump.com)' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('Extracting brand from URL:', formattedUrl);
