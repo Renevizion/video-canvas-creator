@@ -2,6 +2,13 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { DynamicVideo } from '../components/remotion/DynamicVideo';
 import type { VideoPlan } from '../types/video';
+import { 
+  MusicVisualization, 
+  CaptionsShowcase, 
+  ScreencastShowcase, 
+  YearInReview, 
+  RenderProgressShowcase 
+} from '../components/remotion/showcases';
 
 // Default video plan for testing
 const defaultPlan: VideoPlan = {
@@ -95,6 +102,57 @@ export const RemotionRoot: React.FC = () => {
         defaultProps={{
           plan: defaultPlan,
         }}
+      />
+      
+      {/* Remotion Showcase Compositions */}
+      <Composition
+        id="MusicVisualization"
+        component={MusicVisualization}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      <Composition
+        id="CaptionsShowcase"
+        component={CaptionsShowcase}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      <Composition
+        id="ScreencastShowcase"
+        component={ScreencastShowcase}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      <Composition
+        id="YearInReview"
+        component={YearInReview}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      <Composition
+        id="RenderProgressShowcase"
+        component={RenderProgressShowcase}
+        durationInFrames={270}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
       />
     </>
   );
