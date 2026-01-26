@@ -13,6 +13,9 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Editor from "./pages/Editor";
 import AnimationShowcase from "./pages/AnimationShowcase";
 import TestVideo from "./pages/TestVideo";
+import Resources from "./pages/Resources";
+import VideoCreationWizard from "./pages/VideoCreationWizard";
+import SimpleVideoCreator from "./pages/SimpleVideoCreator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +37,9 @@ const App = () => (
           <Route path="/editor/:id" element={<Editor />} />
           <Route path="/showcase" element={<AnimationShowcase />} />
           <Route path="/test-video" element={<TestVideo />} />
+          <Route path="/resources" element={<Resources />} />
+          <Route path="/wizard" element={<VideoCreationWizard />} />
+          <Route path="/simple-create" element={<SimpleVideoCreator />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

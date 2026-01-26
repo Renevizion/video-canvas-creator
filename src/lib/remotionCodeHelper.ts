@@ -210,9 +210,6 @@ export function generateRemotionComponentCode(plan: VideoPlan): string {
   const customElements: string[] = [];
   if (hasElementType(plan, 'code-editor')) customElements.push('CodeEditor');
   if (hasElementType(plan, 'progress-bar')) customElements.push('ProgressBar');
-  if (hasElementType(plan, 'terminal')) customElements.push('Terminal');
-  if (hasElementType(plan, 'laptop')) customElements.push('Laptop3D');
-  if (hasElementType(plan, '3d-card')) customElements.push('Perspective3DCard');
   
   const customImports = customElements.length > 0
     ? `import { ${customElements.join(', ')} } from './elements';`
