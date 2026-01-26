@@ -145,9 +145,10 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
       // TERMINAL ELEMENT
       if (el.type === 'terminal') {
         const content = el.content || '';
-        const lines = content.split('\\n').slice(0, 8); // Limit lines
         const termWidth = el.size?.width ? (el.size.width <= 100 ? el.size.width * 10 : el.size.width) : 600;
         const termHeight = el.size?.height ? (el.size.height <= 100 ? el.size.height * 6 : el.size.height) : 350;
+        // Escape content for safe embedding
+        const safeContent = content.replace(/`/g, '\\`').replace(/\$/g, '\\$');
         
         return `
           <div
@@ -175,14 +176,13 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
               <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e' }} />
               <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#27ca40' }} />
             </div>
-            ${lines.map((line, i) => `<div style={{ marginBottom: 6, opacity: \${interpolate(spring_${idx}_${elIdx}, [0, 1], [0, 1])} }}>{${JSON.stringify(line)}}</div>`).join('\n            ')}
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>${JSON.stringify(content)}</pre>
           </div>`;
       }
       
       // CODE EDITOR ELEMENT
       if (el.type === 'code-editor') {
         const content = el.content || '';
-        const lines = content.split('\\n').slice(0, 12);
         const codeWidth = el.size?.width ? (el.size.width <= 100 ? el.size.width * 10 : el.size.width) : 650;
         const codeHeight = el.size?.height ? (el.size.height <= 100 ? el.size.height * 6 : el.size.height) : 400;
         
@@ -212,13 +212,7 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
               </div>
               <span style={{ color: '#6c7086', fontSize: 12, marginLeft: 8 }}>App.tsx</span>
             </div>
-            <div style={{ padding: 20, fontFamily: 'JetBrains Mono, Monaco, monospace', fontSize: 14 }}>
-              ${lines.map((line, i) => {
-                const isKeyword = line.includes('import') || line.includes('export') || line.includes('const') || line.includes('function') || line.includes('return');
-                const lineColor = isKeyword ? '#cba6f7' : line.includes("'") || line.includes('"') ? '#a6e3a1' : '#cdd6f4';
-                return `<div style={{ color: '${lineColor}', marginBottom: 4 }}><span style={{ color: '#6c7086', marginRight: 16 }}>{${i + 1}}</span>{${JSON.stringify(line)}}</div>`;
-              }).join('\n              ')}
-            </div>
+            <pre style={{ margin: 0, padding: 20, fontFamily: 'JetBrains Mono, Monaco, monospace', fontSize: 14, color: '#cdd6f4', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>${JSON.stringify(content)}</pre>
           </div>`;
       }
       
