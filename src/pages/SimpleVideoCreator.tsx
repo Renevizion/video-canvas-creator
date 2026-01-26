@@ -4,11 +4,11 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Sparkles, Loader2, Play } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Loader2, Play, Download, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Header } from '@/components/layout/Header';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
 import { findMatchingComponents, componentToVideoPlan } from '@/components/remotion/showcases/UsableComponents';
@@ -53,110 +53,179 @@ export default function SimpleVideoCreator() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95">
       <Header />
 
       <main className="pt-24 px-4 pb-12">
-        <div className="container mx-auto max-w-5xl">
+        <div className="container mx-auto max-w-6xl">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <h1 className="text-5xl font-bold mb-4">
-              <span className="gradient-text">Just Say What You Want</span>
+            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+              <Sparkles className="w-4 h-4" />
+              AI-Powered Video Creation
+            </div>
+            <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+              Create Videos with Natural Language
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Describe the video you want in plain English. We'll create it for you.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Describe what you want in plain English. We'll create professional videos instantly.
             </p>
           </motion.div>
 
           {/* Input Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-primary" />
-                  What do you want to create?
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="e.g., Create a product demo for my scheduling app showing the calendar feature..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  className="min-h-[120px] text-base"
-                  disabled={loading}
-                />
+          <AnimatePresence mode="wait">
+            {!videoPlan && (
+              <motion.div
+                key="input"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: 0.1 }}
+                className="max-w-3xl mx-auto"
+              >
+                <Card className="border-2 shadow-2xl">
+                  <CardHeader className="space-y-1">
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Sparkles className="w-6 h-6 text-primary" />
+                      What do you want to create?
+                    </CardTitle>
+                    <CardDescription className="text-base">
+                      Describe your video idea and we'll make it happen
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Textarea
+                        placeholder="e.g., Create a music visualization with colorful bars..."
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        className="min-h-[140px] text-lg resize-none focus:ring-2 focus:ring-primary transition-all"
+                        disabled={loading}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        {prompt.length}/500 characters
+                      </p>
+                    </div>
 
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-sm text-muted-foreground">Try:</span>
-                  {examplePrompts.map((example, i) => (
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-muted-foreground">Quick examples:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {examplePrompts.map((example, i) => (
+                          <Button
+                            key={i}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPrompt(example)}
+                            disabled={loading}
+                            className="text-xs hover:bg-primary/10 hover:text-primary hover:border-primary transition-all"
+                          >
+                            {example}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
                     <Button
-                      key={i}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPrompt(example)}
-                      disabled={loading}
-                      className="text-xs"
+                      size="lg"
+                      className="w-full gap-2 text-lg h-14 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all shadow-lg hover:shadow-xl"
+                      onClick={handleGenerate}
+                      disabled={!prompt.trim() || loading}
                     >
-                      {example.substring(0, 40)}...
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Generating your video...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-5 h-5" />
+                          Generate Video
+                        </>
+                      )}
                     </Button>
-                  ))}
-                </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
-                <Button
-                  size="lg"
-                  className="w-full gap-2"
-                  onClick={handleGenerate}
-                  disabled={!prompt.trim() || loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      Generate Video
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
+            {/* Video Preview */}
+            {videoPlan && (
+              <motion.div
+                key="preview"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="space-y-6"
+              >
+                <Card className="border-2 shadow-2xl overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-2xl flex items-center gap-2">
+                          <Play className="w-6 h-6 text-primary" />
+                          Your Video
+                        </CardTitle>
+                        <CardDescription className="text-base mt-1">
+                          Preview your generated video below
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="px-3 py-1 bg-background rounded-full">
+                          {videoPlan.resolution.width}×{videoPlan.resolution.height}
+                        </span>
+                        <span className="px-3 py-1 bg-background rounded-full">
+                          {videoPlan.fps} FPS
+                        </span>
+                        <span className="px-3 py-1 bg-background rounded-full">
+                          {videoPlan.duration}s
+                        </span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="rounded-xl overflow-hidden shadow-2xl mb-6 bg-black">
+                      <RemotionPlayerWrapper plan={videoPlan} className="w-full" />
+                    </div>
 
-          {/* Video Preview */}
-          {videoPlan && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Play className="w-5 h-5 text-primary" />
-                    Your Video
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <RemotionPlayerWrapper plan={videoPlan} className="rounded-lg overflow-hidden" />
-                  <div className="mt-4 flex gap-2">
-                    <Button variant="outline" onClick={() => setVideoPlan(null)}>
-                      Create Another
-                    </Button>
-                    <Button>Download Video</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={() => {
+                          setVideoPlan(null);
+                          setPrompt('');
+                        }}
+                        className="gap-2 flex-1"
+                      >
+                        <RefreshCw className="w-5 h-5" />
+                        Create Another
+                      </Button>
+                      <Button
+                        size="lg"
+                        className="gap-2 flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg"
+                      >
+                        <Download className="w-5 h-5" />
+                        Download Video
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Prompt reminder */}
+                <Card className="border-dashed">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">Your prompt:</span> "{prompt}"
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </main>
     </div>
@@ -283,3 +352,4 @@ function generateVideoPlanFromPrompt(prompt: string): VideoPlan {
     },
   };
 }
+
