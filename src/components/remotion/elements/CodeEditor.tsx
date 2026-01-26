@@ -69,7 +69,7 @@ const tokenize = (code: string): Array<{ text: string; color: string }> => {
     
     if (!matched && remaining.startsWith('<')) {
       let end = 1;
-      while (end < remaining.length && /[a-zA-Z\/]/.test(remaining[end])) end++;
+      while (end < remaining.length && /[a-zA-Z/]/.test(remaining[end])) end++;
       if (end > 1) {
         tokens.push({ text: remaining.slice(0, end), color: syntaxColors.tag });
         remaining = remaining.slice(end);
@@ -90,7 +90,7 @@ const tokenize = (code: string): Array<{ text: string; color: string }> => {
     if (!matched) {
       // Default: single character
       const char = remaining[0];
-      const color = /[{}()\[\];,<>]/.test(char) ? syntaxColors.punctuation : syntaxColors.text;
+      const color = /[{}()[\];,<>]/.test(char) ? syntaxColors.punctuation : syntaxColors.text;
       tokens.push({ text: char, color });
       remaining = remaining.slice(1);
     }
