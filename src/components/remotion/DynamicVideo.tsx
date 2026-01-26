@@ -27,7 +27,10 @@ import { Trail } from '@remotion/motion-blur';
 import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 import { getLength, getPointAtLength, evolvePath } from '@remotion/paths';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
-import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard, AnimatedText } from './elements';
+import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard, AnimatedText, PhoneMockup, LogoGrid, DataVisualization } from './elements';
+import { AudioVisualization } from './elements/AudioVisualization';
+import { ColorGrading, FilmGrain, Vignette, Bloom } from './elements/ColorGrading';
+import { ResponsiveContainer, type AspectRatio } from './elements/AspectRatioSupport';
 
 interface DynamicVideoProps {
   plan: VideoPlan;
@@ -307,6 +310,15 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
   const colors = plan.style?.colorPalette || ['#ffffff', '#06b6d4', '#1e293b', '#0f172a'];
   const globalBg = colors[3] || colors[2] || '#0f172a';
 
+  // NEW: Extract global video effects from plan.style
+  const videoStyle = plan.style as any;
+  const aspectRatio = videoStyle?.aspectRatio as AspectRatio | undefined;
+  const colorGradingPreset = videoStyle?.colorGrading as 'cinematic' | 'vintage' | 'vibrant' | 'moody' | 'pastel' | 'noir' | 'sunset' | 'cool' | 'natural' | undefined;
+  const filmGrainIntensity = videoStyle?.filmGrain as number | undefined;
+  const vignetteIntensity = videoStyle?.vignette as number | undefined;
+  const bloomIntensity = videoStyle?.bloom as number | undefined;
+  const safeArea = videoStyle?.safeArea as boolean | undefined;
+
   // No scenes placeholder
   if (!plan?.scenes?.length) {
     return (
@@ -318,128 +330,78 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
     );
   }
 
-  // Use simple Sequence-based rendering for better compatibility
-  const useSimpleRendering = true; // Toggle for debugging
-
-  if (useSimpleRendering) {
-    return (
-      <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
-        {/* Animated background gradient */}
-        <AnimatedBackground colors={colors} />
-        
-        {/* Render scenes with simple Sequences */}
-        {plan.scenes.map((scene, index) => {
-          const startFrame = Math.round(scene.startTime * fps);
-          const durationFrames = Math.round(scene.duration * fps);
-          
-          return (
-            <Sequence
-              key={scene.id}
-              from={startFrame}
-              durationInFrames={durationFrames}
-            >
-              <SceneRenderer 
-                scene={scene} 
-                globalStyle={plan.style} 
-                sceneIndex={index}
-                totalScenes={plan.scenes.length}
-              />
-            </Sequence>
-          );
-        })}
-        
-        {/* Subtle vignette overlay */}
-        <Vignette />
-      </AbsoluteFill>
-    );
-  }
-
-  return (
+  // Render function for the actual video content
+  const renderVideoContent = () => (
     <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
       {/* Animated background gradient */}
       <AnimatedBackground colors={colors} />
       
-      {/* Render scenes with TransitionSeries */}
-      <TransitionSeries>
-        {plan.scenes.flatMap((scene, index) => {
-          const durationFrames = Math.round(scene.duration * fps);
-          
-          // Determine transition based on scene.transition property
-          const transitionType = scene.transition?.type || 'fade';
-          const transitionDuration = scene.transition?.duration || 0.3;
-          
-          let transition;
-          switch (transitionType) {
-            case 'slide':
-              transition = slide({ direction: 'from-right' });
-              break;
-            case 'wipe':
-              transition = wipe({ direction: 'from-right' });
-              break;
-            case 'zoom':
-              transition = fade(); // Use fade for zoom (can be extended with custom transition)
-              break;
-            case 'cut':
-              // For cut transitions, use very short fade
-              transition = fade();
-              break;
-            default:
-              transition = fade();
-          }
-
-          const elements: React.ReactNode[] = [
-            <TransitionSeries.Sequence 
-              key={scene.id}
-              durationInFrames={durationFrames}
-            >
-              <SceneRenderer 
-                scene={scene} 
-                globalStyle={plan.style} 
-                sceneIndex={index}
-                totalScenes={plan.scenes.length}
-              />
-            </TransitionSeries.Sequence>
-          ];
-
-          // Add transition AFTER the sequence (between scenes)
-          if (index < plan.scenes.length - 1) {
-            const nextScene = plan.scenes[index + 1];
-            const nextDurationFrames = Math.round(nextScene.duration * fps);
-            
-            // Calculate transition duration in frames
-            let transitionDurationFrames = transitionType === 'cut' 
-              ? Math.round(fps * 0.1) // Very quick for cuts
-              : Math.round(fps * transitionDuration);
-            
-            // Ensure transition doesn't exceed either adjacent sequence duration
-            // Rule: Transition must be <= min(current sequence, next sequence)
-            const maxAllowedDuration = Math.min(durationFrames, nextDurationFrames);
-            transitionDurationFrames = Math.min(transitionDurationFrames, Math.floor(maxAllowedDuration * 0.9)); // Use 90% to be safe
-            
-            const timing = transitionType === 'cut' 
-              ? linearTiming({ durationInFrames: transitionDurationFrames })
-              : springTiming({ 
-                  config: { damping: 200, stiffness: 100 },
-                  durationInFrames: transitionDurationFrames
-                });
-            
-            elements.push(
-              <TransitionSeries.Transition
-                key={`${scene.id}-transition`}
-                presentation={transition}
-                timing={timing}
-              />
-            );
-          }
-
-          return elements;
-        })}
-      </TransitionSeries>
+      {/* Render scenes with simple Sequences */}
+      {plan.scenes.map((scene, index) => {
+        const startFrame = Math.round(scene.startTime * fps);
+        const durationFrames = Math.round(scene.duration * fps);
+        
+        return (
+          <Sequence
+            key={scene.id}
+            from={startFrame}
+            durationInFrames={durationFrames}
+          >
+            <SceneRenderer 
+              scene={scene} 
+              globalStyle={plan.style} 
+              sceneIndex={index}
+              totalScenes={plan.scenes.length}
+            />
+          </Sequence>
+        );
+      })}
       
-      {/* Subtle vignette overlay */}
-      <Vignette />
+      {/* Subtle vignette overlay (always on by default) */}
+      <Vignette intensity={vignetteIntensity !== undefined ? vignetteIntensity : 0.15} />
     </AbsoluteFill>
   );
+
+  // Wrap with aspect ratio container if specified
+  const withAspectRatio = (content: React.ReactNode) => {
+    if (aspectRatio) {
+      return (
+        <ResponsiveContainer 
+          aspectRatio={aspectRatio} 
+          safeArea={safeArea}
+          backgroundColor={globalBg}
+        >
+          {content}
+        </ResponsiveContainer>
+      );
+    }
+    return content;
+  };
+
+  // Wrap with color grading if specified
+  const withColorGrading = (content: React.ReactNode) => {
+    if (colorGradingPreset) {
+      return (
+        <ColorGrading preset={colorGradingPreset}>
+          {content}
+          {filmGrainIntensity !== undefined && filmGrainIntensity > 0 && (
+            <FilmGrain intensity={filmGrainIntensity} />
+          )}
+          {vignetteIntensity !== undefined && vignetteIntensity > 0 && (
+            <Vignette intensity={vignetteIntensity} />
+          )}
+          {bloomIntensity !== undefined && bloomIntensity > 0 && (
+            <Bloom intensity={bloomIntensity} />
+          )}
+        </ColorGrading>
+      );
+    }
+    return content;
+  };
+
+  // Apply all wrappers: aspectRatio -> colorGrading -> content
+  return withAspectRatio(withColorGrading(renderVideoContent())) as React.ReactElement;
+
 };
 
 // ============================================================================
@@ -905,10 +867,119 @@ const ElementRenderer: React.FC<{
     return wrapWithMotionBlur(<Perspective3DCard element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
+  // Phone mockup / device frame
+  if (element.type === 'phone-mockup' || styleType === 'phone' || styleType === 'iphone' || content.includes('phone') || content.includes('iphone') || content.includes('device mockup')) {
+    return wrapWithMotionBlur(<PhoneMockup element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // Logo grid with scrolling/alignment
+  if (element.type === 'logo-grid' || styleType === 'logos' || content.includes('logo grid') || content.includes('company logos')) {
+    return wrapWithMotionBlur(<LogoGrid element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // Data visualization (charts)
+  if (element.type === 'data-viz' || element.type === 'chart' || styleType === 'chart' || content.includes('bar chart') || content.includes('line chart') || content.includes('pie chart')) {
+    return wrapWithMotionBlur(<DataVisualization element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
   // Check for animated text (character-by-character reveal)
+  const elementStyle = element.style as Record<string, unknown>;
   const elementStyle = element.style as Record<string, unknown> | undefined;
   if (element.type === 'text' && (styleType === 'animated-text' || content.toLowerCase().includes('animated') || elementStyle?.animated === true)) {
     return wrapWithMotionBlur(<AnimatedText element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // NEW: Showcase element support for reusable components
+  // These can be used directly in video plans by setting element.type or keywords in content
+  
+  // REAL Audio Visualization using @remotion/media-utils
+  if (element.type === 'audio-visualization' || element.type === 'real-audio-viz' || styleType === 'real-audio' || content.includes('real audio visualization')) {
+    const audioSrc = elementStyle?.audioSrc as string || elementStyle?.src as string || '';
+    const visualizationType = elementStyle?.visualizationType as 'bars' | 'waveform' | 'circular' | 'spectrum' || 'bars';
+    const numberOfSamples = elementStyle?.numberOfSamples as number || 64;
+    const color = elementStyle?.color as string || colors[1] || '#3b82f6';
+    
+    if (audioSrc) {
+      return (
+        <div style={baseStyle}>
+          <AudioVisualization
+            audioSrc={audioSrc}
+            visualizationType={visualizationType}
+            numberOfSamples={numberOfSamples}
+            color={color}
+          />
+        </div>
+      );
+    }
+  }
+  
+  // Music Visualization bars (simulated)
+  if (element.type === 'music-visualization' || styleType === 'music-bars' || content.includes('music visualization') || content.includes('audio bars')) {
+    // Render audio visualization bars
+    const bars = 64;
+    const barWidth = (element.size?.width || 1920) / bars - 8;
+    return (
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, height: element.size?.height || 300 }}>
+        {Array.from({ length: bars }).map((_, i) => {
+          const barProgress = spring({ fps, frame: sceneFrame - i * 0.5, config: { damping: 20, stiffness: 100 } });
+          const frequency = 0.05 + (i / bars) * 0.1;
+          const amplitude = Math.sin(sceneFrame * frequency) * 0.5 + 0.5;
+          const barHeight = interpolate(amplitude, [0, 1], [20, (element.size?.height || 300) - 50]) * barProgress;
+          const hue = interpolate(i, [0, bars], [240, 320]);
+          const lightness = interpolate(barHeight, [20, 250], [40, 70]);
+          return (
+            <div key={i} style={{ width: barWidth, height: barHeight, background: `hsl(${hue}, 80%, ${lightness}%)`, borderRadius: 4, boxShadow: `0 0 20px hsla(${hue}, 80%, ${lightness}%, 0.5)` }} />
+          );
+        })}
+      </div>
+    );
+  }
+  
+  // TikTok-style captions with word highlighting
+  if (element.type === 'tiktok-captions' || styleType === 'word-captions' || content.includes('caption') && content.includes('highlight')) {
+    const words = (element.content || '').split(' ');
+    return (
+      <div style={{ ...baseStyle, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
+        {words.map((word, i) => {
+          const wordDelay = i * 5;
+          const wordProgress = spring({ fps, frame: Math.max(0, sceneFrame - wordDelay), config: { damping: 20, stiffness: 100 } });
+          const scale = interpolate(wordProgress, [0, 1], [0.5, 1]);
+          const opacity = interpolate(wordProgress, [0, 1], [0, 1]);
+          const highlightProgress = interpolate(sceneFrame, [wordDelay, wordDelay + 15], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+          const isHighlighted = highlightProgress > 0.5;
+          return (
+            <span key={i} style={{ fontSize: elementStyle?.fontSize as number || 48, fontWeight: 700, color: isHighlighted ? '#fbbf24' : 'white', opacity, transform: `scale(${scale})`, display: 'inline-block', fontFamily: 'Inter, system-ui, sans-serif', textShadow: isHighlighted ? '0 0 30px rgba(251, 191, 36, 0.8), 0 4px 20px rgba(0,0,0,0.5)' : '0 4px 20px rgba(0,0,0,0.5)' }}>
+              {word}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+  
+  // Year in Review stats counter
+  if (element.type === 'stats-counter' || styleType === 'year-review' || content.includes('stats') || content.includes('counter')) {
+    const statValue = elementStyle?.value as number || 100;
+    const statLabel = elementStyle?.label as string || element.content || 'Count';
+    const statSuffix = elementStyle?.suffix as string || '';
+    const statDelay = elementStyle?.delay as number || 30;
+    
+    const statProgress = spring({ fps, frame: Math.max(0, sceneFrame - statDelay), config: { damping: 25, stiffness: 80 } });
+    const countProgress = interpolate(statProgress, [0, 1], [0, statValue], { easing: Easing.out(Easing.cubic) });
+    const displayValue = Math.floor(countProgress);
+    const statScale = interpolate(statProgress, [0, 1], [0.8, 1]);
+    const statOpacity = interpolate(statProgress, [0, 1], [0, 1]);
+    
+    return (
+      <div style={{ ...baseStyle, background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', padding: 40, borderRadius: 20, border: '1px solid rgba(255, 255, 255, 0.1)', transform: `${baseStyle.transform} scale(${statScale})`, opacity: statOpacity, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)' }}>
+        <div style={{ fontSize: 72, fontWeight: 900, background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: 12, fontFamily: "'SF Mono', monospace" }}>
+          {displayValue}{statSuffix}
+        </div>
+        <div style={{ fontSize: 20, color: 'rgba(255, 255, 255, 0.7)', fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif' }}>
+          {statLabel}
+        </div>
+      </div>
+    );
   }
 
   // Render based on element type
