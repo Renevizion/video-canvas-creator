@@ -41,9 +41,15 @@ export async function fetchPatterns(): Promise<StoredPattern[]> {
   }));
 }
 
-export async function generateVideoPlan(prompt: string, duration: number, style: string, brandData?: Record<string, unknown>) {
+export async function generateVideoPlan(
+  prompt: string, 
+  duration: number, 
+  style: string, 
+  brandData?: Record<string, unknown>,
+  aspectRatio: 'landscape' | 'portrait' | 'square' = 'landscape'
+) {
   const { data, error } = await supabase.functions.invoke('generate-video-plan', {
-    body: { prompt, duration, style, brandData },
+    body: { prompt, duration, style, brandData, aspectRatio },
   });
 
   if (error) throw error;

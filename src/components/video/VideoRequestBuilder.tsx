@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Wand2, Clock, Palette, Sparkles, Loader2, Globe, X } from 'lucide-react';
+import { Wand2, Clock, Palette, Sparkles, Loader2, Globe, X, Monitor, Smartphone, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
@@ -39,6 +39,14 @@ interface BrandData {
   };
 }
 
+type AspectRatioType = 'landscape' | 'portrait' | 'square';
+
+const aspectRatioPresets = [
+  { id: 'landscape' as AspectRatioType, name: 'YouTube', icon: Monitor, dimensions: '1920×1080', ratio: '16:9' },
+  { id: 'portrait' as AspectRatioType, name: 'TikTok/Reels', icon: Smartphone, dimensions: '1080×1920', ratio: '9:16' },
+  { id: 'square' as AspectRatioType, name: 'Instagram', icon: Square, dimensions: '1080×1080', ratio: '1:1' },
+];
+
 const stylePresets = [
   { id: 'dark-web', name: 'Dark Web', colors: ['#0a0e27', '#1a1a2e', '#53a8ff'] },
   { id: 'corporate', name: 'Corporate', colors: ['#ffffff', '#1a1a2e', '#3b82f6'] },
@@ -64,6 +72,7 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState([10]);
   const [selectedStyle, setSelectedStyle] = useState('dark-web');
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState<AspectRatioType>('landscape');
   const [brandData, setBrandData] = useState<BrandData | null>(null);
   const [isExtractingBrand, setIsExtractingBrand] = useState(false);
   const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
@@ -110,6 +119,7 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
         duration: duration[0],
         style: brandData ? 'brand' : selectedStyle,
         brandData: brandData ? (brandData as unknown as Record<string, unknown>) : undefined,
+        aspectRatio: selectedAspectRatio,
       });
       
       if (result?.planId) {
@@ -238,6 +248,36 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
           <span>5s</span>
           <span>30s</span>
           <span>60s</span>
+        </div>
+      </div>
+
+      {/* Aspect Ratio Selection */}
+      <div className="space-y-3">
+        <Label className="flex items-center gap-2 text-foreground">
+          <Monitor className="w-4 h-4 text-primary" />
+          Aspect Ratio
+        </Label>
+        <div className="grid grid-cols-3 gap-2">
+          {aspectRatioPresets.map((preset) => {
+            const Icon = preset.icon;
+            return (
+              <motion.button
+                key={preset.id}
+                onClick={() => setSelectedAspectRatio(preset.id)}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`p-3 rounded-lg border transition-all flex flex-col items-center gap-1 ${
+                  selectedAspectRatio === preset.id
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border bg-card hover:border-primary/50'
+                }`}
+              >
+                <Icon className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{preset.name}</span>
+                <span className="text-[10px] text-muted-foreground">{preset.ratio}</span>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 

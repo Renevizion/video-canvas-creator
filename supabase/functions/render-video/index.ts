@@ -147,8 +147,6 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
         const content = el.content || '';
         const termWidth = el.size?.width ? (el.size.width <= 100 ? el.size.width * 10 : el.size.width) : 600;
         const termHeight = el.size?.height ? (el.size.height <= 100 ? el.size.height * 6 : el.size.height) : 350;
-        // Escape content for safe embedding
-        const safeContent = content.replace(/`/g, '\\`').replace(/\$/g, '\\$');
         
         return `
           <div
@@ -176,7 +174,7 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
               <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ffbd2e' }} />
               <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#27ca40' }} />
             </div>
-            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{\`${safeContent}\`}</pre>
+            <pre style={{ margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{${JSON.stringify(content)}}</pre>
           </div>`;
       }
       
@@ -185,8 +183,6 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
         const content = el.content || '';
         const codeWidth = el.size?.width ? (el.size.width <= 100 ? el.size.width * 10 : el.size.width) : 650;
         const codeHeight = el.size?.height ? (el.size.height <= 100 ? el.size.height * 6 : el.size.height) : 400;
-        // Escape content for safe embedding
-        const safeContent = content.replace(/`/g, '\\`').replace(/\$/g, '\\$');
         
         return `
           <div
@@ -214,7 +210,7 @@ function generateRemotionCode(plan: VideoPlan, config: CompositionConfig): strin
               </div>
               <span style={{ color: '#6c7086', fontSize: 12, marginLeft: 8 }}>App.tsx</span>
             </div>
-            <pre style={{ margin: 0, padding: 20, fontFamily: 'JetBrains Mono, Monaco, monospace', fontSize: 14, color: '#cdd6f4', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{\`${safeContent}\`}</pre>
+            <pre style={{ margin: 0, padding: 20, fontFamily: 'JetBrains Mono, Monaco, monospace', fontSize: 14, color: '#cdd6f4', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{${JSON.stringify(content)}}</pre>
           </div>`;
       }
       

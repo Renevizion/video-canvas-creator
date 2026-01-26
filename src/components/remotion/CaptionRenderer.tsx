@@ -70,11 +70,11 @@ export const CaptionRenderer: React.FC<CaptionRendererProps> = ({
       {style === 'tiktok' ? (
         <TikTokStyleCaption
           text={currentCaption.text}
-          style={captionStyle}
+          style={CAPTION_STYLES.tiktok}
           progress={captionProgress}
         />
       ) : (
-        <SimpleCaption text={currentCaption.text} style={captionStyle} />
+        <SimpleCaption text={currentCaption.text} style={style === 'simple' ? CAPTION_STYLES.simple : CAPTION_STYLES.minimal} />
       )}
     </div>
   );
@@ -82,7 +82,7 @@ export const CaptionRenderer: React.FC<CaptionRendererProps> = ({
 
 const TikTokStyleCaption: React.FC<{
   text: string;
-  style: typeof CAPTION_STYLES.tiktok;
+  style: (typeof CAPTION_STYLES)['tiktok'];
   progress: number;
 }> = ({ text, style, progress }) => {
   const words = text.split(' ');
@@ -128,7 +128,7 @@ const TikTokStyleCaption: React.FC<{
 
 const SimpleCaption: React.FC<{
   text: string;
-  style: typeof CAPTION_STYLES.simple | typeof CAPTION_STYLES.minimal;
+  style: (typeof CAPTION_STYLES)['simple'] | (typeof CAPTION_STYLES)['minimal'];
 }> = ({ text, style }) => {
   return (
     <div

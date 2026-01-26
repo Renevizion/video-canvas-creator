@@ -12,12 +12,20 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, duration, style, brandData } = await req.json();
+    const { prompt, duration, style, brandData, aspectRatio = 'landscape' } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
+
+    // Aspect ratio configurations
+    const aspectRatios: Record<string, { width: number; height: number }> = {
+      'landscape': { width: 1920, height: 1080 },
+      'portrait': { width: 1080, height: 1920 },
+      'square': { width: 1080, height: 1080 },
+    };
+    const resolution = aspectRatios[aspectRatio] || aspectRatios.landscape;
 
     const styleColors: Record<string, string[]> = {
       'dark-web': ['#0a0e27', '#1a1a2e', '#16213e', '#53a8ff'],
@@ -60,6 +68,17 @@ Use these brand elements in the video. Match the color scheme exactly.
 ${brandContext}
 CRITICAL: Return ONLY valid JSON, no markdown, no explanations.
 
+ASPECT RATIO OPTIMIZATION (IMPORTANT):
+- Video aspect ratio: ${aspectRatio} (${resolution.width}x${resolution.height})
+- FOR PORTRAIT (9:16 / TikTok/Reels): Place elements vertically centered, use Y positions 20-80%, stack content
+- FOR LANDSCAPE (16:9 / YouTube): Use wide horizontal layouts, cinematic framing
+- FOR SQUARE (1:1 / Instagram): Balanced composition, center-focused
+
+VOICEOVER & CAPTIONS:
+- Add a "voiceover" field to EACH scene with short, punchy text (3-7 words)
+- This text will be displayed as TikTok-style captions
+- Examples: "Check this out" → "Mind-blowing results" → "Get started today"
+
 MANDATORY VISUAL QUALITY STANDARDS:
 - Every scene MUST have 4-8 layered elements for visual depth
 - Use dramatic scale animations (0.3 → 1.0) with spring easing
@@ -79,13 +98,15 @@ MANDATORY JSON STRUCTURE:
 {
   "duration": ${duration},
   "fps": 30,
-  "resolution": { "width": 1920, "height": 1080 },
+  "resolution": ${JSON.stringify(resolution)},
+  "aspectRatio": "${aspectRatio}",
   "scenes": [
     {
       "id": "scene_1",
       "startTime": 0,
       "duration": 3,
       "description": "Cinematic opening",
+      "voiceover": "Check this out",
       "elements": [
         {
           "id": "bg_gradient",
@@ -250,7 +271,10 @@ SCENE PLANNING RULES (FOLLOW EXACTLY):
       .from('video_plans')
       .insert({
         prompt,
-        plan,
+        plan: {
+          ...plan,
+          aspectRatio: aspectRatio,
+        },
         status: 'pending',
       })
       .select()
