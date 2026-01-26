@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 
 /**
- * Backend Package Checker
+ * Backend Package Checker (CommonJS version)
  * 
  * This script validates that a backend render service has all required
  * Remotion packages installed. Run this in your backend render service
  * directory (NOT in the video-canvas-creator frontend).
  * 
  * Usage:
- *   node check-backend-packages.js
+ *   node check-backend-packages.cjs
  * 
  * Or make executable:
- *   chmod +x check-backend-packages.js
- *   ./check-backend-packages.js
+ *   chmod +x check-backend-packages.cjs
+ *   ./check-backend-packages.cjs
+ * 
+ * Note: This uses .cjs extension to ensure it runs as CommonJS even if
+ * the host project uses ES modules.
  */
 
 const fs = require('fs');

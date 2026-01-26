@@ -103,9 +103,9 @@ For detailed instructions, see:
 After installing packages, verify with the automated checker:
 
 ```bash
-# Copy check-backend-packages.js from this repo to your backend
+# Copy check-backend-packages.cjs from this repo to your backend
 # Run in backend directory:
-node check-backend-packages.js
+node check-backend-packages.cjs
 ```
 
 Or test manually:

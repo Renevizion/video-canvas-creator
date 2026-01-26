@@ -133,9 +133,9 @@ npm list @remotion/motion-blur
 Use the provided validation script to check all packages at once:
 
 ```bash
-# Copy check-backend-packages.js from video-canvas-creator repo to your backend
+# Copy check-backend-packages.cjs from video-canvas-creator repo to your backend
 # Then run:
-node check-backend-packages.js
+node check-backend-packages.cjs
 ```
 
 This script will:
@@ -304,9 +304,9 @@ npm install
 **Option 1: Use the automated checker (recommended)**
 
 ```bash
-# Copy check-backend-packages.js from video-canvas-creator repo
+# Copy check-backend-packages.cjs from video-canvas-creator repo
 # Run in your backend directory:
-node check-backend-packages.js
+node check-backend-packages.cjs
 ```
 
 The script will show you exactly what's missing and how to fix it.
