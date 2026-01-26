@@ -20,7 +20,7 @@ export function useGenerateVideoPlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ prompt, duration, style, brandData, aspectRatio, generateImages, imageStyle }: { 
+    mutationFn: ({ prompt, duration, style, brandData, aspectRatio, generateImages, imageStyle, referencePattern }: { 
       prompt: string; 
       duration: number; 
       style: string;
@@ -28,8 +28,9 @@ export function useGenerateVideoPlan() {
       aspectRatio?: 'landscape' | 'portrait' | 'square';
       generateImages?: boolean;
       imageStyle?: string;
+      referencePattern?: Record<string, unknown>;
     }) =>
-      generateVideoPlan(prompt, duration, style, brandData, aspectRatio || 'landscape', generateImages, imageStyle),
+      generateVideoPlan(prompt, duration, style, brandData, aspectRatio || 'landscape', generateImages, imageStyle, referencePattern),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['video-plans'] });
       toast.success('Video plan generated!');

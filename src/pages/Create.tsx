@@ -1,19 +1,55 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Wand2 } from 'lucide-react';
+import { ArrowLeft, Wand2, Film, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { VideoRequestBuilder } from '@/components/video/VideoRequestBuilder';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import type { VideoPlan } from '@/types/video';
+import type { VideoPlan, VideoPattern } from '@/types/video';
 import { toast } from 'sonner';
+
+interface ReferencePattern {
+  id: string;
+  name: string;
+  pattern: VideoPattern;
+}
 
 const Create = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<VideoPlan | null>(null);
+  const [referencePattern, setReferencePattern] = useState<ReferencePattern | null>(null);
+
+  // Load reference pattern from URL param
+  useEffect(() => {
+    const patternId = searchParams.get('pattern');
+    if (patternId) {
+      supabase
+        .from('video_patterns')
+        .select('*')
+        .eq('id', patternId)
+        .single()
+        .then(({ data, error }) => {
+          if (data && !error) {
+            setReferencePattern({
+              id: data.id,
+              name: data.name,
+              pattern: data.pattern as unknown as VideoPattern,
+            });
+            toast.success(`Using pattern: ${data.name}`);
+          }
+        });
+    }
+  }, [searchParams]);
+
+  const clearPattern = () => {
+    setReferencePattern(null);
+    setSearchParams({});
+    toast.info('Reference pattern cleared');
+  };
 
   const handlePlanGenerated = async (planId: string) => {
     setCurrentPlanId(planId);
@@ -56,11 +92,66 @@ const Create = () => {
                   </div>
                   <div>
                     <h1 className="text-xl font-bold">Create Video</h1>
-                    <p className="text-sm text-muted-foreground">AI-powered video generation</p>
+                  <p className="text-sm text-muted-foreground">AI-powered video generation</p>
                   </div>
                 </div>
 
-                <VideoRequestBuilder onPlanGenerated={handlePlanGenerated} />
+                {/* Reference Pattern Preview */}
+                {referencePattern && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 rounded-lg bg-accent/10 border border-accent/30 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Film className="w-4 h-4 text-accent" />
+                        <span className="text-sm font-medium">Reference Pattern</span>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={clearPattern} className="h-7 w-7 p-0">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    
+                    <p className="text-sm text-foreground font-medium">{referencePattern.name}</p>
+                    
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs px-2 py-1 rounded bg-muted">
+                        {referencePattern.pattern.scenes?.length || 0} scenes
+                      </span>
+                      <span className="text-xs px-2 py-1 rounded bg-muted">
+                        {referencePattern.pattern.duration}s
+                      </span>
+                      {referencePattern.pattern.globalStyles?.colorPalette?.slice(0, 3).map((color, i) => (
+                        <div
+                          key={i}
+                          className="w-4 h-4 rounded-full border border-border"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Scene descriptions preview */}
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {referencePattern.pattern.scenes?.slice(0, 3).map((scene, i) => (
+                        <p key={i} className="text-xs text-muted-foreground truncate">
+                          Scene {i + 1}: {scene.description}
+                        </p>
+                      ))}
+                      {(referencePattern.pattern.scenes?.length || 0) > 3 && (
+                        <p className="text-xs text-muted-foreground">
+                          +{(referencePattern.pattern.scenes?.length || 0) - 3} more scenes
+                        </p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+
+                <VideoRequestBuilder 
+                  onPlanGenerated={handlePlanGenerated} 
+                  referencePattern={referencePattern?.pattern}
+                />
               </motion.div>
             </div>
 

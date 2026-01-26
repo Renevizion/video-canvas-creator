@@ -10,8 +10,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useGenerateVideoPlan } from '@/hooks/useVideoData';
 import { toast } from 'sonner';
 
+import type { VideoPattern } from '@/types/video';
+
 interface VideoRequestBuilderProps {
   onPlanGenerated?: (planId: string) => void;
+  referencePattern?: VideoPattern;
 }
 
 interface BrandData {
@@ -79,7 +82,7 @@ const extractUrlFromPrompt = (text: string): string | null => {
   return null;
 };
 
-export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProps) {
+export function VideoRequestBuilder({ onPlanGenerated, referencePattern }: VideoRequestBuilderProps) {
   const [prompt, setPrompt] = useState('');
   const [duration, setDuration] = useState([10]);
   const [selectedStyle, setSelectedStyle] = useState('dark-web');
@@ -135,6 +138,7 @@ export function VideoRequestBuilder({ onPlanGenerated }: VideoRequestBuilderProp
         aspectRatio: selectedAspectRatio,
         generateImages,
         imageStyle: generateImages ? imageStyle : undefined,
+        referencePattern: referencePattern as unknown as Record<string, unknown> | undefined,
       });
       
       if (result?.planId) {
