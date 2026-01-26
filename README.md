@@ -32,8 +32,21 @@ cd <YOUR_PROJECT_NAME>
 # Step 3: Install the necessary dependencies.
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Start the development servers (Main App + Remotion Studio)
 npm run dev
+```
+
+This will start two servers simultaneously:
+- **Main App** on `http://localhost:5173` - The video creation interface
+- **Remotion Studio** on `http://localhost:3000` - For previewing and developing video compositions
+
+You can also run them individually:
+```sh
+# Run only the main app
+npm run dev:app
+
+# Run only Remotion Studio
+npm run dev:studio
 ```
 
 **Edit a file directly in GitHub**
@@ -67,10 +80,30 @@ This project is properly configured to create **high-grade videos** using [Remot
 
 ### Quick Start
 
-```sh
-# Preview videos in Remotion Studio
-npm run remotion:preview
+The project now includes a unified development workflow that runs both the main application and Remotion Studio together:
 
+```sh
+# Start both servers (Main App + Remotion Studio)
+npm run dev
+```
+
+This single command will start:
+- **Main App** at `http://localhost:5173` - Create and edit videos in the visual interface
+- **Remotion Studio** at `http://localhost:3000` - Preview and develop video compositions
+
+You can also run them separately:
+
+```sh
+# Run only the main application
+npm run dev:app
+
+# Run only Remotion Studio
+npm run dev:studio
+```
+
+### Other Remotion Commands
+
+```sh
 # Render a video to MP4
 npm run remotion:render
 

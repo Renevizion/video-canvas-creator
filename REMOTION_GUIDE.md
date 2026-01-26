@@ -1,28 +1,105 @@
 # Remotion Video Rendering Guide
 
-This project is now properly set up for high-grade video creation using Remotion v4.
+This project is now properly set up for high-grade video creation using Remotion v4 with a unified development workflow.
 
 ## Overview
 
 Remotion allows you to create videos programmatically using React. This setup enables both:
-- **Browser Preview**: Using `@remotion/player` for real-time editing
+- **Browser Preview**: Using `@remotion/player` for real-time editing in the main app
+- **Remotion Studio**: Using `@remotion/cli` for advanced composition development
 - **Server-Side Rendering**: Using `@remotion/cli` for high-quality video exports
 
-## Quick Start
+## Unified Development Workflow
+
+### Single Command Development
+
+Start both the main application and Remotion Studio together:
+
+```bash
+npm run dev
+```
+
+This will launch:
+- **Main Application** at `http://localhost:5173`
+  - Create and edit videos using the visual interface
+  - Real-time preview with the embedded Remotion Player
+  - Save projects and manage your video library
+  
+- **Remotion Studio** at `http://localhost:3000`
+  - Advanced composition development and testing
+  - Frame-by-frame preview and timeline editor
+  - Direct export from the studio interface
+
+### Individual Commands
+
+Run servers separately if needed:
+
+```bash
+# Run only the main application
+npm run dev:app
+
+# Run only Remotion Studio
+npm run dev:studio
+```
+
+## Video Development Workflow
+
+### For Regular Users
+
+1. **Start Development**
+   ```bash
+   npm run dev
+   ```
+
+2. **Use the Main App** (`http://localhost:5173`)
+   - Navigate to the Create page
+   - Design your video using the visual editor
+   - Preview in real-time with the embedded player
+   - Save your project
+
+3. **Export Your Video**
+   ```bash
+   npm run remotion:render
+   ```
+
+### For Advanced Users / Developers
+
+1. **Start Development**
+   ```bash
+   npm run dev
+   ```
+
+2. **Use Remotion Studio** (`http://localhost:3000`)
+   - Open the DynamicVideo composition
+   - Edit props and test animations
+   - Use the timeline for precise control
+   - Export directly from the studio
+
+3. **Develop New Compositions**
+   - Edit `src/remotion/Root.tsx` to add new compositions
+   - Create new video components in `src/components/remotion/`
+   - Test in the studio before integrating into the main app
+
+## Preview and Rendering
 
 ### 1. Preview Videos (Development)
 
-Open the Remotion Studio to preview and develop your videos:
+**Using Remotion Studio** (for advanced development):
 
-```bash
-npm run remotion:preview
-```
+Open the Remotion Studio in your browser (it should auto-open at `http://localhost:3000` when you run `npm run dev`):
 
-This will open an interactive studio in your browser where you can:
+This will open an interactive studio where you can:
 - Preview all compositions
 - Adjust timings and animations
 - Test different configurations
 - Export videos directly from the UI
+
+**Using the Main App** (for regular use):
+
+The main application at `http://localhost:5173` includes an embedded Remotion Player that provides:
+- Real-time preview of your video edits
+- Integrated editing experience
+- Seamless workflow without switching tools
 
 ### 2. Render Videos (Production)
 
@@ -41,6 +118,13 @@ See all available compositions:
 ```bash
 npm run remotion:compositions
 ```
+
+## About Remotion Studio vs Preview
+
+Remotion has renamed the `preview` command to `studio` in newer versions. This project uses:
+- `remotion studio` - The official command (used in `dev:studio` and `remotion:preview`)
+- Port 3000 is the default for Remotion Studio (or higher if unavailable)
+- The studio provides the full Remotion development experience
 
 ## Advanced Rendering Options
 
