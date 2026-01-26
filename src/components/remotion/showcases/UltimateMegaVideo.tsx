@@ -428,7 +428,19 @@ function Scene7PhoneMockup() {
       }}
     >
       <div style={{ opacity: interpolate(frame, [0, 20], [0, 1]) }}>
-        <PhoneMockup phoneType="iphone" />
+        <PhoneMockup
+          element={{
+            id: 'phone-demo',
+            type: 'phone-mockup',
+            content: '',
+            position: { x: 50, y: 50, z: 1 },
+            size: { width: 280, height: 560 },
+            style: { phoneType: 'iphone' },
+          }}
+          style={{}}
+          colors={['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7']}
+          sceneFrame={frame}
+        />
       </div>
 
       <div
@@ -479,7 +491,23 @@ function Scene8LogoGrid() {
       </div>
 
       <div style={{ opacity: interpolate(frame, [20, 40], [0, 1]) }}>
-        <LogoGrid logos={logos} columns={2} animation="fade" />
+        <LogoGrid
+          element={{
+            id: 'logo-grid',
+            type: 'logo-grid',
+            content: '',
+            position: { x: 50, y: 50, z: 1 },
+            size: { width: 600, height: 400 },
+            style: { 
+              logos: logos,
+              columns: 2,
+              animation: 'fade',
+            },
+          }}
+          style={{}}
+          colors={['#059669', '#10b981']}
+          sceneFrame={frame}
+        />
       </div>
     </AbsoluteFill>
   );
@@ -513,14 +541,25 @@ function Scene9DataViz() {
 
       <div style={{ opacity: interpolate(frame, [20, 40], [0, 1]) }}>
         <DataVisualization
-          chartType="bar"
-          data={[
-            { label: 'Q1', value: 45 },
-            { label: 'Q2', value: 67 },
-            { label: 'Q3', value: 82 },
-            { label: 'Q4', value: 93 },
-          ]}
+          element={{
+            id: 'data-viz',
+            type: 'data-viz',
+            content: '',
+            position: { x: 50, y: 50, z: 1 },
+            size: { width: 600, height: 400 },
+            style: {
+              chartType: 'bar',
+              data: [
+                { label: 'Q1', value: 45 },
+                { label: 'Q2', value: 67 },
+                { label: 'Q3', value: 82 },
+                { label: 'Q4', value: 93 },
+              ],
+            },
+          }}
+          style={{}}
           colors={['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b']}
+          sceneFrame={frame}
         />
       </div>
     </AbsoluteFill>

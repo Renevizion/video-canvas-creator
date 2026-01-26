@@ -62,10 +62,11 @@ export const MyVideo = () => {
       <CodeEditor
         element={{
           id: 'screencast-editor',
-          type: 'code',
+          type: 'code-editor',
           content: exampleCode,
           position: { x: 50, y: 50, z: 1 },
           size: { width: 800, height: 500 },
+          style: {},
         }}
         style={{
           position: 'absolute',
