@@ -774,10 +774,16 @@ const CursorElement: React.FC<{
   
   if (anim?.properties) {
     if (anim.properties.x && Array.isArray(anim.properties.x)) {
-      cursorX = interpolate(moveProgress, [0, 1], anim.properties.x as number[]);
+      const xValues = anim.properties.x as number[];
+      // Ensure we only use 2 values for interpolation (start and end)
+      const xRange = xValues.length >= 2 ? [xValues[0], xValues[xValues.length - 1]] : xValues;
+      cursorX = interpolate(moveProgress, [0, 1], xRange);
     }
     if (anim.properties.y && Array.isArray(anim.properties.y)) {
-      cursorY = interpolate(moveProgress, [0, 1], anim.properties.y as number[]);
+      const yValues = anim.properties.y as number[];
+      // Ensure we only use 2 values for interpolation (start and end)
+      const yRange = yValues.length >= 2 ? [yValues[0], yValues[yValues.length - 1]] : yValues;
+      cursorY = interpolate(moveProgress, [0, 1], yRange);
     }
   }
   
