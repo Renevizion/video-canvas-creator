@@ -3,6 +3,57 @@
  * Analyzes user prompts to determine video content type and provide helpful hints
  */
 
+// Keyword arrays for content type detection
+const MOTION_GRAPHICS_KEYWORDS = [
+  'motion graphics',
+  'motion graphic',
+  'animated shapes',
+  'geometric animation',
+  'abstract animation',
+  'animated logo',
+  'logo reveal',
+  'kinetic typography',
+  'shape animation',
+  'geometric shapes',
+  'abstract shapes',
+  'animated pattern',
+];
+
+const TECH_SAAS_KEYWORDS = [
+  'saas', 'software', 'app', 'platform', 'dashboard', 
+  'analytics', 'api', 'developer', 'code', 'tech'
+];
+
+const PRODUCT_KEYWORDS = [
+  'product', 'item', 'merchandise', 'shop', 'store', 
+  'buy', 'purchase', 'ecommerce'
+];
+
+const SERVICE_KEYWORDS = [
+  'service', 'consulting', 'agency', 'solution', 
+  'support', 'help', 'professional'
+];
+
+const BRAND_KEYWORDS = [
+  'brand', 'lifestyle', 'identity', 'story', 
+  'about us', 'mission', 'vision', 'values'
+];
+
+const EXPLAINER_KEYWORDS = [
+  'how to', 'explain', 'tutorial', 'guide', 
+  'learn', 'understand', 'what is'
+];
+
+const COLOR_KEYWORDS = [
+  'color', 'blue', 'red', 'green', 'purple', 
+  'cyan', 'orange', 'yellow', 'pink', 'gradient'
+];
+
+const STYLE_KEYWORDS = [
+  'style', 'modern', 'minimal', 'professional', 
+  'playful', 'elegant', 'bold', 'clean'
+];
+
 export type VideoContentType = 
   | 'motion-graphics' 
   | 'tech-saas' 
@@ -24,23 +75,7 @@ export interface ContentTypeResult {
  */
 export function detectMotionGraphics(prompt: string): boolean {
   const lowerPrompt = prompt.toLowerCase();
-  
-  const motionGraphicsKeywords = [
-    'motion graphics',
-    'motion graphic',
-    'animated shapes',
-    'geometric animation',
-    'abstract animation',
-    'animated logo',
-    'logo reveal',
-    'kinetic typography',
-    'shape animation',
-    'geometric shapes',
-    'abstract shapes',
-    'animated pattern',
-  ];
-  
-  return motionGraphicsKeywords.some(keyword => lowerPrompt.includes(keyword));
+  return MOTION_GRAPHICS_KEYWORDS.some(keyword => lowerPrompt.includes(keyword));
 }
 
 /**
@@ -71,8 +106,7 @@ export function detectContentType(prompt: string): ContentTypeResult {
   }
   
   // Tech/SaaS detection
-  const techKeywords = ['saas', 'software', 'app', 'platform', 'dashboard', 'analytics', 'api', 'developer', 'code', 'tech'];
-  if (techKeywords.some(k => lowerPrompt.includes(k))) {
+  if (TECH_SAAS_KEYWORDS.some(k => lowerPrompt.includes(k))) {
     return {
       type: 'tech-saas',
       confidence: 0.85,
@@ -93,8 +127,7 @@ export function detectContentType(prompt: string): ContentTypeResult {
   }
   
   // Product detection
-  const productKeywords = ['product', 'item', 'merchandise', 'shop', 'store', 'buy', 'purchase', 'ecommerce'];
-  if (productKeywords.some(k => lowerPrompt.includes(k))) {
+  if (PRODUCT_KEYWORDS.some(k => lowerPrompt.includes(k))) {
     return {
       type: 'product',
       confidence: 0.8,
@@ -115,8 +148,7 @@ export function detectContentType(prompt: string): ContentTypeResult {
   }
   
   // Service detection
-  const serviceKeywords = ['service', 'consulting', 'agency', 'solution', 'support', 'help', 'professional'];
-  if (serviceKeywords.some(k => lowerPrompt.includes(k))) {
+  if (SERVICE_KEYWORDS.some(k => lowerPrompt.includes(k))) {
     return {
       type: 'service',
       confidence: 0.75,
@@ -137,8 +169,7 @@ export function detectContentType(prompt: string): ContentTypeResult {
   }
   
   // Brand/Lifestyle detection
-  const brandKeywords = ['brand', 'lifestyle', 'identity', 'story', 'about us', 'mission', 'vision', 'values'];
-  if (brandKeywords.some(k => lowerPrompt.includes(k))) {
+  if (BRAND_KEYWORDS.some(k => lowerPrompt.includes(k))) {
     return {
       type: 'brand-lifestyle',
       confidence: 0.8,
@@ -159,8 +190,7 @@ export function detectContentType(prompt: string): ContentTypeResult {
   }
   
   // Explainer detection
-  const explainerKeywords = ['how to', 'explain', 'tutorial', 'guide', 'learn', 'understand', 'what is'];
-  if (explainerKeywords.some(k => lowerPrompt.includes(k))) {
+  if (EXPLAINER_KEYWORDS.some(k => lowerPrompt.includes(k))) {
     return {
       type: 'explainer',
       confidence: 0.85,
@@ -224,6 +254,7 @@ export function validatePromptQuality(prompt: string): {
   suggestions: string[];
 } {
   const wordCount = prompt.trim().split(/\s+/).length;
+  const lowerPrompt = prompt.toLowerCase();
   let score = 0;
   const suggestions: string[] = [];
   
@@ -240,8 +271,8 @@ export function validatePromptQuality(prompt: string): {
   }
   
   // Check for specific elements
-  const hasColors = /color|blue|red|green|purple|cyan|orange|yellow|pink|gradient/i.test(prompt);
-  const hasStyle = /style|modern|minimal|professional|playful|elegant|bold|clean/i.test(prompt);
+  const hasColors = COLOR_KEYWORDS.some(k => lowerPrompt.includes(k));
+  const hasStyle = STYLE_KEYWORDS.some(k => lowerPrompt.includes(k));
   const hasDuration = /\d+\s*second|\d+s|short|long|quick/i.test(prompt);
   const hasAction = /show|display|reveal|animate|showcase|highlight|present/i.test(prompt);
   
