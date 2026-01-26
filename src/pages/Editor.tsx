@@ -119,9 +119,9 @@ const Editor = () => {
         planId={id}
         currentPlan={plan}
         onPlanUpdate={(newPlan) => {
-          setPlan(newPlan);
-          // Refetch to ensure DB is in sync
-          fetchPlan();
+          // Immediately update local state for instant preview refresh
+          setPlan({ ...newPlan });
+          toast.success('Preview updated with AI changes');
         }}
         isOpen={chatOpen}
         onToggle={() => setChatOpen(!chatOpen)}

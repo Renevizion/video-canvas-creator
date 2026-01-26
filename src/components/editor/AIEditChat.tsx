@@ -61,16 +61,19 @@ export const AIEditChat = ({ planId, currentPlan, onPlanUpdate, isOpen, onToggle
       if (error) throw error;
 
       if (data?.plan) {
+        // Force immediate update with the new plan
         onPlanUpdate(data.plan);
         
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: `Done! I've updated the video based on your request. The preview should refresh automatically.`,
+          content: `✅ Done! I've applied: "${instruction}"\n\nChanges are now visible in the preview. If you don't see them, the preview will refresh shortly.`,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, assistantMessage]);
-        toast.success('Video updated!');
+        toast.success('Video updated - preview refreshing!');
+      } else {
+        throw new Error('No updated plan returned from AI');
       }
     } catch (error) {
       console.error('Edit error:', error);
