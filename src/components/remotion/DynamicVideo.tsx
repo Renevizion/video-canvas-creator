@@ -27,7 +27,7 @@ import { Trail } from '@remotion/motion-blur';
 import { Circle, Rect, Triangle, Star, Polygon } from '@remotion/shapes';
 import { getLength, getPointAtLength, evolvePath } from '@remotion/paths';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
-import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard, AnimatedText, PhoneMockup, LogoGrid, DataVisualization } from './elements';
+import { CodeEditor, ProgressBar, AnimatedText, PhoneMockup, LogoGrid, DataVisualization } from './elements';
 import { AudioVisualization } from './elements/AudioVisualization';
 import { ColorGrading, FilmGrain, Vignette, Bloom } from './elements/ColorGrading';
 import { ResponsiveContainer, type AspectRatio } from './elements/AspectRatioSupport';
@@ -844,15 +844,97 @@ const ElementRenderer: React.FC<{
   }
   
   if (styleType === 'terminal' || content.includes('terminal') || content.includes('command') || content.includes('cli')) {
-    return wrapWithMotionBlur(<Terminal element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+    const entrySpring = spring({ fps, frame: sceneFrame, config: { damping: 30, stiffness: 100 } });
+    const width = (element.size?.width || 600);
+    const height = (element.size?.height || 400);
+    
+    return wrapWithMotionBlur(
+      <div style={{ ...baseStyle, opacity: entrySpring, transform: `${baseStyle.transform} scale(${entrySpring})` }}>
+        <Rect width={width} height={height} fill="#1e1e2e" cornerRadius={16} />
+        <div style={{
+          position: 'absolute',
+          padding: 20,
+          fontFamily: 'monospace',
+          fontSize: 14,
+          color: '#4ade80',
+          width: width - 40,
+          height: height - 40,
+          overflow: 'hidden',
+        }}>
+          <pre style={{ margin: 0 }}>{element.content || '$ command...'}</pre>
+        </div>
+      </div>
+    );
   }
   
   if (styleType === 'laptop' || content.includes('laptop') || content.includes('macbook')) {
-    return wrapWithMotionBlur(<Laptop3D element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+    const entrySpring = spring({ fps, frame: sceneFrame, config: { damping: 40, stiffness: 60 } });
+    const screenWidth = (element.size?.width || 800);
+    const rotateY = interpolate(entrySpring, [0, 1], [-20, -10]);
+    
+    return wrapWithMotionBlur(
+      <div style={{ 
+        ...baseStyle, 
+        perspective: '2000px',
+        transform: `${baseStyle.transform} rotateY(${rotateY}deg)`,
+      }}>
+        <Rect width={screenWidth} height={screenWidth * 0.625} fill="#1a1a1a" cornerRadius={20} />
+        <div style={{
+          position: 'absolute',
+          width: screenWidth - 30,
+          height: screenWidth * 0.625 - 30,
+          margin: 15,
+          background: '#0f172a',
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#64748b',
+        }}>
+          {element.content || 'Screen Content'}
+        </div>
+      </div>
+    );
   }
   
   if (styleType === '3d-card' || content.includes('3d card') || content.includes('perspective card')) {
-    return wrapWithMotionBlur(<Perspective3DCard element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+    const entrySpring = spring({ fps, frame: sceneFrame, config: { damping: 25, stiffness: 70 } });
+    const floatY = noise3D('float-' + element.id, 0, 0, sceneFrame * 0.02) * 10;
+    const rotateY = interpolate(entrySpring, [0, 1], [-15, 5]);
+    const width = (element.size?.width || 400);
+    const height = (element.size?.height || 280);
+    
+    return wrapWithMotionBlur(
+      <div style={{
+        ...baseStyle,
+        perspective: '1500px',
+        transform: `${baseStyle.transform} translateY(${floatY}px)`,
+      }}>
+        <div style={{
+          transform: `rotateY(${rotateY}deg) scale(${entrySpring})`,
+          transformStyle: 'preserve-3d',
+        }}>
+          <Rect 
+            width={width} 
+            height={height} 
+            fill="rgba(255,255,255,0.1)" 
+            cornerRadius={24} 
+          />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backdropFilter: 'blur(20px)',
+            borderRadius: 24,
+            color: '#fff',
+          }}>
+            {element.content || ''}
+          </div>
+        </div>
+      </div>
+    );
   }
   
   // Phone mockup / device frame
