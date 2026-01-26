@@ -49,17 +49,16 @@ export const Terminal: React.FC<TerminalProps> = ({
   // Calculate visible lines and characters
   const getVisibleContent = () => {
     const result: Array<{ text: string; isComplete: boolean }> = [];
-    const currentFrame = sceneFrame;
     
     for (let i = 0; i < commands.length; i++) {
       const lineStartFrame = i * lineDelay;
       const line = commands[i];
       
-      if (currentFrame < lineStartFrame) {
+      if (sceneFrame < lineStartFrame) {
         break;
       }
       
-      const framesIntoLine = currentFrame - lineStartFrame;
+      const framesIntoLine = sceneFrame - lineStartFrame;
       const charsVisible = Math.floor(framesIntoLine * typingSpeed);
       const visibleText = line.slice(0, Math.min(charsVisible, line.length));
       const isComplete = charsVisible >= line.length;
