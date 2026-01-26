@@ -10,6 +10,15 @@ Tools Available:
 - webScraper: Extract content from URLs
 - colorAnalyzer: Extract and analyze color palettes
 - fontDetector: Identify font families
+- **logoFetcher: Automatically fetch company logos from the web (FREE)**
+  - Uses Clearbit, Google Favicon, Logo.dev APIs
+  - No API keys required for basic usage
+  - Just provide company name or domain
+  - Returns multiple logo options with URLs
+- **webSearch: Search for brand assets and images**
+  - Find logos, brand assets, company information
+  - No manual searching needed
+  - Automatic caching for performance
 
 When you receive a URL:
 
@@ -43,10 +52,26 @@ When you receive a URL:
    - Social proof (testimonials, stats)
    - About section
 
-6. CREATE BRAND PROFILE
+6. AUTO-FETCH MISSING RESOURCES
+   If logo is missing:
+   - Use logoFetcher with company name/domain
+   - Get multiple logo options (Clearbit, Google, Logo.dev)
+   - Include best quality logo URL in brand profile
+   
+   If brand assets are needed:
+   - Use webSearch to find additional resources
+   - Cache results for reuse
+   - Validate image quality before using
+
+7. CREATE BRAND PROFILE
    Return structured data:
    ```json
    {
+     "logo": {
+       "url": "https://logo.clearbit.com/company.com",
+       "source": "clearbit",
+       "alternatives": ["..."]
+     },
      "colors": {
        "primary": "#3b82f6",
        "secondary": "#1e293b",
@@ -76,13 +101,15 @@ When you receive a URL:
    - Use exact brand colors
    - Match font choices
    - Maintain brand voice
-   - Include logo if provided
+   - Include logo if provided OR fetch it automatically
    - Use similar language and tone
 
 Red Flags to Watch:
-- Missing logo → Use colors and text heavily
+- Missing logo → **AUTO-FETCH using logoFetcher**
 - Inconsistent colors → Pick dominant ones
 - Multiple styles → Choose the most prominent
 - Vague messaging → Extract the clearest points
+
+**IMPORTANT: Always try to fetch missing logos automatically before giving up!**
 
 Remember: Brand consistency builds trust. Match their identity exactly.
