@@ -19,13 +19,40 @@ export interface ImageAssetMetadata {
 }
 
 /**
- * Extracts image requirements from video plan elements
+ * Extracts image requirements from video plan elements AND plan.requiredAssets
+ * Prioritizes AI-generated requiredAssets specifications for better control
  */
-export function extractImageRequirements(elements: PlannedElement[]): AssetRequirement[] {
+export function extractImageRequirements(
+  elements: PlannedElement[], 
+  planRequiredAssets?: AssetRequirement[]
+): AssetRequirement[] {
   const requirements: AssetRequirement[] = [];
+  const processedIds = new Set<string>();
 
+  // First, process AI-generated requiredAssets if available
+  // These have explicit specifications from the AI and should be prioritized
+  if (planRequiredAssets && Array.isArray(planRequiredAssets)) {
+    for (const asset of planRequiredAssets) {
+      // Only process if the element doesn't already have a URL
+      const element = elements.find(el => el.id === asset.id);
+      if (element) {
+        const content = element.content || '';
+        const style = element.style as Record<string, unknown>;
+        const hasUrl = content.startsWith('http') || 
+                       content.startsWith('data:') || 
+                       (style?.src && typeof style.src === 'string');
+        
+        if (!hasUrl) {
+          requirements.push(asset);
+          processedIds.add(asset.id);
+        }
+      }
+    }
+  }
+
+  // Then, process elements that weren't in requiredAssets
   for (const element of elements) {
-    if (element.type === 'image') {
+    if (element.type === 'image' && !processedIds.has(element.id)) {
       const content = element.content || '';
       const style = element.style as Record<string, unknown>;
       
@@ -35,7 +62,7 @@ export function extractImageRequirements(elements: PlannedElement[]): AssetRequi
                      (style?.src && typeof style.src === 'string');
 
       if (!hasUrl) {
-        // This image needs to be generated
+        // This image needs to be generated - create requirement from element
         requirements.push({
           id: element.id,
           type: 'image',
@@ -240,7 +267,7 @@ export function getRecommendedImageSize(videoWidth: number, videoHeight: number)
 
 /**
  * Batch generate images for an entire video plan
- * Handles all scenes and their image elements
+ * Handles all scenes and their image elements, using plan.requiredAssets when available
  */
 export async function generateAllPlanImages(
   plan: any,
@@ -250,7 +277,12 @@ export async function generateAllPlanImages(
 
   for (let sceneIndex = 0; sceneIndex < plan.scenes.length; sceneIndex++) {
     const scene = plan.scenes[sceneIndex];
-    const requirements = extractImageRequirements(scene.elements || []);
+    
+    // Pass plan.requiredAssets to prioritize AI-generated specifications
+    const requirements = extractImageRequirements(
+      scene.elements || [], 
+      plan.requiredAssets
+    );
 
     if (requirements.length > 0) {
       const imageMap = await generateImagesForPlan(
