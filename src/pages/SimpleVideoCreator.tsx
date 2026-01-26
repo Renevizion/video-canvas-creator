@@ -11,13 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Header } from '@/components/layout/Header';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
+import { SceneBreakdown } from '@/components/video/SceneBreakdown';
 import { findMatchingComponents, componentToVideoPlan } from '@/components/remotion/showcases/UsableComponents';
 import type { VideoPlan } from '@/types/video';
+import { gateway } from '@/lib/videoGateway';
+import type { EnhancedVideoPlan } from '@/services/SophisticatedVideoGenerator';
 
 export default function SimpleVideoCreator() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [videoPlan, setVideoPlan] = useState<VideoPlan | null>(null);
+  const [videoPlan, setVideoPlan] = useState<EnhancedVideoPlan | null>(null);
 
   const examplePrompts = [
     "Create a music visualization with audio bars",
@@ -32,23 +35,32 @@ export default function SimpleVideoCreator() {
 
     setLoading(true);
 
-    // Simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      // Use the sophisticated video gateway (STANDARD)
+      console.log('🎬 Generating sophisticated video via gateway...');
+      const result = await gateway.process({
+        type: 'text',
+        prompt: prompt,
+        duration: 30, // Default 30 seconds
+      });
 
-    // Find matching usable components
-    const matchingComponents = findMatchingComponents(prompt);
-    
-    let plan: VideoPlan;
-    
-    if (matchingComponents.length > 0) {
-      // Use the best matching component
-      plan = componentToVideoPlan(matchingComponents[0]);
-    } else {
-      // Fallback to generated plan
-      plan = generateVideoPlanFromPrompt(prompt);
+      if (result.status === 'success' && result.videoPlan) {
+        console.log('✅ Sophisticated video generated successfully');
+        console.log('   Production Grade:', result.videoPlan.sophisticatedMetadata?.productionGrade || 'N/A');
+        setVideoPlan(result.videoPlan as EnhancedVideoPlan);
+      } else if (result.status === 'error') {
+        console.error('❌ Video generation failed:', result.error);
+        // Fallback to basic plan
+        const fallbackPlan = generateVideoPlanFromPrompt(prompt);
+        setVideoPlan(fallbackPlan as EnhancedVideoPlan);
+      }
+    } catch (error) {
+      console.error('❌ Error generating video:', error);
+      // Fallback to basic plan
+      const fallbackPlan = generateVideoPlanFromPrompt(prompt);
+      setVideoPlan(fallbackPlan as EnhancedVideoPlan);
     }
     
-    setVideoPlan(plan);
     setLoading(false);
   };
 
@@ -214,6 +226,11 @@ export default function SimpleVideoCreator() {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Scene Breakdown - NEW! */}
+                {videoPlan.sophisticatedMetadata && (
+                  <SceneBreakdown videoPlan={videoPlan} />
+                )}
 
                 {/* Prompt reminder */}
                 <Card className="border-dashed">
