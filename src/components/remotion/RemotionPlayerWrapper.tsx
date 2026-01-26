@@ -1,6 +1,5 @@
 import React, { useMemo, forwardRef } from 'react';
 import { Player } from '@remotion/player';
-import { DynamicVideo } from './DynamicVideo';
 import { SophisticatedVideo } from './SophisticatedVideo';
 import type { VideoPlan } from '@/types/video';
 import type { EnhancedVideoPlan } from '@/services/SophisticatedVideoGenerator';
@@ -11,9 +10,8 @@ interface RemotionPlayerWrapperProps {
 }
 
 /**
- * Intelligent video player wrapper that automatically selects the appropriate renderer:
- * - SophisticatedVideo for EnhancedVideoPlan (with camera paths, parallax, etc.)
- * - DynamicVideo for basic VideoPlan (fallback)
+ * Video player wrapper - ALWAYS uses SophisticatedVideo renderer
+ * All videos are sophisticated by default - no tiers, no conditionals
  */
 export const RemotionPlayerWrapper = forwardRef<HTMLDivElement, RemotionPlayerWrapperProps>(
   ({ plan, className }, ref) => {
@@ -21,32 +19,27 @@ export const RemotionPlayerWrapper = forwardRef<HTMLDivElement, RemotionPlayerWr
       return Math.max(30, Math.round((plan.duration || 10) * 30));
     }, [plan.duration]);
 
-    // Detect if this is an enhanced sophisticated video plan
-    const isSophisticated = useMemo(() => {
-      return 'sophisticatedMetadata' in plan && plan.sophisticatedMetadata !== undefined;
-    }, [plan]);
+    // ALWAYS use sophisticated video - if plan doesn't have sophisticated metadata, 
+    // it means it came from old code and we'll render it with sophisticated renderer anyway
+    const enhancedPlan = plan as EnhancedVideoPlan;
 
-    // Select the appropriate component
-    const VideoComponent = isSophisticated ? SophisticatedVideo : DynamicVideo;
-    const inputProps = isSophisticated 
-      ? { videoPlan: plan as EnhancedVideoPlan }
-      : { plan: plan as VideoPlan };
-
-    console.log(`[RemotionPlayerWrapper] Using ${isSophisticated ? 'SophisticatedVideo' : 'DynamicVideo'} renderer`);
-    if (isSophisticated) {
-      const enhanced = plan as EnhancedVideoPlan;
-      console.log(`   Production Grade: ${enhanced.sophisticatedMetadata?.productionGrade || 'N/A'}`);
-      console.log(`   Camera Paths: ${enhanced.sophisticatedMetadata?.usesOrbitalCamera || enhanced.sophisticatedMetadata?.usesForwardTracking ? '✓' : '✗'}`);
-      console.log(`   Curved Paths: ${enhanced.sophisticatedMetadata?.usesCurvedPaths ? '✓' : '✗'}`);
-      console.log(`   Parallax: ${enhanced.sophisticatedMetadata?.usesParallax ? '✓' : '✗'}`);
-      console.log(`   Color Grading: ${enhanced.sophisticatedMetadata?.usesColorGrading ? '✓' : '✗'}`);
+    // Log what we're rendering
+    console.log('[RemotionPlayerWrapper] Rendering with SophisticatedVideo');
+    if (enhancedPlan.sophisticatedMetadata) {
+      console.log(`   Production Grade: ${enhancedPlan.sophisticatedMetadata.productionGrade}`);
+      console.log(`   Camera Paths: ${enhancedPlan.sophisticatedMetadata.usesOrbitalCamera || enhancedPlan.sophisticatedMetadata.usesForwardTracking ? '✓' : '✗'}`);
+      console.log(`   Curved Paths: ${enhancedPlan.sophisticatedMetadata.usesCurvedPaths ? '✓' : '✗'}`);
+      console.log(`   Parallax: ${enhancedPlan.sophisticatedMetadata.usesParallax ? '✓' : '✗'}`);
+      console.log(`   Color Grading: ${enhancedPlan.sophisticatedMetadata.usesColorGrading ? '✓' : '✗'}`);
+    } else {
+      console.log('   Note: Plan without sophisticated metadata - will render basic features only');
     }
 
     return (
       <div ref={ref} className={className}>
         <Player
-          component={VideoComponent}
-          inputProps={inputProps}
+          component={SophisticatedVideo}
+          inputProps={{ videoPlan: enhancedPlan }}
           durationInFrames={durationInFrames}
           fps={30}
           compositionWidth={1920}
