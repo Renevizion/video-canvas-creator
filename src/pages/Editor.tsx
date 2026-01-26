@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Header } from '@/components/layout/Header';
 import { VisualEditor } from '@/components/editor/VisualEditor';
+import { AIEditChat } from '@/components/editor/AIEditChat';
 import { supabase } from '@/integrations/supabase/client';
 import type { VideoPlan } from '@/types/video';
 import { toast } from 'sonner';
@@ -14,11 +14,17 @@ const Editor = () => {
   const [plan, setPlan] = useState<VideoPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchPlan();
     }
+    
+    // Cleanup on unmount
+    return () => {
+      setPlan(null);
+    };
   }, [id]);
 
   const fetchPlan = async () => {
@@ -53,10 +59,10 @@ const Editor = () => {
       .eq('id', id);
 
     if (error) {
-      toast.error('Failed to save changes');
+      toast.error('Failed to save');
       console.error(error);
     } else {
-      toast.success('Changes saved!');
+      toast.success('Saved!');
     }
     setSaving(false);
   };
@@ -69,41 +75,57 @@ const Editor = () => {
     );
   }
 
-  if (!plan) return null;
+  if (!plan || !id) return null;
 
   return (
-    <div className="min-h-screen bg-background noise-bg">
-      <Header />
+    <div className="min-h-screen bg-background">
+      {/* Minimal header */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-background/80 backdrop-blur-xl border-b border-border z-40 flex items-center px-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/project/${id}`)}
+          className="gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+        
+        <div className="flex-1" />
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSave}
+          disabled={saving}
+          className="gap-2"
+        >
+          {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+          {saving ? 'Saving...' : 'Save'}
+        </Button>
+      </header>
 
-      <main className="pt-20 px-4 pb-4">
-        <div className="container mx-auto">
-          {/* Back button */}
-          <div className="flex items-center gap-4 mb-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/project/${id}`)}
-              className="gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Project
-            </Button>
-            {saving && (
-              <span className="text-sm text-muted-foreground flex items-center gap-2">
-                <Loader2 className="w-3 h-3 animate-spin" />
-                Saving...
-              </span>
-            )}
-          </div>
-
-          {/* Visual Editor */}
-          <VisualEditor
-            plan={plan}
-            onPlanChange={handlePlanChange}
-            onSave={handleSave}
-          />
-        </div>
+      {/* Editor - full height */}
+      <main className="pt-14 h-screen">
+        <VisualEditor
+          plan={plan}
+          onPlanChange={handlePlanChange}
+          onSave={handleSave}
+        />
       </main>
+
+      {/* AI Edit Chat */}
+      <AIEditChat
+        planId={id}
+        currentPlan={plan}
+        onPlanUpdate={(newPlan) => {
+          setPlan(newPlan);
+          // Refetch to ensure DB is in sync
+          fetchPlan();
+        }}
+        isOpen={chatOpen}
+        onToggle={() => setChatOpen(!chatOpen)}
+      />
     </div>
   );
 };
