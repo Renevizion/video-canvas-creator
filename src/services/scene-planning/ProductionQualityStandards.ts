@@ -248,8 +248,10 @@ export class ProductionQualityStandards {
       paletteType = 'triadic';
     }
     
-    // Simple contrast check (in production, calculate WCAG contrast ratios)
-    const contrastRatio = 4.5; // Placeholder
+    // Simple contrast check
+    // NOTE: This is a placeholder. In production, calculate actual WCAG contrast ratios
+    // using luminance values from color hex codes
+    const contrastRatio = 4.5; // Estimated - needs proper implementation
     
     let accessibility: ColorHarmony['accessibility'];
     if (contrastRatio >= 7) accessibility = 'excellent';
@@ -465,8 +467,9 @@ export class ProductionQualityStandards {
    * Enforce transition variety
    */
   private enforceTransitionVariety(plan: VideoPlan): VideoPlan {
-    const transitionTypes: Array<NonNullable<VideoPlan['scenes'][0]['transition']>['type']> = 
-      ['fade', 'slide', 'wipe', 'zoom', 'cut'];
+    // Available transition types for variety
+    type TransitionType = NonNullable<VideoPlan['scenes'][0]['transition']>['type'];
+    const transitionTypes: TransitionType[] = ['fade', 'slide', 'wipe', 'zoom', 'cut'];
     
     return {
       ...plan,

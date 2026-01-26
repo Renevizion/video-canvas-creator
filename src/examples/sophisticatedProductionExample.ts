@@ -168,7 +168,7 @@ async function demonstrateSophisticatedProduction() {
     );
   
   console.log('\n✅ Production Complete!');
-  console.log(`   Quality Score: ${report.qualityScore}/100 (${report.qualityImprovement >= 0 ? '+' : ''}${report.qualityImprovement})`);
+  console.log(`   Quality Score: ${report.qualityScore}/100 (${report.qualityImprovement > 0 ? '+' : ''}${report.qualityImprovement})`);
   console.log(`   Processing Time: ${report.processingTime}ms`);
   console.log(`   Scenes: ${basicProductVideo.scenes.length} → ${plan.scenes.length}`);
   

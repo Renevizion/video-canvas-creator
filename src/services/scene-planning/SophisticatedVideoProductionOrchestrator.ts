@@ -145,16 +145,20 @@ export class SophisticatedVideoProductionOrchestrator {
         if (scene.elements.length > 1) {
           // Apply staggered animations for visual interest
           const preset = motionDesignLibrary.getMotionPreset(motionStyle);
-          const baseAnimation = preset.animations[0];
           
-          return {
-            ...scene,
-            elements: motionDesignLibrary.createCoordinatedAnimation(
-              scene.elements,
-              'staggered',
-              baseAnimation
-            )
-          };
+          // Ensure preset has animations
+          if (preset.animations.length > 0) {
+            const baseAnimation = preset.animations[0];
+            
+            return {
+              ...scene,
+              elements: motionDesignLibrary.createCoordinatedAnimation(
+                scene.elements,
+                'staggered',
+                baseAnimation
+              )
+            };
+          }
         }
         return scene;
       })

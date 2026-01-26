@@ -360,6 +360,10 @@ export class MotionDesignLibrary {
     baseAnimation: AnimationPattern
   ): PlannedElement[] {
     
+    // Animation choreography timing constants
+    const STAGGER_DELAY = 0.1; // Delay between staggered elements
+    const WAVE_DELAY_MULTIPLIER = 0.08; // Delay multiplier for wave effect
+    
     return elements.map((element, index) => {
       let delay = baseAnimation.delay || 0;
       
@@ -376,14 +380,14 @@ export class MotionDesignLibrary {
           
         case 'staggered':
           // Slight delay between each
-          delay += index * 0.1;
+          delay += index * STAGGER_DELAY;
           break;
           
         case 'wave':
           // Wave effect (center first, then outwards)
           const middle = Math.floor(elements.length / 2);
           const distance = Math.abs(index - middle);
-          delay += distance * 0.08;
+          delay += distance * WAVE_DELAY_MULTIPLIER;
           break;
       }
       

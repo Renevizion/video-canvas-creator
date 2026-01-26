@@ -251,9 +251,12 @@ export class AdvancedScenePlanner {
     const optimizedScenes: PlannedScene[] = [];
     let currentTime = 0;
     
+    // Constants for scene pacing
+    const SCENE_DURATION_VARIANCE_RATIO = 0.3; // 30% variance for rhythm
+    
     // Calculate ideal scene count
     const idealSceneCount = Math.round(totalDuration / profile.averageSceneDuration);
-    const sceneDurationVariance = profile.averageSceneDuration * 0.3; // 30% variance
+    const sceneDurationVariance = profile.averageSceneDuration * SCENE_DURATION_VARIANCE_RATIO;
     
     scenes.forEach((scene, index) => {
       // Vary duration for rhythm
@@ -619,8 +622,12 @@ export class AdvancedScenePlanner {
    * Enhance the hook (opening) for maximum impact
    */
   private enhanceHook(scenes: PlannedScene[], totalDuration: number): PlannedScene[] {
+    // Constants for hook enhancement
+    const HOOK_DURATION_RATIO = 0.15; // First 15% of video
+    const HOOK_ANIMATION_MAX_DURATION = 0.4; // Max 0.4s for energetic feel
+    
     // Hook is first 15% of video
-    const hookDuration = totalDuration * 0.15;
+    const hookDuration = totalDuration * HOOK_DURATION_RATIO;
     
     return scenes.map((scene, index) => {
       // If this is a hook scene
@@ -630,20 +637,22 @@ export class AdvancedScenePlanner {
           // Add fast, energetic animations
           animations: scene.animations.map(anim => ({
             ...anim,
-            duration: Math.min(anim.duration, 0.4), // Faster animations
+            duration: Math.min(anim.duration, HOOK_ANIMATION_MAX_DURATION), // Faster animations
             easing: 'spring' // Bouncy, energetic easing
           })),
           // Ensure elements have strong animations
           elements: scene.elements.map(el => {
             if (!el.animation) {
+              const HOOK_ELEMENT_STAGGER_DELAY = 0.1; // Delay between element animations
+              
               return {
                 ...el,
                 animation: {
                   name: 'ZoomIn',
                   type: 'scale',
-                  duration: 0.4,
+                  duration: HOOK_ANIMATION_MAX_DURATION,
                   easing: 'spring',
-                  delay: index * 0.1,
+                  delay: index * HOOK_ELEMENT_STAGGER_DELAY,
                   properties: {
                     from: { scale: 0.8, opacity: 0 },
                     to: { scale: 1, opacity: 1 }
