@@ -906,8 +906,81 @@ const ElementRenderer: React.FC<{
   }
   
   // Check for animated text (character-by-character reveal)
-  if (element.type === 'text' && (styleType === 'animated-text' || content.toLowerCase().includes('animated') || textStyle?.animated === true)) {
+  const elementStyle = element.style as Record<string, unknown>;
+  if (element.type === 'text' && (styleType === 'animated-text' || content.toLowerCase().includes('animated') || elementStyle?.animated === true)) {
     return wrapWithMotionBlur(<AnimatedText element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
+  }
+  
+  // NEW: Showcase element support for reusable components
+  // These can be used directly in video plans by setting element.type or keywords in content
+  
+  // Music Visualization bars
+  if (element.type === 'music-visualization' || styleType === 'music-bars' || content.includes('music visualization') || content.includes('audio bars')) {
+    // Render audio visualization bars
+    const bars = 64;
+    const barWidth = (element.size?.width || 1920) / bars - 8;
+    return (
+      <div style={{ ...baseStyle, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, height: element.size?.height || 300 }}>
+        {Array.from({ length: bars }).map((_, i) => {
+          const barProgress = spring({ fps, frame: sceneFrame - i * 0.5, config: { damping: 20, stiffness: 100 } });
+          const frequency = 0.05 + (i / bars) * 0.1;
+          const amplitude = Math.sin(sceneFrame * frequency) * 0.5 + 0.5;
+          const barHeight = interpolate(amplitude, [0, 1], [20, (element.size?.height || 300) - 50]) * barProgress;
+          const hue = interpolate(i, [0, bars], [240, 320]);
+          const lightness = interpolate(barHeight, [20, 250], [40, 70]);
+          return (
+            <div key={i} style={{ width: barWidth, height: barHeight, background: `hsl(${hue}, 80%, ${lightness}%)`, borderRadius: 4, boxShadow: `0 0 20px hsla(${hue}, 80%, ${lightness}%, 0.5)` }} />
+          );
+        })}
+      </div>
+    );
+  }
+  
+  // TikTok-style captions with word highlighting
+  if (element.type === 'tiktok-captions' || styleType === 'word-captions' || content.includes('caption') && content.includes('highlight')) {
+    const words = (element.content || '').split(' ');
+    return (
+      <div style={{ ...baseStyle, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
+        {words.map((word, i) => {
+          const wordDelay = i * 5;
+          const wordProgress = spring({ fps, frame: Math.max(0, sceneFrame - wordDelay), config: { damping: 20, stiffness: 100 } });
+          const scale = interpolate(wordProgress, [0, 1], [0.5, 1]);
+          const opacity = interpolate(wordProgress, [0, 1], [0, 1]);
+          const highlightProgress = interpolate(sceneFrame, [wordDelay, wordDelay + 15], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+          const isHighlighted = highlightProgress > 0.5;
+          return (
+            <span key={i} style={{ fontSize: elementStyle?.fontSize as number || 48, fontWeight: 700, color: isHighlighted ? '#fbbf24' : 'white', opacity, transform: `scale(${scale})`, display: 'inline-block', fontFamily: 'Inter, system-ui, sans-serif', textShadow: isHighlighted ? '0 0 30px rgba(251, 191, 36, 0.8), 0 4px 20px rgba(0,0,0,0.5)' : '0 4px 20px rgba(0,0,0,0.5)' }}>
+              {word}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+  
+  // Year in Review stats counter
+  if (element.type === 'stats-counter' || styleType === 'year-review' || content.includes('stats') || content.includes('counter')) {
+    const statValue = elementStyle?.value as number || 100;
+    const statLabel = elementStyle?.label as string || element.content || 'Count';
+    const statSuffix = elementStyle?.suffix as string || '';
+    const statDelay = elementStyle?.delay as number || 30;
+    
+    const statProgress = spring({ fps, frame: Math.max(0, sceneFrame - statDelay), config: { damping: 25, stiffness: 80 } });
+    const countProgress = interpolate(statProgress, [0, 1], [0, statValue], { easing: Easing.out(Easing.cubic) });
+    const displayValue = Math.floor(countProgress);
+    const statScale = interpolate(statProgress, [0, 1], [0.8, 1]);
+    const statOpacity = interpolate(statProgress, [0, 1], [0, 1]);
+    
+    return (
+      <div style={{ ...baseStyle, background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', padding: 40, borderRadius: 20, border: '1px solid rgba(255, 255, 255, 0.1)', transform: `${baseStyle.transform} scale(${statScale})`, opacity: statOpacity, boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)' }}>
+        <div style={{ fontSize: 72, fontWeight: 900, background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', marginBottom: 12, fontFamily: "'SF Mono', monospace" }}>
+          {displayValue}{statSuffix}
+        </div>
+        <div style={{ fontSize: 20, color: 'rgba(255, 255, 255, 0.7)', fontWeight: 500, fontFamily: 'Inter, system-ui, sans-serif' }}>
+          {statLabel}
+        </div>
+      </div>
+    );
   }
 
   // Render based on element type
