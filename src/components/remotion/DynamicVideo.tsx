@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, Img, random } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring, Sequence, Easing, Img } from 'remotion';
 import { noise3D } from '@remotion/noise';
 import type { VideoPlan, PlannedScene, PlannedElement, AnimationPattern } from '@/types/video';
 import { CodeEditor, ProgressBar, Laptop3D, Terminal, Perspective3DCard } from './elements';
