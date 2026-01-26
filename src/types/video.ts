@@ -61,9 +61,11 @@ export interface VideoPlan {
   duration: number;
   fps: 30;
   resolution: { width: number; height: number };
+  aspectRatio?: 'landscape' | 'portrait' | 'square'; // NEW: Support for different aspect ratios
   scenes: PlannedScene[];
   requiredAssets: AssetRequirement[];
   style: GlobalStyles;
+  captions?: CaptionData[]; // NEW: Support for captions
 }
 
 export interface PlannedScene {
@@ -74,16 +76,25 @@ export interface PlannedScene {
   elements: PlannedElement[];
   animations: AnimationPattern[];
   transition: TransitionPattern | null;
+  voiceover?: string; // NEW: Support for voiceover text
 }
 
 export interface PlannedElement {
   id: string;
-  type: 'text' | 'image' | 'shape' | 'cursor' | 'video' | 'audio' | 'code-editor' | 'progress-bar' | 'terminal' | 'laptop' | '3d-card';
+  type: 'text' | 'image' | 'shape' | 'cursor' | 'video' | 'audio' | 'code-editor' | 'progress-bar' | 'terminal' | 'laptop' | '3d-card' | 'caption'; // Added caption type
   content: string;
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };
   style: Record<string, unknown>;
   animation?: AnimationPattern;
+}
+
+// NEW: Caption data structure
+export interface CaptionData {
+  startTime: number; // in seconds
+  endTime: number; // in seconds
+  text: string;
+  style?: 'tiktok' | 'simple' | 'minimal'; // Caption style
 }
 
 export interface AssetRequirement {

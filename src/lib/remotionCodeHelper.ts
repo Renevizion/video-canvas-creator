@@ -100,7 +100,7 @@ const REMOTION_PACKAGES = {
   captions: {
     package: '@remotion/captions',
     imports: ['Caption'],
-    condition: (plan: VideoPlan) => hasElementType(plan, 'caption'),
+    condition: (plan: VideoPlan) => hasElementType(plan, 'caption') || (plan.captions && plan.captions.length > 0),
   },
   
   // Lottie
