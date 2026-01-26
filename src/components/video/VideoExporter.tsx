@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Player, PlayerRef } from '@remotion/player';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Loader2, X, Film, CheckCircle, AlertCircle, Cloud, Monitor } from 'lucide-react';
+import { Download, Loader2, X, Film, CheckCircle, AlertCircle, Cloud, Monitor, History, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { DynamicVideo } from '@/components/remotion/DynamicVideo';
 import { supabase } from '@/integrations/supabase/client';
 import type { VideoPlan } from '@/types/video';
 import { toast } from 'sonner';
+import { addRenderToHistory, getRenderHistory, type RenderHistoryItem } from '@/lib/renderHistory';
 
 interface VideoExporterProps {
   plan: VideoPlan;
@@ -25,10 +26,18 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
     const [message, setMessage] = useState('');
     const [videoUrl, setVideoUrl] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [showHistory, setShowHistory] = useState(false);
+    const [renderHistory, setRenderHistory] = useState<RenderHistoryItem[]>([]);
 
     const duration = plan.duration || 10;
     const fps = plan.fps || 30;
     const totalFrames = duration * fps;
+
+    // Load render history on mount
+    React.useEffect(() => {
+      const history = getRenderHistory();
+      setRenderHistory(history);
+    }, []);
 
     const handleCloudRender = async () => {
       if (!projectId) {
@@ -66,6 +75,20 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
             setVideoUrl(project.final_video_url);
             setStatus('complete');
             toast.success('Video rendered successfully!');
+            
+            // Save to render history
+            if (projectId) {
+              addRenderToHistory({
+                projectId,
+                videoUrl: project.final_video_url,
+                duration,
+                fps,
+                resolution: plan.resolution || { width: 1920, height: 1080 },
+                title: plan.id || 'Untitled Video',
+              });
+              // Refresh history display
+              setRenderHistory(getRenderHistory());
+            }
           } else if (project?.status === 'failed') {
             clearInterval(pollInterval);
             setError(project.error || 'Render failed');
@@ -206,42 +229,97 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
           </AnimatePresence>
 
           {/* Actions */}
-          <div className="flex items-center gap-3 justify-end">
-            {status === 'idle' && (
-              <Button
-                onClick={handleCloudRender}
-                className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
-              >
-                <Cloud className="w-4 h-4" />
-                Render Video (Cloud)
-              </Button>
-            )}
+          <div className="flex items-center gap-3 justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHistory(!showHistory)}
+              className="gap-2"
+            >
+              <History className="w-4 h-4" />
+              {showHistory ? 'Hide' : 'Show'} History ({renderHistory.length})
+            </Button>
 
-            {status === 'rendering' && (
-              <Button variant="outline" disabled className="gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Rendering...
-              </Button>
-            )}
+            <div className="flex items-center gap-3">
+              {status === 'idle' && (
+                <Button
+                  onClick={handleCloudRender}
+                  className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                >
+                  <Cloud className="w-4 h-4" />
+                  Render Video (Cloud)
+                </Button>
+              )}
 
-            {status === 'complete' && videoUrl && (
-              <>
+              {status === 'rendering' && (
+                <Button variant="outline" disabled className="gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Rendering...
+                </Button>
+              )}
+
+              {status === 'complete' && videoUrl && (
+                <>
+                  <Button variant="outline" onClick={handleReset}>
+                    Render Again
+                  </Button>
+                  <Button onClick={handleDownload} className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                    <Download className="w-4 h-4" />
+                    Download MP4
+                  </Button>
+                </>
+              )}
+
+              {status === 'error' && (
                 <Button variant="outline" onClick={handleReset}>
-                  Render Again
+                  Try Again
                 </Button>
-                <Button onClick={handleDownload} className="gap-2 bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                  <Download className="w-4 h-4" />
-                  Download MP4
-                </Button>
-              </>
-            )}
-
-            {status === 'error' && (
-              <Button variant="outline" onClick={handleReset}>
-                Try Again
-              </Button>
-            )}
+              )}
+            </div>
           </div>
+
+          {/* Render History */}
+          <AnimatePresence>
+            {showHistory && renderHistory.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-6 border-t border-muted-foreground/20 pt-6"
+              >
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <History className="w-4 h-4" />
+                  Recent Renders
+                </h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {renderHistory.slice(0, 10).map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-3 glass-card hover:bg-primary/5 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {item.title || 'Untitled Video'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(item.timestamp).toLocaleString()} • {item.duration}s @ {item.fps}fps • {item.resolution.width}x{item.resolution.height}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(item.videoUrl, '_blank')}
+                        className="gap-2 ml-3"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Open
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Info */}
           <div className="mt-6 p-4 border border-dashed border-muted-foreground/30 rounded-lg">
