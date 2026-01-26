@@ -133,6 +133,7 @@ const showcaseElementsPlan: VideoPlan = {
           type: 'text',
           content: 'Music Visualization',
           position: { x: 50, y: 15, z: 2 },
+          size: { width: 80, height: 20 },
           style: { fontSize: 56, fontWeight: 800 },
           animation: { type: 'fade', name: 'fadeIn', duration: 1, delay: 0, easing: 'ease-out', properties: {} }
         },
@@ -142,6 +143,7 @@ const showcaseElementsPlan: VideoPlan = {
           content: 'Audio bars',
           position: { x: 50, y: 50, z: 1 },
           size: { width: 1400, height: 300 },
+          style: {},
           animation: { type: 'fade', name: 'fadeIn', duration: 1.5, delay: 0.5, easing: 'ease-out', properties: {} }
         }
       ]
@@ -159,6 +161,7 @@ const showcaseElementsPlan: VideoPlan = {
           type: 'tiktok-captions',
           content: 'Welcome to our amazing showcase video',
           position: { x: 50, y: 50, z: 1 },
+          size: { width: 80, height: 20 },
           style: { fontSize: 52 },
           animation: { type: 'fade', name: 'fadeIn', duration: 0.8, delay: 0, easing: 'ease-out', properties: {} }
         }

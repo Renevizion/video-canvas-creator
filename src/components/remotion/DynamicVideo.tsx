@@ -472,19 +472,7 @@ const AnimatedBackground: React.FC<{ colors: string[]; showParticles?: boolean }
   );
 });
 
-// ============================================================================
-// VIGNETTE OVERLAY
-// ============================================================================
-const Vignette: React.FC = () => (
-  <div
-    style={{
-      position: 'absolute',
-      inset: 0,
-      background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)',
-      pointerEvents: 'none',
-    }}
-  />
-);
+// Note: Using imported Vignette from ColorGrading instead of local duplicate
 
 // ============================================================================
 // SCENE RENDERER - Handles individual scenes with transitions
@@ -883,9 +871,8 @@ const ElementRenderer: React.FC<{
   }
   
   // Check for animated text (character-by-character reveal)
-  const elementStyle = element.style as Record<string, unknown>;
-  const elementStyle = element.style as Record<string, unknown> | undefined;
-  if (element.type === 'text' && (styleType === 'animated-text' || content.toLowerCase().includes('animated') || elementStyle?.animated === true)) {
+  const animTextStyle = element.style as Record<string, unknown> | undefined;
+  if (element.type === 'text' && (styleType === 'animated-text' || content.toLowerCase().includes('animated') || animTextStyle?.animated === true)) {
     return wrapWithMotionBlur(<AnimatedText element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
@@ -894,10 +881,11 @@ const ElementRenderer: React.FC<{
   
   // REAL Audio Visualization using @remotion/media-utils
   if (element.type === 'audio-visualization' || element.type === 'real-audio-viz' || styleType === 'real-audio' || content.includes('real audio visualization')) {
-    const audioSrc = elementStyle?.audioSrc as string || elementStyle?.src as string || '';
-    const visualizationType = elementStyle?.visualizationType as 'bars' | 'waveform' | 'circular' | 'spectrum' || 'bars';
-    const numberOfSamples = elementStyle?.numberOfSamples as number || 64;
-    const color = elementStyle?.color as string || colors[1] || '#3b82f6';
+    const elStyle = element.style as Record<string, unknown> | undefined;
+    const audioSrc = elStyle?.audioSrc as string || elStyle?.src as string || '';
+    const visualizationType = elStyle?.visualizationType as 'bars' | 'waveform' | 'circular' | 'spectrum' || 'bars';
+    const numberOfSamples = elStyle?.numberOfSamples as number || 64;
+    const color = elStyle?.color as string || colors[1] || '#3b82f6';
     
     if (audioSrc) {
       return (
@@ -937,6 +925,7 @@ const ElementRenderer: React.FC<{
   
   // TikTok-style captions with word highlighting
   if (element.type === 'tiktok-captions' || styleType === 'word-captions' || content.includes('caption') && content.includes('highlight')) {
+    const captionStyle = element.style as Record<string, unknown> | undefined;
     const words = (element.content || '').split(' ');
     return (
       <div style={{ ...baseStyle, display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 20 }}>
@@ -948,7 +937,7 @@ const ElementRenderer: React.FC<{
           const highlightProgress = interpolate(sceneFrame, [wordDelay, wordDelay + 15], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
           const isHighlighted = highlightProgress > 0.5;
           return (
-            <span key={i} style={{ fontSize: elementStyle?.fontSize as number || 48, fontWeight: 700, color: isHighlighted ? '#fbbf24' : 'white', opacity, transform: `scale(${scale})`, display: 'inline-block', fontFamily: 'Inter, system-ui, sans-serif', textShadow: isHighlighted ? '0 0 30px rgba(251, 191, 36, 0.8), 0 4px 20px rgba(0,0,0,0.5)' : '0 4px 20px rgba(0,0,0,0.5)' }}>
+            <span key={i} style={{ fontSize: captionStyle?.fontSize as number || 48, fontWeight: 700, color: isHighlighted ? '#fbbf24' : 'white', opacity, transform: `scale(${scale})`, display: 'inline-block', fontFamily: 'Inter, system-ui, sans-serif', textShadow: isHighlighted ? '0 0 30px rgba(251, 191, 36, 0.8), 0 4px 20px rgba(0,0,0,0.5)' : '0 4px 20px rgba(0,0,0,0.5)' }}>
               {word}
             </span>
           );
@@ -959,10 +948,11 @@ const ElementRenderer: React.FC<{
   
   // Year in Review stats counter
   if (element.type === 'stats-counter' || styleType === 'year-review' || content.includes('stats') || content.includes('counter')) {
-    const statValue = elementStyle?.value as number || 100;
-    const statLabel = elementStyle?.label as string || element.content || 'Count';
-    const statSuffix = elementStyle?.suffix as string || '';
-    const statDelay = elementStyle?.delay as number || 30;
+    const statsStyle = element.style as Record<string, unknown> | undefined;
+    const statValue = statsStyle?.value as number || 100;
+    const statLabel = statsStyle?.label as string || element.content || 'Count';
+    const statSuffix = statsStyle?.suffix as string || '';
+    const statDelay = statsStyle?.delay as number || 30;
     
     const statProgress = spring({ fps, frame: Math.max(0, sceneFrame - statDelay), config: { damping: 25, stiffness: 80 } });
     const countProgress = interpolate(statProgress, [0, 1], [0, statValue], { easing: Easing.out(Easing.cubic) });

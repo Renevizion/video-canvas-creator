@@ -9,7 +9,6 @@ import React, { useState } from 'react';
 import {
   createImplementationPlan,
   executeImplementationWithSafeguards,
-  formatPlanForUser,
   type SafeImplementationPlan,
   type SafeImplementationOptions,
   type ImplementationApproval,
@@ -17,6 +16,285 @@ import {
   type UncertainResource,
 } from '../lib/autoImplementerWithSafeguards';
 import type { ImplementationResult } from '../lib/autoImplementer';
+
+// Inline styles
+const styles = {
+  container: {
+    background: 'white',
+    borderRadius: 12,
+    padding: 24,
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+    maxWidth: 800,
+    margin: '0 auto',
+  } as React.CSSProperties,
+  loading: {
+    textAlign: 'center' as const,
+    padding: 48,
+  },
+  spinner: {
+    border: '4px solid #f3f3f3',
+    borderTop: '4px solid #3b82f6',
+    borderRadius: '50%',
+    width: 40,
+    height: 40,
+    animation: 'spin 1s linear infinite',
+    margin: '0 auto 16px',
+  } as React.CSSProperties,
+  header: {
+    textAlign: 'center' as const,
+    marginBottom: 24,
+  },
+  headerTitle: {
+    margin: '0 0 8px 0',
+    color: '#333',
+  } as React.CSSProperties,
+  subtitle: {
+    color: '#666',
+    margin: 0,
+  } as React.CSSProperties,
+  section: {
+    marginBottom: 24,
+  } as React.CSSProperties,
+  sectionTitle: {
+    margin: '0 0 12px 0',
+    color: '#333',
+    fontSize: 18,
+  } as React.CSSProperties,
+  list: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 12,
+  },
+  costGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 12,
+  } as React.CSSProperties,
+  costItem: {
+    background: '#f5f5f5',
+    padding: 16,
+    borderRadius: 8,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
+  },
+  costLabel: {
+    fontSize: 14,
+    color: '#666',
+  } as React.CSSProperties,
+  costValue: {
+    fontSize: 20,
+    fontWeight: 600,
+    color: '#333',
+  } as React.CSSProperties,
+  warningsList: {
+    margin: 0,
+    paddingLeft: 20,
+    color: '#d97706',
+  } as React.CSSProperties,
+  warningItem: {
+    marginBottom: 8,
+  } as React.CSSProperties,
+  actions: {
+    display: 'flex',
+    gap: 12,
+    justifyContent: 'center',
+    marginTop: 24,
+  } as React.CSSProperties,
+  btnBase: {
+    padding: '12px 24px',
+    border: 'none',
+    borderRadius: 8,
+    fontSize: 16,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  } as React.CSSProperties,
+  btnCancel: {
+    background: '#f5f5f5',
+    color: '#666',
+  } as React.CSSProperties,
+  btnApprove: {
+    background: '#3b82f6',
+    color: 'white',
+  } as React.CSSProperties,
+  notice: {
+    background: '#fef3c7',
+    border: '1px solid #fbbf24',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    textAlign: 'center' as const,
+  },
+  noticeText: {
+    margin: 0,
+    color: '#92400e',
+  } as React.CSSProperties,
+  // ActionCard styles
+  actionCard: {
+    background: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: 8,
+    padding: 16,
+    transition: 'all 0.2s',
+  } as React.CSSProperties,
+  actionCardSkipped: {
+    opacity: 0.5,
+    background: '#f3f4f6',
+  } as React.CSSProperties,
+  actionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  } as React.CSSProperties,
+  actionType: {
+    fontSize: 12,
+    textTransform: 'uppercase' as const,
+    fontWeight: 600,
+    color: '#6b7280',
+  },
+  confidenceBadge: {
+    padding: '4px 8px',
+    borderRadius: 4,
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 600,
+  } as React.CSSProperties,
+  actionBody: {
+    marginBottom: 12,
+  } as React.CSSProperties,
+  actionDescription: {
+    margin: '0 0 12px 0',
+    color: '#374151',
+    fontWeight: 500,
+  } as React.CSSProperties,
+  editSection: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
+  },
+  editInput: {
+    padding: '8px 12px',
+    border: '1px solid #d1d5db',
+    borderRadius: 6,
+    fontSize: 14,
+  } as React.CSSProperties,
+  editActions: {
+    display: 'flex',
+    gap: 8,
+  } as React.CSSProperties,
+  btnSave: {
+    padding: '6px 12px',
+    border: 'none',
+    borderRadius: 6,
+    fontSize: 14,
+    cursor: 'pointer',
+    background: '#10b981',
+    color: 'white',
+  } as React.CSSProperties,
+  btnCancelEdit: {
+    padding: '6px 12px',
+    border: 'none',
+    borderRadius: 6,
+    fontSize: 14,
+    cursor: 'pointer',
+    background: '#f3f4f6',
+    color: '#6b7280',
+  } as React.CSSProperties,
+  valueSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    background: 'white',
+    padding: '8px 12px',
+    borderRadius: 6,
+  } as React.CSSProperties,
+  valueLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+  } as React.CSSProperties,
+  valueText: {
+    flex: 1,
+    fontWeight: 500,
+    color: '#111827',
+  } as React.CSSProperties,
+  btnEdit: {
+    padding: '4px 8px',
+    background: 'transparent',
+    border: '1px solid #d1d5db',
+    borderRadius: 4,
+    fontSize: 12,
+    cursor: 'pointer',
+  } as React.CSSProperties,
+  costInfo: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 8,
+  } as React.CSSProperties,
+  actionFooter: {
+    borderTop: '1px solid #e5e7eb',
+    paddingTop: 12,
+  } as React.CSSProperties,
+  skipCheckbox: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    cursor: 'pointer',
+    fontSize: 14,
+    color: '#6b7280',
+  } as React.CSSProperties,
+  // UncertainResourceCard styles
+  uncertainCard: {
+    background: '#fef3c7',
+    border: '1px solid #fbbf24',
+    borderRadius: 8,
+    padding: 16,
+  } as React.CSSProperties,
+  resourceHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  } as React.CSSProperties,
+  resourceValue: {
+    fontWeight: 600,
+    color: '#92400e',
+  } as React.CSSProperties,
+  resourceType: {
+    fontSize: 12,
+    background: '#f59e0b',
+    color: 'white',
+    padding: '2px 8px',
+    borderRadius: 4,
+  } as React.CSSProperties,
+  resourceReason: {
+    margin: '0 0 12px 0',
+    color: '#92400e',
+    fontSize: 14,
+  } as React.CSSProperties,
+  suggestionsLabel: {
+    margin: '0 0 8px 0',
+    fontSize: 14,
+    fontWeight: 500,
+    color: '#78350f',
+  } as React.CSSProperties,
+  suggestionsList: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    gap: 8,
+  },
+  suggestionBtn: {
+    padding: '6px 12px',
+    background: 'white',
+    border: '1px solid #fbbf24',
+    borderRadius: 6,
+    fontSize: 13,
+    cursor: 'pointer',
+    color: '#92400e',
+    transition: 'all 0.2s',
+  } as React.CSSProperties,
+};
 
 interface Props {
   userInput: string;
@@ -33,14 +311,9 @@ export function AutoImplementApproval({
 }: Props) {
   const [plan, setPlan] = useState<SafeImplementationPlan | null>(null);
   const [loading, setLoading] = useState(false);
-  const [modifications, setModifications] = useState<
-    Record<string, string>
-  >({});
-  const [skipEntities, setSkipEntities] = useState<Set<string>>(
-    new Set()
-  );
+  const [modifications, setModifications] = useState<Record<string, string>>({});
+  const [skipEntities, setSkipEntities] = useState<Set<string>>(new Set());
 
-  // Load plan on mount
   React.useEffect(() => {
     loadPlan();
   }, [userInput]);
@@ -48,10 +321,7 @@ export function AutoImplementApproval({
   async function loadPlan() {
     setLoading(true);
     try {
-      const implementationPlan = await createImplementationPlan(
-        userInput,
-        options
-      );
+      const implementationPlan = await createImplementationPlan(userInput, options);
       setPlan(implementationPlan);
     } catch (error) {
       console.error('Failed to create plan:', error);
@@ -67,21 +337,14 @@ export function AutoImplementApproval({
     try {
       const approval: ImplementationApproval = {
         approved: true,
-        modifications: Object.entries(modifications).map(
-          ([id, newValue]) => ({
-            entityId: id,
-            newValue,
-          })
-        ),
+        modifications: Object.entries(modifications).map(([id, newValue]) => ({
+          entityId: id,
+          newValue,
+        })),
         skipEntities: Array.from(skipEntities),
       };
 
-      const result = await executeImplementationWithSafeguards(
-        userInput,
-        approval,
-        options
-      );
-
+      const result = await executeImplementationWithSafeguards(userInput, approval, options);
       onComplete(result);
     } catch (error) {
       console.error('Implementation failed:', error);
@@ -95,10 +358,7 @@ export function AutoImplementApproval({
   }
 
   function handleModify(entityId: string, newValue: string) {
-    setModifications((prev) => ({
-      ...prev,
-      [entityId]: newValue,
-    }));
+    setModifications((prev) => ({ ...prev, [entityId]: newValue }));
   }
 
   function handleToggleSkip(entityId: string) {
@@ -115,8 +375,8 @@ export function AutoImplementApproval({
 
   if (loading) {
     return (
-      <div className="auto-implement-approval loading">
-        <div className="spinner"></div>
+      <div style={{ ...styles.container, ...styles.loading }}>
+        <div style={styles.spinner}></div>
         <p>Analyzing request...</p>
       </div>
     );
@@ -124,7 +384,7 @@ export function AutoImplementApproval({
 
   if (!plan) {
     return (
-      <div className="auto-implement-approval error">
+      <div style={styles.container}>
         <p>Failed to create implementation plan</p>
         <button onClick={onCancel}>Cancel</button>
       </div>
@@ -132,40 +392,29 @@ export function AutoImplementApproval({
   }
 
   return (
-    <div className="auto-implement-approval">
-      <div className="approval-header">
-        <h2>🤖 Auto-Implementation Request</h2>
-        <p className="subtitle">
-          Review what will be fetched before proceeding
-        </p>
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h2 style={styles.headerTitle}>🤖 Auto-Implementation Request</h2>
+        <p style={styles.subtitle}>Review what will be fetched before proceeding</p>
       </div>
 
       {/* Actions List */}
-      <div className="actions-section">
-        <h3>📋 Planned Actions ({plan.actions.length})</h3>
-        <div className="actions-list">
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>📋 Planned Actions ({plan.actions.length})</h3>
+        <div style={styles.list}>
           {plan.actions.map((action, index) => (
             <ActionCard
               key={index}
               action={action}
-              isSkipped={skipEntities.has(
-                `${action.entity.type}-${action.entity.value}`
-              )}
+              isSkipped={skipEntities.has(`${action.entity.type}-${action.entity.value}`)}
               currentValue={
-                modifications[
-                  `${action.entity.type}-${action.entity.value}`
-                ] || action.entity.value
+                modifications[`${action.entity.type}-${action.entity.value}`] || action.entity.value
               }
               onModify={(newValue) =>
-                handleModify(
-                  `${action.entity.type}-${action.entity.value}`,
-                  newValue
-                )
+                handleModify(`${action.entity.type}-${action.entity.value}`, newValue)
               }
               onToggleSkip={() =>
-                handleToggleSkip(
-                  `${action.entity.type}-${action.entity.value}`
-                )
+                handleToggleSkip(`${action.entity.type}-${action.entity.value}`)
               }
             />
           ))}
@@ -174,18 +423,15 @@ export function AutoImplementApproval({
 
       {/* Uncertain Resources */}
       {plan.uncertainResources.length > 0 && (
-        <div className="uncertain-section">
-          <h3>⚠️ Resources Needing Attention</h3>
-          <div className="uncertain-list">
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>⚠️ Resources Needing Attention</h3>
+          <div style={styles.list}>
             {plan.uncertainResources.map((resource, index) => (
               <UncertainResourceCard
                 key={index}
                 resource={resource}
                 onSelect={(suggestion) =>
-                  handleModify(
-                    `${resource.entity.type}-${resource.entity.value}`,
-                    suggestion
-                  )
+                  handleModify(`${resource.entity.type}-${resource.entity.value}`, suggestion)
                 }
               />
             ))}
@@ -194,234 +440,61 @@ export function AutoImplementApproval({
       )}
 
       {/* Cost Summary */}
-      <div className="cost-summary">
-        <h3>💰 Cost Estimate</h3>
-        <div className="cost-grid">
-          <div className="cost-item">
-            <span className="label">API Calls:</span>
-            <span className="value">
-              {plan.estimatedCost.apiCalls}
-            </span>
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>💰 Cost Estimate</h3>
+        <div style={styles.costGrid}>
+          <div style={styles.costItem}>
+            <span style={styles.costLabel}>API Calls:</span>
+            <span style={styles.costValue}>{plan.estimatedCost.apiCalls}</span>
           </div>
-          <div className="cost-item">
-            <span className="label">Tokens:</span>
-            <span className="value">
-              {plan.estimatedCost.tokens}
-            </span>
+          <div style={styles.costItem}>
+            <span style={styles.costLabel}>Tokens:</span>
+            <span style={styles.costValue}>{plan.estimatedCost.tokens}</span>
           </div>
-          <div className="cost-item">
-            <span className="label">Dollar Cost:</span>
-            <span className="value">
-              ${plan.estimatedCost.dollarCost.toFixed(4)}
-            </span>
+          <div style={styles.costItem}>
+            <span style={styles.costLabel}>Dollar Cost:</span>
+            <span style={styles.costValue}>${plan.estimatedCost.dollarCost.toFixed(4)}</span>
           </div>
         </div>
       </div>
 
       {/* Warnings */}
       {plan.warnings.length > 0 && (
-        <div className="warnings-section">
-          <h3>⚠️ Warnings</h3>
-          <ul className="warnings-list">
+        <div style={styles.section}>
+          <h3 style={styles.sectionTitle}>⚠️ Warnings</h3>
+          <ul style={styles.warningsList}>
             {plan.warnings.map((warning, index) => (
-              <li key={index}>{warning}</li>
+              <li key={index} style={styles.warningItem}>{warning}</li>
             ))}
           </ul>
         </div>
       )}
 
       {/* Action Buttons */}
-      <div className="approval-actions">
+      <div style={styles.actions}>
         <button
-          className="btn-cancel"
+          style={{ ...styles.btnBase, ...styles.btnCancel }}
           onClick={handleDeny}
           disabled={loading}
         >
           ❌ Cancel
         </button>
         <button
-          className="btn-approve"
+          style={{ ...styles.btnBase, ...styles.btnApprove }}
           onClick={handleApprove}
           disabled={loading}
         >
-          ✅ Approve & Fetch ({plan.actions.length - skipEntities.size}{' '}
-          items)
+          ✅ Approve & Fetch ({plan.actions.length - skipEntities.size} items)
         </button>
       </div>
 
       {!plan.canProceedAutomatically && (
-        <div className="notice">
-          <p>
-            ⛔ This request cannot proceed automatically. Please review
-            and modify as needed.
+        <div style={styles.notice}>
+          <p style={styles.noticeText}>
+            ⛔ This request cannot proceed automatically. Please review and modify as needed.
           </p>
         </div>
       )}
-
-      <style jsx>{`
-        .auto-implement-approval {
-          background: white;
-          border-radius: 12px;
-          padding: 24px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          max-width: 800px;
-          margin: 0 auto;
-        }
-
-        .approval-header {
-          text-align: center;
-          margin-bottom: 24px;
-        }
-
-        .approval-header h2 {
-          margin: 0 0 8px 0;
-          color: #333;
-        }
-
-        .subtitle {
-          color: #666;
-          margin: 0;
-        }
-
-        .actions-section,
-        .uncertain-section,
-        .cost-summary,
-        .warnings-section {
-          margin-bottom: 24px;
-        }
-
-        .actions-section h3,
-        .uncertain-section h3,
-        .cost-summary h3,
-        .warnings-section h3 {
-          margin: 0 0 12px 0;
-          color: #333;
-          font-size: 18px;
-        }
-
-        .actions-list,
-        .uncertain-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .cost-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 12px;
-        }
-
-        .cost-item {
-          background: #f5f5f5;
-          padding: 16px;
-          border-radius: 8px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .cost-item .label {
-          font-size: 14px;
-          color: #666;
-        }
-
-        .cost-item .value {
-          font-size: 20px;
-          font-weight: 600;
-          color: #333;
-        }
-
-        .warnings-list {
-          margin: 0;
-          padding-left: 20px;
-          color: #d97706;
-        }
-
-        .warnings-list li {
-          margin-bottom: 8px;
-        }
-
-        .approval-actions {
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-          margin-top: 24px;
-        }
-
-        .btn-cancel,
-        .btn-approve {
-          padding: 12px 24px;
-          border: none;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-
-        .btn-cancel {
-          background: #f5f5f5;
-          color: #666;
-        }
-
-        .btn-cancel:hover {
-          background: #e5e5e5;
-        }
-
-        .btn-approve {
-          background: #3b82f6;
-          color: white;
-        }
-
-        .btn-approve:hover {
-          background: #2563eb;
-        }
-
-        .btn-cancel:disabled,
-        .btn-approve:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .notice {
-          background: #fef3c7;
-          border: 1px solid #fbbf24;
-          border-radius: 8px;
-          padding: 12px;
-          margin-top: 16px;
-          text-align: center;
-        }
-
-        .notice p {
-          margin: 0;
-          color: #92400e;
-        }
-
-        .loading {
-          text-align: center;
-          padding: 48px;
-        }
-
-        .spinner {
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #3b82f6;
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -446,11 +519,7 @@ function ActionCard({
 
   const confidencePercent = Math.floor(action.confidence * 100);
   const confidenceColor =
-    confidencePercent >= 80
-      ? '#10b981'
-      : confidencePercent >= 60
-        ? '#f59e0b'
-        : '#ef4444';
+    confidencePercent >= 80 ? '#10b981' : confidencePercent >= 60 ? '#f59e0b' : '#ef4444';
 
   function handleSave() {
     onModify(editValue);
@@ -458,63 +527,54 @@ function ActionCard({
   }
 
   return (
-    <div className={`action-card ${isSkipped ? 'skipped' : ''}`}>
-      <div className="action-header">
-        <div className="action-type">{action.actionType}</div>
-        <div
-          className="confidence-badge"
-          style={{ background: confidenceColor }}
-        >
+    <div style={{ ...styles.actionCard, ...(isSkipped ? styles.actionCardSkipped : {}) }}>
+      <div style={styles.actionHeader}>
+        <div style={styles.actionType}>{action.actionType}</div>
+        <div style={{ ...styles.confidenceBadge, background: confidenceColor }}>
           {confidencePercent}%
         </div>
       </div>
 
-      <div className="action-body">
-        <p className="action-description">{action.description}</p>
+      <div style={styles.actionBody}>
+        <p style={styles.actionDescription}>{action.description}</p>
 
         {isEditing ? (
-          <div className="edit-section">
+          <div style={styles.editSection}>
             <input
               type="text"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className="edit-input"
+              style={styles.editInput}
             />
-            <div className="edit-actions">
-              <button onClick={handleSave} className="btn-save">
+            <div style={styles.editActions}>
+              <button onClick={handleSave} style={styles.btnSave}>
                 Save
               </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="btn-cancel-edit"
-              >
+              <button onClick={() => setIsEditing(false)} style={styles.btnCancelEdit}>
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <div className="value-section">
-            <span className="value-label">Resource:</span>
-            <span className="value-text">{currentValue}</span>
-            <button
-              onClick={() => setIsEditing(true)}
-              className="btn-edit"
-            >
+          <div style={styles.valueSection}>
+            <span style={styles.valueLabel}>Resource:</span>
+            <span style={styles.valueText}>{currentValue}</span>
+            <button onClick={() => setIsEditing(true)} style={styles.btnEdit}>
               ✏️ Edit
             </button>
           </div>
         )}
 
         {action.estimatedCost > 0 && (
-          <div className="cost-info">
-            Est. Cost: ${action.estimatedCost.toFixed(4)}
-          </div>
+          <div style={styles.costInfo}>Est. Cost: ${action.estimatedCost.toFixed(4)}</div>
         )}
 
         {action.alternatives && action.alternatives.length > 0 && (
-          <details className="alternatives">
-            <summary>Alternatives ({action.alternatives.length})</summary>
-            <ul>
+          <details style={{ marginTop: 8, fontSize: 14 }}>
+            <summary style={{ cursor: 'pointer', color: '#3b82f6', userSelect: 'none' }}>
+              Alternatives ({action.alternatives.length})
+            </summary>
+            <ul style={{ margin: '8px 0 0 0', paddingLeft: 20, color: '#6b7280' }}>
               {action.alternatives.map((alt, i) => (
                 <li key={i}>{alt}</li>
               ))}
@@ -523,179 +583,12 @@ function ActionCard({
         )}
       </div>
 
-      <div className="action-footer">
-        <label className="skip-checkbox">
-          <input
-            type="checkbox"
-            checked={isSkipped}
-            onChange={onToggleSkip}
-          />
+      <div style={styles.actionFooter}>
+        <label style={styles.skipCheckbox}>
+          <input type="checkbox" checked={isSkipped} onChange={onToggleSkip} />
           <span>Skip this action</span>
         </label>
       </div>
-
-      <style jsx>{`
-        .action-card {
-          background: #f9fafb;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          padding: 16px;
-          transition: all 0.2s;
-        }
-
-        .action-card:hover {
-          border-color: #3b82f6;
-          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-        }
-
-        .action-card.skipped {
-          opacity: 0.5;
-          background: #f3f4f6;
-        }
-
-        .action-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 12px;
-        }
-
-        .action-type {
-          font-size: 12px;
-          text-transform: uppercase;
-          font-weight: 600;
-          color: #6b7280;
-        }
-
-        .confidence-badge {
-          padding: 4px 8px;
-          border-radius: 4px;
-          color: white;
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .action-body {
-          margin-bottom: 12px;
-        }
-
-        .action-description {
-          margin: 0 0 12px 0;
-          color: #374151;
-          font-weight: 500;
-        }
-
-        .edit-section {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .edit-input {
-          padding: 8px 12px;
-          border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 14px;
-        }
-
-        .edit-actions {
-          display: flex;
-          gap: 8px;
-        }
-
-        .btn-save,
-        .btn-cancel-edit {
-          padding: 6px 12px;
-          border: none;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-        }
-
-        .btn-save {
-          background: #10b981;
-          color: white;
-        }
-
-        .btn-cancel-edit {
-          background: #f3f4f6;
-          color: #6b7280;
-        }
-
-        .value-section {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: white;
-          padding: 8px 12px;
-          border-radius: 6px;
-        }
-
-        .value-label {
-          font-size: 12px;
-          color: #6b7280;
-        }
-
-        .value-text {
-          flex: 1;
-          font-weight: 500;
-          color: #111827;
-        }
-
-        .btn-edit {
-          padding: 4px 8px;
-          background: transparent;
-          border: 1px solid #d1d5db;
-          border-radius: 4px;
-          font-size: 12px;
-          cursor: pointer;
-        }
-
-        .btn-edit:hover {
-          background: #f9fafb;
-        }
-
-        .cost-info {
-          font-size: 12px;
-          color: #6b7280;
-          margin-top: 8px;
-        }
-
-        .alternatives {
-          margin-top: 8px;
-          font-size: 14px;
-        }
-
-        .alternatives summary {
-          cursor: pointer;
-          color: #3b82f6;
-          user-select: none;
-        }
-
-        .alternatives ul {
-          margin: 8px 0 0 0;
-          padding-left: 20px;
-          color: #6b7280;
-        }
-
-        .action-footer {
-          border-top: 1px solid #e5e7eb;
-          padding-top: 12px;
-        }
-
-        .skip-checkbox {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          color: #6b7280;
-        }
-
-        .skip-checkbox input {
-          cursor: pointer;
-        }
-      `}</style>
     </div>
   );
 }
@@ -705,26 +598,23 @@ interface UncertainResourceCardProps {
   onSelect: (suggestion: string) => void;
 }
 
-function UncertainResourceCard({
-  resource,
-  onSelect,
-}: UncertainResourceCardProps) {
+function UncertainResourceCard({ resource, onSelect }: UncertainResourceCardProps) {
   return (
-    <div className="uncertain-resource-card">
-      <div className="resource-header">
-        <span className="resource-value">{resource.entity.value}</span>
-        <span className="resource-type">{resource.entity.type}</span>
+    <div style={styles.uncertainCard}>
+      <div style={styles.resourceHeader}>
+        <span style={styles.resourceValue}>{resource.entity.value}</span>
+        <span style={styles.resourceType}>{resource.entity.type}</span>
       </div>
 
-      <p className="resource-reason">⚠️ {resource.reason}</p>
+      <p style={styles.resourceReason}>⚠️ {resource.reason}</p>
 
-      <div className="suggestions">
-        <p className="suggestions-label">Suggestions:</p>
-        <div className="suggestions-list">
+      <div>
+        <p style={styles.suggestionsLabel}>Suggestions:</p>
+        <div style={styles.suggestionsList}>
           {resource.suggestions.map((suggestion, i) => (
             <button
               key={i}
-              className="suggestion-btn"
+              style={styles.suggestionBtn}
               onClick={() => onSelect(suggestion)}
             >
               {suggestion}
@@ -732,70 +622,6 @@ function UncertainResourceCard({
           ))}
         </div>
       </div>
-
-      <style jsx>{`
-        .uncertain-resource-card {
-          background: #fef3c7;
-          border: 1px solid #fbbf24;
-          border-radius: 8px;
-          padding: 16px;
-        }
-
-        .resource-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .resource-value {
-          font-weight: 600;
-          color: #92400e;
-        }
-
-        .resource-type {
-          font-size: 12px;
-          background: #f59e0b;
-          color: white;
-          padding: 2px 8px;
-          border-radius: 4px;
-        }
-
-        .resource-reason {
-          margin: 0 0 12px 0;
-          color: #92400e;
-          font-size: 14px;
-        }
-
-        .suggestions-label {
-          margin: 0 0 8px 0;
-          font-size: 14px;
-          font-weight: 500;
-          color: #78350f;
-        }
-
-        .suggestions-list {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
-
-        .suggestion-btn {
-          padding: 6px 12px;
-          background: white;
-          border: 1px solid #fbbf24;
-          border-radius: 6px;
-          font-size: 13px;
-          cursor: pointer;
-          color: #92400e;
-          transition: all 0.2s;
-        }
-
-        .suggestion-btn:hover {
-          background: #fbbf24;
-          color: white;
-        }
-      `}</style>
     </div>
   );
 }
