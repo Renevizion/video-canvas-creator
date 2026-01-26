@@ -117,6 +117,21 @@ ADVANCED ELEMENT TYPES (USE CREATIVELY, NOT IN EVERY VIDEO):
 4. "3d-card" - Glassmorphic floating card. Best for feature showcases
 5. "laptop-mockup" - 3D rotating laptop frame. Best for product demos
 
+MOTION GRAPHICS ELEMENTS (FOR ABSTRACT/ANIMATED CONTENT):
+For motion graphics videos, use type: "shape" with these geometric elements:
+- "circle" or "dot" - Animated circles/dots with scale, pulse, bounce animations
+- "rect" or "square" - Rectangles and squares for grid patterns, transitions
+- "triangle" - Triangles for directional elements, arrows, pyramids
+- "star" - Star shapes for emphasis, sparkles, highlights
+- "polygon" or "hexagon" - Polygons for technical/geometric patterns
+
+Motion Graphics Tips:
+- Combine multiple geometric shapes with staggered animations
+- Use scale, rotate, and translate animations for dynamic movement
+- Layer shapes with different sizes, colors, and opacities
+- Create patterns by duplicating shapes with varied positions
+- Excellent for: explainers, abstract intros, logo reveals, transitions
+
 EXAMPLE JSON STRUCTURE (USE AS REFERENCE, NOT TEMPLATE):
 NOTE: This is just showing the structure. Your actual content should be COMPLETELY DIFFERENT and tailored to the prompt.
 
@@ -183,6 +198,8 @@ SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
    - Products: images, 3d-cards, mockups, product features
    - Services: testimonials, benefits, process flows
    - Brand/Lifestyle: lifestyle imagery, text focus, emotional appeal
+   - Motion Graphics: geometric shapes (circles, triangles, stars), abstract patterns, dynamic animations
+   - Explainer Videos: Mix of text, shapes, and icons with smooth transitions
 5. BE SPECIFIC: Use actual content from the prompt, not generic placeholders
 6. MIX IT UP: Every video should feel different - vary transitions, animation styles, layouts
 7. Animation variety: Don't just use popIn - mix scale, slide, fade, rotate based on what fits
@@ -206,6 +223,8 @@ SCENE PLANNING APPROACH (IMPORTANT - BE CREATIVE):
 
 IMPORTANT INSTRUCTIONS:
 - Analyze this prompt carefully and extract specific details
+- Determine content type: Is this tech/SaaS, product, service, brand, motion graphics, or explainer?
+- For MOTION GRAPHICS: Use geometric shapes (circles, triangles, stars, etc.) with dynamic animations
 - Create a video that REFLECTS THE UNIQUE ASPECTS of this prompt
 - Don't use generic templates - tailor everything to this specific content
 - Be creative with scene structures, animations, and element placement
