@@ -41,7 +41,7 @@ export interface AnimationPattern {
 }
 
 export interface TransitionPattern {
-  type: 'cut' | 'fade' | 'wipe' | 'zoom';
+  type: 'cut' | 'fade' | 'slide' | 'wipe' | 'zoom';
   duration: number;
 }
 
