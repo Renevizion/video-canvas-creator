@@ -9,6 +9,20 @@ AI agents should NOT:
 - ❌ Use expensive operations for cheap tasks
 - ❌ Auto-implement things the user didn't ask for
 
+## ⚠️ Auto-Implementation Safeguards
+
+**Before auto-fetching any resources, see:** [AUTO_IMPLEMENTATION_SAFEGUARDS.md](./AUTO_IMPLEMENTATION_SAFEGUARDS.md)
+
+Key safeguards:
+- ✅ **Always show plan first** - never fetch without user seeing
+- ✅ **User approval required** - explicit confirmation before fetching
+- ✅ **Cost limits enforced** - configurable $ and API call limits
+- ✅ **Confidence scores** - flag uncertain resources
+- ✅ **Edit capabilities** - user can modify before fetching
+- ✅ **Fallback options** - graceful handling of failures
+
+**Default behavior:** `requireConfirmation: true` (never auto-fetch without asking)
+
 ## Solution: Request Complexity Classifier
 
 ### Complexity Tiers
