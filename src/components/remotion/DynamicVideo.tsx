@@ -1120,7 +1120,8 @@ const ArrowElement: React.FC<{
 });
 
 // ============================================================================
-// IMAGE ELEMENT - Renders actual images from URLs
+// IMAGE ELEMENT - Renders actual images with cinematic effects
+// Ken Burns effect, parallax, and depth for cinematic feel
 // ============================================================================
 const ImageElement: React.FC<{
   element: PlannedElement;
@@ -1128,6 +1129,8 @@ const ImageElement: React.FC<{
   globalStyle: VideoPlan['style'];
   colors: string[];
 }> = React.memo(({ element, style, colors }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
   const content = element.content || '';
   const imageStyle = element.style as Record<string, unknown>;
   
@@ -1138,7 +1141,39 @@ const ImageElement: React.FC<{
   const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '300px';
   const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '200px';
   
-  // If we have a valid image URL, render the actual image
+  // Ken Burns effect - subtle zoom and pan for cinematic feel
+  const enableKenBurns = imageStyle?.kenBurns === true;
+  const kenBurnsProgress = interpolate(
+    frame,
+    [0, durationInFrames],
+    [0, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+  );
+  
+  // Use deterministic seed for consistent random values
+  const panDirection = random(`kb-pan-${element.id}`) > 0.5 ? 1 : -1;
+  const zoomStart = 1 + random(`kb-zoom-start-${element.id}`) * 0.05;
+  const zoomEnd = zoomStart + 0.08 + random(`kb-zoom-end-${element.id}`) * 0.04;
+  
+  const kenBurnsScale = enableKenBurns 
+    ? interpolate(kenBurnsProgress, [0, 1], [zoomStart, zoomEnd], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+    : 1;
+  const kenBurnsPanX = enableKenBurns 
+    ? interpolate(kenBurnsProgress, [0, 1], [0, panDirection * 3], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+    : 0;
+  const kenBurnsPanY = enableKenBurns 
+    ? interpolate(kenBurnsProgress, [0, 1], [0, random(`kb-pan-y-${element.id}`) * 2 - 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })
+    : 0;
+  
+  // Floating effect using noise for organic motion
+  const floatY = noise3D(`img-float-${element.id}`, 0, frame * 0.008, 0) * 4;
+  const floatRotate = noise3D(`img-rot-${element.id}`, frame * 0.005, 0, 0) * 1.5;
+  
+  // Depth-based parallax (elements with higher z move more)
+  const zIndex = element.position?.z || 1;
+  const parallaxMultiplier = 1 + (zIndex * 0.02);
+  
+  // If we have a valid image URL, render the actual image with cinematic effects
   if (imageUrl) {
     return (
       <div
@@ -1150,42 +1185,74 @@ const ImageElement: React.FC<{
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
+          transform: `${style.transform} translateY(${floatY}px) rotate(${floatRotate}deg)`,
         }}
       >
-        <Img
-          src={imageUrl}
-          alt=""
+        <div
           style={{
-            maxWidth: '100%',
-            maxHeight: '100%',
-            objectFit: 'contain',
-            filter: (imageStyle?.filter as string) || undefined,
-            borderRadius: (imageStyle?.borderRadius as number) || 12,
-            boxShadow: '0 15px 40px rgba(0,0,0,0.3)',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            borderRadius: (imageStyle?.borderRadius as number) || 16,
+            boxShadow: (imageStyle?.boxShadow as string) || '0 25px 50px rgba(0,0,0,0.35)',
+          }}
+        >
+          <Img
+            src={imageUrl}
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              filter: (imageStyle?.filter as string) || 'brightness(1.05) contrast(1.02)',
+              transform: `scale(${kenBurnsScale * parallaxMultiplier}) translate(${kenBurnsPanX}%, ${kenBurnsPanY}%)`,
+            }}
+          />
+        </div>
+        
+        {/* Subtle vignette overlay on image */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: (imageStyle?.borderRadius as number) || 16,
+            background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.15) 100%)',
+            pointerEvents: 'none',
           }}
         />
       </div>
     );
   }
   
-  // Fallback: placeholder if no URL
+  // Fallback: placeholder if no URL - show loading state or content description
   return (
     <div
       style={{
         ...style,
         width,
         height,
-        background: `linear-gradient(135deg, ${colors[1]}15 0%, ${colors[2]}30 100%)`,
+        background: `linear-gradient(135deg, ${colors[1]}20 0%, ${colors[2]}40 100%)`,
         borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 15px 40px rgba(0,0,0,0.2)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
+        transform: `${style.transform} translateY(${floatY}px)`,
       }}
     >
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" opacity="0.3">
+      {/* Animated loading shimmer */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `linear-gradient(90deg, transparent 0%, ${colors[1]}10 50%, transparent 100%)`,
+          animation: 'shimmer 2s infinite',
+          transform: `translateX(${(frame % 120) / 120 * 200 - 100}%)`,
+        }}
+      />
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" opacity="0.4">
         <rect x="3" y="3" width="18" height="18" rx="3" stroke="white" strokeWidth="1.5" />
         <circle cx="8.5" cy="8.5" r="1.5" fill="white" />
         <path d="M3 16l5-5 3 3 5-5 5 5v3a3 3 0 01-3 3H6a3 3 0 01-3-3v-1z" fill="white" opacity="0.5" />
