@@ -32,6 +32,7 @@ import {
   ModernScreencast,
   ModernRenderProgress,
 } from '../components/remotion/showcases/ModernShowcases';
+import { ClaudeStyleExample } from '../components/remotion/showcases/ClaudeStyleExample';
 
 // Default video plan for testing
 const defaultPlan: VideoPlan = {
@@ -484,6 +485,19 @@ export const RemotionRoot: React.FC = () => {
         id="ModernRenderProgress"
         component={ModernRenderProgress}
         durationInFrames={270}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* ========== CLAUDE-STYLE EXAMPLE (TARGET QUALITY) ========== */}
+      
+      {/* Claude-Style Video - Professional hand-crafted quality */}
+      <Composition
+        id="ClaudeStyleExample"
+        component={ClaudeStyleExample}
+        durationInFrames={495}
         fps={30}
         width={1920}
         height={1080}

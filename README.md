@@ -1,5 +1,14 @@
 # Welcome to your Lovable project
 
+## 🎥 What Makes This Different?
+
+This is an **AI-powered video production system** that generates professional videos from simple text prompts, URLs, or data. Unlike manual Remotion coding (writing React components for each video), our system uses intelligent agents and sophisticated orchestration to create videos at scale.
+
+**New to the project?** Start here:
+- [QUICK_COMPARISON.md](./QUICK_COMPARISON.md) - Quick overview of our approach vs manual Remotion
+- [VIDEO_CREATION_COMPARISON.md](./VIDEO_CREATION_COMPARISON.md) - Detailed comparison and architecture
+- [SYSTEM_ARCHITECTURE_VISUAL.md](./SYSTEM_ARCHITECTURE_VISUAL.md) - Visual diagrams and flow charts
+
 ## ⚠️ Troubleshooting "Module not found" Errors
 
 If you see errors like `Module not found: Error: Can't resolve '@remotion/shapes'`, this means your **backend render service needs npm packages installed**. 
