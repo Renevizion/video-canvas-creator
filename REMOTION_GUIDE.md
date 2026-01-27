@@ -187,7 +187,7 @@ All video compositions are registered in `src/remotion/Root.tsx`. To add new com
 ```typescript
 <Composition
   id="MyNewVideo"
-  component={MyVideoComponent}
+  component={MyNewVideoComponent}
   durationInFrames={300}
   fps={30}
   width={1920}
