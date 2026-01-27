@@ -114,14 +114,15 @@ export class AIVideoService {
   /**
    * Convert sophisticated plan to VideoConfig format
    */
-  private convertToVideoConfig(sophisticatedPlan: any, analysis: PromptAnalysis): VideoConfig & { scenes: VideoScene[] } {
+  private convertToVideoConfig(sophisticatedPlan: any, analysis: PromptAnalysis): VideoConfig & { scenes: VideoScene[]; metadata?: any } {
     return {
       id: sophisticatedPlan.id,
+      name: sophisticatedPlan.id,
       duration: sophisticatedPlan.duration,
       fps: sophisticatedPlan.fps,
       width: sophisticatedPlan.resolution.width,
       height: sophisticatedPlan.resolution.height,
-      backgroundColor: '#000000',
+      aspectRatio: '16:9' as const,
       scenes: sophisticatedPlan.scenes,
       // Add sophisticated metadata as custom data
       metadata: {

@@ -94,7 +94,7 @@ export function kelvinToRGB(kelvin: number): string {
 // MOOD PRESETS
 // ============================================================================
 
-const MOOD_PRESETS: Record<MoodPreset, ColorGrade> = {
+export const MOOD_PRESETS: Record<MoodPreset, ColorGrade> = {
   'space-blue': {
     temperature: 7000, // Cool blue
     tint: -10,
@@ -363,13 +363,4 @@ export function createSimpleTemperatureGrading(
   return grading;
 }
 
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export {
-  type ColorGrade,
-  type ColorGradeKeyframe,
-  type MoodPreset,
-  MOOD_PRESETS
-};
+// Types and MOOD_PRESETS are already exported at definition above
