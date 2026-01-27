@@ -419,6 +419,76 @@ export const RemotionRoot: React.FC = () => {
         height={1080}
         defaultProps={{}}
       />
+
+      {/* ========== ULTIMATE MEGA VIDEO ========== */}
+      
+      {/* ULTIMATE MEGA VIDEO - THE COMPLETE PACKAGE */}
+      <Composition
+        id="UltimateMegaVideo"
+        component={UltimateMegaVideo}
+        durationInFrames={900}
+        fps={30}
+        width={1080}
+        height={1920}
+        defaultProps={{}}
+      />
+
+      {/* ========== MODERN SHOWCASES (ENHANCED VERSIONS) ========== */}
+      
+      {/* Modern Music Visualization - Enhanced version */}
+      <Composition
+        id="ModernMusicVisualization"
+        component={ModernMusicVisualization}
+        durationInFrames={300}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      {/* Modern Captions - Enhanced TikTok-style captions */}
+      <Composition
+        id="ModernCaptions"
+        component={ModernCaptions}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      {/* Modern Year In Review - Enhanced stats showcase */}
+      <Composition
+        id="ModernYearInReview"
+        component={ModernYearInReview}
+        durationInFrames={240}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      {/* Modern Screencast - Enhanced code typing */}
+      <Composition
+        id="ModernScreencast"
+        component={ModernScreencast}
+        durationInFrames={360}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+      
+      {/* Modern Render Progress - Enhanced progress bar */}
+      <Composition
+        id="ModernRenderProgress"
+        component={ModernRenderProgress}
+        durationInFrames={270}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
     </>
   );
 };
