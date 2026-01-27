@@ -1,5 +1,19 @@
 # Welcome to your Lovable project
 
+## ⚠️ Troubleshooting "Module not found" Errors
+
+If you see errors like `Module not found: Error: Can't resolve '@remotion/shapes'`, this means your **backend render service needs npm packages installed**. 
+
+**Quick fix:** See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for a 2-minute solution.
+
+## 🎨 Using Remotion Components
+
+Custom components (Terminal, Laptop3D, Perspective3DCard) have been replaced with simpler implementations using Remotion's official packages. 
+
+**See:** [USING_REMOTION_PACKAGES.md](./USING_REMOTION_PACKAGES.md) for migration guide and examples.
+
+---
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
@@ -112,6 +126,13 @@ npm run remotion:compositions
 ```
 
 For detailed documentation on video rendering, quality settings, and advanced options, see [REMOTION_GUIDE.md](./REMOTION_GUIDE.md).
+
+### Backend Render Service Setup
+
+If you're setting up a backend render service (Railway/custom server) to handle video rendering, see [BACKEND_RENDER_SERVICE_SETUP.md](./BACKEND_RENDER_SERVICE_SETUP.md) for:
+- Required npm packages (including `@remotion/shapes` and others)
+- Fixing "Module not found" errors
+- Complete setup and deployment guide
 
 ### AI-Powered Video Creation
 

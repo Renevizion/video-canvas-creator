@@ -843,6 +843,7 @@ const ElementRenderer: React.FC<{
     return wrapWithMotionBlur(<ProgressBar element={element} style={baseStyle} globalStyle={globalStyle} colors={colors} sceneFrame={sceneFrame} />);
   }
   
+  // Terminal: Simple implementation using Rect shape
   if (styleType === 'terminal' || content.includes('terminal') || content.includes('command') || content.includes('cli')) {
     const entrySpring = spring({ fps, frame: sceneFrame, config: { damping: 30, stiffness: 100 } });
     const width = (element.size?.width || 600);
@@ -867,6 +868,7 @@ const ElementRenderer: React.FC<{
     );
   }
   
+  // Laptop: Simple implementation using Rect shapes
   if (styleType === 'laptop' || content.includes('laptop') || content.includes('macbook')) {
     const entrySpring = spring({ fps, frame: sceneFrame, config: { damping: 40, stiffness: 60 } });
     const screenWidth = (element.size?.width || 800);
@@ -897,6 +899,7 @@ const ElementRenderer: React.FC<{
     );
   }
   
+  // 3D Card: Simple implementation using Rect with transforms
   if (styleType === '3d-card' || content.includes('3d card') || content.includes('perspective card')) {
     const entrySpring = spring({ fps, frame: sceneFrame, config: { damping: 25, stiffness: 70 } });
     const floatY = noise3D('float-' + element.id, 0, 0, sceneFrame * 0.02) * 10;
