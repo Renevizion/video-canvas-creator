@@ -31,9 +31,11 @@ import { CodeEditor, ProgressBar, AnimatedText, PhoneMockup, LogoGrid, DataVisua
 import { AudioVisualization } from './elements/AudioVisualization';
 import { ColorGrading, FilmGrain, Vignette, Bloom } from './elements/ColorGrading';
 import { ResponsiveContainer, type AspectRatio } from './elements/AspectRatioSupport';
+import { EnhancedSceneRenderer } from './EnhancedSceneRenderer';
 
 interface DynamicVideoProps {
   plan: VideoPlan;
+  useEnhancedRenderer?: boolean; // Toggle for Claude-style rendering
 }
 
 // ============================================================================
@@ -295,7 +297,7 @@ export const DramaticPause: React.FC<{
   
   return <>{children}</>;
 };
-export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
+export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan, useEnhancedRenderer = false }) => {
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
 
@@ -347,12 +349,16 @@ export const DynamicVideo: React.FC<DynamicVideoProps> = ({ plan }) => {
             from={startFrame}
             durationInFrames={durationFrames}
           >
-            <SceneRenderer 
-              scene={scene} 
-              globalStyle={plan.style} 
-              sceneIndex={index}
-              totalScenes={plan.scenes.length}
-            />
+            {useEnhancedRenderer ? (
+              <EnhancedSceneRenderer scene={scene} style={plan.style} />
+            ) : (
+              <SceneRenderer 
+                scene={scene} 
+                globalStyle={plan.style} 
+                sceneIndex={index}
+                totalScenes={plan.scenes.length}
+              />
+            )}
           </Sequence>
         );
       })}
