@@ -398,14 +398,4 @@ export class MultiPathOrchestrator {
   }
 }
 
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export {
-  type Point2D,
-  type Point3D,
-  type BezierCurve,
-  type PathAnimationOptions,
-  type PathPoint
-};
+// Types are already exported at definition above

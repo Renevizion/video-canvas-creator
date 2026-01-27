@@ -353,12 +353,4 @@ export function applyCameraDrift(
   };
 }
 
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export {
-  type ParallaxLayer,
-  type ParallaxConfig,
-  type ParallaxTransform
-};
+// Types are already exported at definition above

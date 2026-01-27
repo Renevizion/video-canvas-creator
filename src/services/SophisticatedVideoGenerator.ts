@@ -408,7 +408,7 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
   return {
     id: `video-${Date.now()}`,
     duration: options.duration,
-    fps: options.fps || 30,
+    fps: 30 as const,
     resolution: { width: 1920, height: 1080 },
     aspectRatio: 'landscape',
     scenes,
@@ -575,11 +575,4 @@ function inferColorPalette(prompt: string): string[] {
   return ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
 }
 
-// ============================================================================
-// EXPORT
-// ============================================================================
-
-export {
-  type SophisticatedVideoOptions,
-  type EnhancedVideoPlan
-};
+// Types are already exported at definition above

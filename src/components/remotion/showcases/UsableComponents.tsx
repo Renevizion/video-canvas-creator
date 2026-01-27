@@ -213,7 +213,7 @@ export function componentToVideoPlan(component: UsableVideoComponent): VideoPlan
   return {
     id: component.id,
     duration: component.config.durationInFrames / component.config.fps,
-    fps: component.config.fps,
+    fps: 30 as const,
     resolution: {
       width: component.config.width,
       height: component.config.height,
@@ -230,7 +230,7 @@ export function componentToVideoPlan(component: UsableVideoComponent): VideoPlan
         elements: [
           {
             id: 'component',
-            type: 'component',
+            type: 'shape', // Use 'shape' as wrapper type for custom components
             content: component.name,
             position: { x: 0, y: 0, z: 1 },
             size: { width: 100, height: 100 },

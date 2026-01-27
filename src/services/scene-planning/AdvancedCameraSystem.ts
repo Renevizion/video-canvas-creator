@@ -352,14 +352,4 @@ export function applyCameraShake(
   };
 }
 
-// ============================================================================
-// EXPORT UTILITIES
-// ============================================================================
-
-export {
-  type CameraPosition,
-  type CameraRotation,
-  type CameraState,
-  type CameraKeyframe,
-  type CameraPathOptions
-};
+// Types are already exported at definition above
