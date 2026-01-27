@@ -11,20 +11,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Header } from '@/components/layout/Header';
 import { RemotionPlayerWrapper } from '@/components/remotion/RemotionPlayerWrapper';
-import { findMatchingComponents, componentToVideoPlan } from '@/components/remotion/showcases/UsableComponents';
+import { SceneBreakdown } from '@/components/video/SceneBreakdown';
 import type { VideoPlan } from '@/types/video';
+import { gateway } from '@/lib/videoGateway';
+import type { EnhancedVideoPlan } from '@/services/SophisticatedVideoGenerator';
+import { toast } from 'sonner';
 
 export default function SimpleVideoCreator() {
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [videoPlan, setVideoPlan] = useState<VideoPlan | null>(null);
+  const [videoPlan, setVideoPlan] = useState<EnhancedVideoPlan | null>(null);
 
   const examplePrompts = [
-    "Create a music visualization with audio bars",
-    "Make animated captions like TikTok",
-    "Show year in review stats with counters",
-    "Create a complete vertical video for Reels",
-    "Make a screencast tutorial demo",
+    "Create a video about my AI-powered task management app",
+    "GitHub Wrapped 2024 - showcase my coding stats",
+    "Product launch video for a sustainable coffee brand",
+    "Explainer video for my blockchain platform",
+    "Marketing video for boutique fitness studio",
   ];
 
   const handleGenerate = async () => {
@@ -32,23 +35,30 @@ export default function SimpleVideoCreator() {
 
     setLoading(true);
 
-    // Simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      // ALWAYS use the sophisticated video gateway - this is THE ONLY way
+      console.log('🎬 Generating A-grade sophisticated video...');
+      const result = await gateway.process({
+        type: 'text',
+        prompt: prompt,
+        duration: 30,
+      });
 
-    // Find matching usable components
-    const matchingComponents = findMatchingComponents(prompt);
-    
-    let plan: VideoPlan;
-    
-    if (matchingComponents.length > 0) {
-      // Use the best matching component
-      plan = componentToVideoPlan(matchingComponents[0]);
-    } else {
-      // Fallback to generated plan
-      plan = generateVideoPlanFromPrompt(prompt);
+      if (result.status === 'success' && result.videoPlan) {
+        console.log('✅ A-grade video generated successfully');
+        console.log('   Production Grade:', result.videoPlan.sophisticatedMetadata?.productionGrade || 'PROFESSIONAL');
+        setVideoPlan(result.videoPlan as EnhancedVideoPlan);
+      } else {
+        console.error('❌ Video generation failed:', result.error);
+        throw new Error(result.error || 'Failed to generate video');
+      }
+    } catch (error) {
+      console.error('❌ Error generating video:', error);
+      toast.error('Failed to generate video. Please try again.');
+      setLoading(false);
+      return;
     }
     
-    setVideoPlan(plan);
     setLoading(false);
   };
 
@@ -64,15 +74,23 @@ export default function SimpleVideoCreator() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Sparkles className="w-4 h-4" />
-              AI-Powered Video Creation
-            </div>
+            {videoPlan && videoPlan.sophisticatedMetadata && (
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                A-Grade Production • Sophisticated System Active
+              </div>
+            )}
+            {(!videoPlan || !videoPlan.sophisticatedMetadata) && (
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+                <Sparkles className="w-4 h-4" />
+                AI-Powered Video Creation
+              </div>
+            )}
             <h1 className="text-6xl font-bold mb-4 bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
-              Create Videos with Natural Language
+              Create A-Grade Videos Instantly
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Describe what you want in plain English. We'll create professional videos instantly.
+              Every video uses our sophisticated production system: camera paths, curved animations, parallax depth, and professional color grading. Just describe what you want.
             </p>
           </motion.div>
 
@@ -91,16 +109,16 @@ export default function SimpleVideoCreator() {
                   <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <Sparkles className="w-6 h-6 text-primary" />
-                      What do you want to create?
+                      What video do you want to create?
                     </CardTitle>
                     <CardDescription className="text-base">
-                      Describe your video idea and we'll make it happen
+                      Any topic, business, or idea → A-grade video with sophisticated cinematography
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
                       <Textarea
-                        placeholder="e.g., Create a music visualization with colorful bars..."
+                        placeholder="e.g., Create a video about my coffee subscription service, tech startup demo, GitHub wrapped stats, product launch..."
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
                         className="min-h-[140px] text-lg resize-none focus:ring-2 focus:ring-primary transition-all"
@@ -215,6 +233,11 @@ export default function SimpleVideoCreator() {
                   </CardContent>
                 </Card>
 
+                {/* Scene Breakdown - NEW! */}
+                {videoPlan.sophisticatedMetadata && (
+                  <SceneBreakdown videoPlan={videoPlan} />
+                )}
+
                 {/* Prompt reminder */}
                 <Card className="border-dashed">
                   <CardContent className="p-4">
@@ -231,125 +254,3 @@ export default function SimpleVideoCreator() {
     </div>
   );
 }
-
-/**
- * Generate a video plan from natural language prompt
- */
-function generateVideoPlanFromPrompt(prompt: string): VideoPlan {
-  const lowerPrompt = prompt.toLowerCase();
-
-  // Detect video type and content
-  let title = 'Your Video';
-  let subtitle = '';
-  let duration = 10;
-
-  // Extract product name
-  const forMatch = prompt.match(/for\s+([A-Za-z0-9\s]+?)(?:\s+showing|\s+with|\s+that|\.|\s*$)/i);
-  if (forMatch) {
-    title = forMatch[1].trim();
-  }
-
-  // Extract features/content
-  const showingMatch = prompt.match(/showing\s+(.+?)(?:\s+and\s+|\.|\s*$)/i);
-  if (showingMatch) {
-    subtitle = showingMatch[1].trim();
-  }
-
-  // Extract message for social posts
-  const sayingMatch = prompt.match(/saying\s+['"](.+?)['"]|saying\s+([^.]+)/i);
-  if (sayingMatch) {
-    subtitle = sayingMatch[1] || sayingMatch[2];
-  }
-
-  // Determine style based on keywords
-  let colorPalette = ['#ffffff', '#06b6d4', '#1e293b', '#0f172a'];
-  if (lowerPrompt.includes('social') || lowerPrompt.includes('instagram')) {
-    colorPalette = ['#ffffff', '#ec4899', '#8b5cf6', '#3b82f6'];
-  } else if (lowerPrompt.includes('youtube')) {
-    colorPalette = ['#ffffff', '#ff0000', '#282828', '#0f0f0f'];
-  } else if (lowerPrompt.includes('product') || lowerPrompt.includes('demo')) {
-    colorPalette = ['#ffffff', '#3b82f6', '#1e293b', '#0f172a'];
-  }
-
-  // Create video plan
-  return {
-    id: `video-${Date.now()}`,
-    duration,
-    fps: 30,
-    resolution: { width: 1920, height: 1080 },
-    requiredAssets: [],
-    scenes: [
-      {
-        id: 'intro',
-        startTime: 0,
-        duration: 3,
-        description: 'Intro scene',
-        animations: [],
-        transition: { type: 'fade', duration: 0.3 },
-        elements: [
-          {
-            id: 'title',
-            type: 'text',
-            content: title,
-            position: { x: 50, y: 40, z: 1 },
-            size: { width: 80, height: 15 },
-            animation: {
-              type: 'fade',
-              name: 'fadeIn',
-              duration: 1,
-              delay: 0,
-              easing: 'ease-out',
-              properties: { opacity: [0, 1] },
-            },
-            style: {
-              fontSize: 72,
-              fontWeight: 800,
-              color: colorPalette[0],
-            },
-          },
-        ],
-      },
-      {
-        id: 'content',
-        startTime: 3,
-        duration: 7,
-        description: 'Main content',
-        animations: [],
-        transition: { type: 'fade', duration: 0.3 },
-        elements: [
-          {
-            id: 'subtitle',
-            type: 'text',
-            content: subtitle || prompt.substring(0, 100),
-            position: { x: 50, y: 50, z: 1 },
-            size: { width: 80, height: 20 },
-            animation: {
-              type: 'slide',
-              name: 'slideUp',
-              duration: 0.8,
-              delay: 0,
-              easing: 'ease-out',
-              properties: { y: [60, 50] },
-            },
-            style: {
-              fontSize: 36,
-              fontWeight: 500,
-              color: colorPalette[0],
-            },
-          },
-        ],
-      },
-    ],
-    style: {
-      colorPalette,
-      typography: {
-        primary: 'Inter, system-ui, sans-serif',
-        secondary: 'monospace',
-        sizes: { h1: 72, h2: 48, body: 24 },
-      },
-      borderRadius: 24,
-      spacing: 24,
-    },
-  };
-}
-
