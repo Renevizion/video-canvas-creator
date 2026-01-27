@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Player, PlayerRef } from '@remotion/player';
+import { Player } from '@remotion/player';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Loader2, X, Film, CheckCircle, AlertCircle, Cloud, Monitor, History, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { DynamicVideo } from '@/components/remotion/DynamicVideo';
+import { SophisticatedVideo } from '@/components/remotion/SophisticatedVideo';
 import { supabase } from '@/integrations/supabase/client';
 import type { VideoPlan } from '@/types/video';
 import { toast } from 'sonner';
@@ -20,7 +20,6 @@ type ExportStatus = 'idle' | 'rendering' | 'complete' | 'error';
 
 export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps>(
   function VideoExporter({ plan, projectId, onClose }, ref) {
-    const playerRef = React.useRef<PlayerRef>(null);
     const [status, setStatus] = useState<ExportStatus>('idle');
     const [progress, setProgress] = useState(0);
     const [message, setMessage] = useState('');
@@ -181,9 +180,8 @@ export const VideoExporter = React.forwardRef<HTMLDivElement, VideoExporterProps
           {/* Player Preview */}
           <div className="mb-6 rounded-xl overflow-hidden bg-black" style={{ width: '100%', height: 'auto', aspectRatio: '16/9' }}>
             <Player
-              ref={playerRef}
-              component={DynamicVideo}
-              inputProps={{ plan }}
+              component={SophisticatedVideo as any}
+              inputProps={{ videoPlan: plan as any }}
               durationInFrames={totalFrames}
               compositionWidth={plan.resolution?.width || 1920}
               compositionHeight={plan.resolution?.height || 1080}

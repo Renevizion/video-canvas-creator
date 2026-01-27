@@ -20,6 +20,15 @@ interface SophisticatedVideoProps {
 export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPlan }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
+
+  // Camera rotation values coming from serialized data are typically in radians.
+  // The renderer expects degrees for CSS transforms.
+  const toDegrees = React.useCallback((value: number) => {
+    // If it looks like radians (0..~6.3), convert. Otherwise assume already degrees.
+    const abs = Math.abs(value);
+    const looksLikeRadians = abs <= Math.PI * 2 + 0.001;
+    return looksLikeRadians ? (value * 180) / Math.PI : value;
+  }, []);
   
   // Get camera state from serialized data OR live instance
   const cameraState = React.useMemo(() => {
@@ -110,14 +119,21 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
   // Camera transform - handle both rotation formats
   const cameraTransform = cameraState ? (() => {
     const rotation = cameraState.rotation as Record<string, any> || {};
-    const rotX = typeof rotation.x === 'number' ? rotation.x : (rotation.pitch ?? 0);
-    const rotY = typeof rotation.y === 'number' ? rotation.y : (rotation.yaw ?? 0);
+    const rotXRaw = typeof rotation.x === 'number' ? rotation.x : (rotation.pitch ?? 0);
+    const rotYRaw = typeof rotation.y === 'number' ? rotation.y : (rotation.yaw ?? 0);
+
+    // Convert radians -> degrees when applicable, then apply a subtle multiplier.
+    // (The previous implementation effectively treated radians as degrees and/or scaled too aggressively.)
+    const rotX = toDegrees(rotXRaw);
+    const rotY = toDegrees(rotYRaw);
+    const ROTATION_MULT = 0.08; // keep cinematic motion, avoid rotating the whole frame out of view
+
     return `
       perspective(1000px)
       translateX(${-cameraPosition.x * 0.5}px)
       translateY(${-cameraPosition.y * 0.5}px)
-      rotateX(${rotX * 0.5}deg)
-      rotateY(${rotY * 0.5}deg)
+      rotateX(${rotX * ROTATION_MULT}deg)
+      rotateY(${rotY * ROTATION_MULT}deg)
     `.replace(/\s+/g, ' ').trim();
   })() : 'none';
   
@@ -275,28 +291,7 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
         />
       )}
       
-      {/* Production grade indicator (dev mode) */}
-      {videoPlan.sophisticatedMetadata && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 20,
-            right: 20,
-            padding: '8px 16px',
-            background: 'linear-gradient(135deg, rgba(59,130,246,0.9), rgba(139,92,246,0.9))',
-            color: '#fff',
-            borderRadius: 8,
-            fontSize: 12,
-            fontFamily: 'monospace',
-            fontWeight: 600,
-            pointerEvents: 'none',
-            zIndex: 9999,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-          }}
-        >
-          {videoPlan.sophisticatedMetadata.productionGrade} • Score: {videoPlan.sophisticatedMetadata.qualityScore}
-        </div>
-      )}
+      {/* (Removed on-canvas debug badge for a more polished preview) */}
     </AbsoluteFill>
   );
 };
@@ -342,7 +337,10 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
       
     case 'image':
       // Check if content is a URL or a description
-      const isUrl = element.content?.startsWith('http') || element.content?.startsWith('/');
+      const isUrl =
+        element.content?.startsWith('http') ||
+        element.content?.startsWith('/') ||
+        element.content?.startsWith('data:');
       if (isUrl) {
         return (
           <img
@@ -359,7 +357,8 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
           />
         );
       }
-      // Placeholder for AI-generated image
+      // Placeholder for AI-generated image.
+      // IMPORTANT: Never render the prompt text on-canvas (it looks like a bug to users).
       return (
         <div
           style={{
@@ -374,9 +373,16 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
             border: '1px solid rgba(255,255,255,0.1)'
           }}
         >
-          <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14, textAlign: 'center', padding: 20 }}>
-            {element.content?.slice(0, 50)}...
-          </span>
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 12,
+              background: 'rgba(0,0,0,0.25)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.35)',
+            }}
+          />
         </div>
       );
       
