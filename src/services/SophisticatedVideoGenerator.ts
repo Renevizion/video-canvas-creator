@@ -49,19 +49,66 @@ export interface SophisticatedVideoOptions {
 }
 
 export interface EnhancedVideoPlan extends VideoPlan {
-  // Enhanced with sophisticated systems
+  // Enhanced with sophisticated systems (live instances for frontend generation)
   cameraPath?: AdvancedCameraPath;
   characterPaths?: Map<string, CurvedPathAnimation>;
   parallaxConfig?: Record<string, ParallaxConfig>;
   colorGrading?: AdvancedColorGrading;
+  
+  // Serialized data (from backend edge function)
+  cameraPathData?: {
+    keyframes: Array<{
+      frame: number;
+      position: { x: number; y: number; z: number };
+      rotation: { x: number; y: number; z: number };
+      fov?: number;
+    }>;
+    type: string;
+  };
+  colorGradingData?: {
+    keyframes: Array<{
+      frame: number;
+      grade: {
+        temperature?: number;
+        tint?: number;
+        saturation?: number;
+        vibrance?: number;
+        vignette?: number;
+      };
+    }>;
+    mood: string;
+  };
+  parallaxConfigData?: Record<string, {
+    depth: number;
+    scale: number;
+    blur: number;
+    opacity: number;
+    moveMultiplier: number;
+  }>;
+  characterPathsData?: Record<string, {
+    type: string;
+    startFrame: number;
+    endFrame: number;
+    points: Array<{ x: number; y: number; frame: number }>;
+    easing: string;
+    autoRotate: boolean;
+    scaleWithDistance: boolean;
+  }>;
+  
   sophisticatedMetadata?: {
     usesOrbitalCamera: boolean;
     usesForwardTracking: boolean;
     usesCurvedPaths: boolean;
     usesParallax: boolean;
     usesColorGrading: boolean;
-    productionGrade: 'basic' | 'enhanced' | 'professional' | 'cinematic';
-    finalQualityScore?: number; // Final score after sophistication bonuses
+    productionGrade: 'basic' | 'enhanced' | 'professional' | 'cinematic' | 'PROFESSIONAL' | 'CINEMATIC';
+    qualityScore?: number;
+    finalQualityScore?: number;
+    appliedFeatures?: string[];
+    processingInfo?: {
+      generatedAt: string;
+      generator: string;
+    };
   };
 }
 
