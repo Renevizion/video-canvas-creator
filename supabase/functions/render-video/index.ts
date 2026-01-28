@@ -676,6 +676,11 @@ Deno.serve(async (req) => {
           fps,
           durationInFrames,
         },
+        codecSettings: {
+          codec: 'h264',
+          pixelFormat: 'yuv444p', // Better color fidelity than yuv420p
+          videoBitrate: '8M', // High quality
+        },
         webhookUrl,
       };
 
