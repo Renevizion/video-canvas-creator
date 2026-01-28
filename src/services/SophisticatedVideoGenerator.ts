@@ -31,6 +31,7 @@ import {
   type ParallaxConfig,
   type CameraState
 } from '@/services/scene-planning';
+import { random } from 'remotion';
 
 // ============================================================================
 // ENHANCED VIDEO PLAN GENERATOR
@@ -428,15 +429,53 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
   
   // Determine content type and scene structure
   const contentType = inferContentType(options);
-  const sceneCount = Math.max(3, Math.ceil(duration / 10)); // Minimum 3 scenes, ~10s each
+  
+  // Create a unique seed from the prompt for consistent randomization per prompt
+  const promptSeed = prompt.substring(0, 50).replace(/\s+/g, '-');
+  
+  // Add variation to scene count instead of always using duration/10
+  const sceneCountVariation = random(`scene-count-${promptSeed}`);
+  const baseSceneCount = Math.ceil(duration / 10); // Base calculation
+  
+  // Vary between shorter scenes (more cuts) and longer scenes (less cuts)
+  let sceneCount: number;
+  if (sceneCountVariation < 0.25) {
+    // Fast-paced: More scenes (shorter duration per scene)
+    sceneCount = Math.max(4, Math.ceil(baseSceneCount * 1.5));
+  } else if (sceneCountVariation < 0.5) {
+    // Normal pacing: Standard scene count
+    sceneCount = Math.max(3, baseSceneCount);
+  } else if (sceneCountVariation < 0.75) {
+    // Slow-paced: Fewer scenes (longer duration per scene)
+    sceneCount = Math.max(3, Math.floor(baseSceneCount * 0.75));
+  } else {
+    // Minimal: Very few scenes for impact
+    sceneCount = Math.max(3, Math.floor(baseSceneCount * 0.6));
+  }
+  
   const sceneDuration = duration / sceneCount;
   
   const scenes = [];
   
   // Create a narrative arc with proper scene planning
   for (let i = 0; i < sceneCount; i++) {
-    const sceneType = getSceneType(i, sceneCount);
-    const sceneContent = generateSceneContent(prompt, sceneType, i);
+    const sceneType = getSceneType(i, sceneCount, promptSeed);
+    const sceneContent = generateSceneContent(prompt, sceneType, i, promptSeed);
+    
+    // Vary transition types
+    const transitionVariation = random(`transition-${promptSeed}-${i}`);
+    let transition = null;
+    if (i < sceneCount - 1) {
+      if (transitionVariation < 0.25) {
+        transition = { type: 'fade', duration: 0.5 };
+      } else if (transitionVariation < 0.5) {
+        transition = { type: 'slide', duration: 0.4 };
+      } else if (transitionVariation < 0.75) {
+        transition = { type: 'wipe', duration: 0.6 };
+      } else {
+        transition = { type: 'zoom', duration: 0.3 };
+      }
+    }
     
     scenes.push({
       id: `scene-${i}`,
@@ -445,7 +484,7 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
       description: sceneContent.description,
       elements: sceneContent.elements,
       animations: sceneContent.animations,
-      transition: i < sceneCount - 1 ? { type: 'fade', duration: 0.5 } : null
+      transition
     });
   }
   
@@ -474,22 +513,53 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
 }
 
 /**
- * Determine scene type based on narrative arc position
+ * Determine scene type with randomized narrative structures
+ * Uses deterministic randomness to vary scene types while maintaining coherence
  */
-function getSceneType(index: number, total: number): 'hook' | 'setup' | 'build' | 'climax' | 'resolution' {
+function getSceneType(index: number, total: number, promptSeed: string): 'hook' | 'setup' | 'build' | 'climax' | 'resolution' {
   const position = index / (total - 1);
   
-  if (index === 0) return 'hook';
-  if (position < 0.33) return 'setup';
-  if (position < 0.66) return 'build';
-  if (position < 0.9) return 'climax';
-  return 'resolution';
+  // First scene should always grab attention (but can vary the approach)
+  if (index === 0) {
+    const hookVariation = random(`scene-${promptSeed}-${index}-hook-variation`);
+    return hookVariation > 0.3 ? 'hook' : 'climax'; // 70% hook, 30% start with climax (in medias res)
+  }
+  
+  // Use randomness to vary the narrative structure
+  const narrativeStyle = random(`narrative-style-${promptSeed}-${index}`);
+  
+  // Multiple narrative patterns instead of always the same arc
+  if (narrativeStyle < 0.25) {
+    // Pattern 1: Traditional arc (hook → setup → build → climax → resolution)
+    if (position < 0.33) return 'setup';
+    if (position < 0.66) return 'build';
+    if (position < 0.9) return 'climax';
+    return 'resolution';
+  } else if (narrativeStyle < 0.5) {
+    // Pattern 2: Multiple climaxes (hook → build → climax → build → climax)
+    if (position < 0.33) return random(`alt-${promptSeed}-${index}`) > 0.5 ? 'build' : 'setup';
+    if (position < 0.66) return 'climax';
+    if (position < 0.9) return 'build';
+    return 'climax';
+  } else if (narrativeStyle < 0.75) {
+    // Pattern 3: Problem-solution focus (hook → setup → setup → build → resolution)
+    if (position < 0.4) return 'setup';
+    if (position < 0.7) return 'build';
+    if (position < 0.9) return 'climax';
+    return 'resolution';
+  } else {
+    // Pattern 4: Fast-paced (hook → climax → build → climax → resolution)
+    if (position < 0.25) return 'climax';
+    if (position < 0.5) return 'build';
+    if (position < 0.75) return 'climax';
+    return 'resolution';
+  }
 }
 
 /**
- * Generate scene content based on prompt and scene type
+ * Generate scene content based on prompt and scene type with randomized variations
  */
-function generateSceneContent(prompt: string, sceneType: string, index: number) {
+function generateSceneContent(prompt: string, sceneType: string, index: number, promptSeed: string) {
   const lowerPrompt = prompt.toLowerCase();
   
   // Extract key terms from prompt
@@ -501,33 +571,162 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
   let mainText = '';
   let subText = '';
   
+  // Add variation to text content based on scene type
+  const textVariation = random(`text-variation-${promptSeed}-${index}`);
+  
   switch (sceneType) {
     case 'hook':
       description = 'Opening hook - grab attention immediately';
-      mainText = hasGitHub ? '2024 Wrapped' : hasProduct ? 'Introducing' : hasData ? 'Your Data Story' : 'Welcome';
+      if (textVariation < 0.25) {
+        mainText = hasGitHub ? '2024 Wrapped' : hasProduct ? 'Introducing' : hasData ? 'Your Data Story' : 'Welcome';
+      } else if (textVariation < 0.5) {
+        mainText = hasGitHub ? 'Your Year in Code' : hasProduct ? 'Meet the Future' : hasData ? 'The Numbers Speak' : 'Get Ready';
+      } else if (textVariation < 0.75) {
+        mainText = hasGitHub ? 'Code Journey' : hasProduct ? 'Revolutionary' : hasData ? 'Insights Await' : 'Discover';
+      } else {
+        mainText = hasGitHub ? 'GitHub Highlights' : hasProduct ? 'Innovation Unleashed' : hasData ? 'Analytics Revealed' : 'Explore';
+      }
       subText = prompt.substring(0, 50);
       break;
     case 'setup':
       description = 'Setup - establish context and introduce main elements';
-      mainText = hasGitHub ? 'Your Journey' : hasProduct ? 'The Problem' : hasData ? 'Where We Started' : 'The Story';
+      if (textVariation < 0.33) {
+        mainText = hasGitHub ? 'Your Journey' : hasProduct ? 'The Problem' : hasData ? 'Where We Started' : 'The Story';
+      } else if (textVariation < 0.66) {
+        mainText = hasGitHub ? 'Building Together' : hasProduct ? 'The Challenge' : hasData ? 'Initial State' : 'The Beginning';
+      } else {
+        mainText = hasGitHub ? 'The Foundation' : hasProduct ? 'Understanding Needs' : hasData ? 'Baseline Metrics' : 'Setting Up';
+      }
       subText = 'Setting the stage';
       break;
     case 'build':
       description = 'Build - develop the narrative, show progression';
-      mainText = hasGitHub ? 'Contributions Soar' : hasProduct ? 'The Solution' : hasData ? 'Growth & Insights' : 'Building Up';
+      if (textVariation < 0.33) {
+        mainText = hasGitHub ? 'Contributions Soar' : hasProduct ? 'The Solution' : hasData ? 'Growth & Insights' : 'Building Up';
+      } else if (textVariation < 0.66) {
+        mainText = hasGitHub ? 'Code Evolution' : hasProduct ? 'Smart Features' : hasData ? 'Trending Upward' : 'Progress Made';
+      } else {
+        mainText = hasGitHub ? 'Rapid Development' : hasProduct ? 'Perfect Implementation' : hasData ? 'Exponential Rise' : 'Advancing';
+      }
       subText = 'Momentum builds';
       break;
     case 'climax':
       description = 'Climax - peak moment, key revelation';
-      mainText = hasGitHub ? 'Top Contributor' : hasProduct ? 'Game Changer' : hasData ? 'Peak Performance' : 'The Reveal';
+      if (textVariation < 0.33) {
+        mainText = hasGitHub ? 'Top Contributor' : hasProduct ? 'Game Changer' : hasData ? 'Peak Performance' : 'The Reveal';
+      } else if (textVariation < 0.66) {
+        mainText = hasGitHub ? 'Achievement Unlocked' : hasProduct ? 'Breakthrough' : hasData ? 'Record Breaking' : 'Climactic Moment';
+      } else {
+        mainText = hasGitHub ? 'Elite Status' : hasProduct ? 'Revolutionary Impact' : hasData ? 'All-Time High' : 'Epic Victory';
+      }
       subText = 'The breakthrough';
       break;
     case 'resolution':
       description = 'Resolution - satisfying conclusion, call to action';
-      mainText = hasGitHub ? 'Keep Coding' : hasProduct ? 'Get Started' : hasData ? 'Your Future' : 'What\'s Next';
+      if (textVariation < 0.33) {
+        mainText = hasGitHub ? 'Keep Coding' : hasProduct ? 'Get Started' : hasData ? 'Your Future' : 'What\'s Next';
+      } else if (textVariation < 0.66) {
+        mainText = hasGitHub ? 'Keep Building' : hasProduct ? 'Join Us' : hasData ? 'Future Growth' : 'Continue';
+      } else {
+        mainText = hasGitHub ? 'Never Stop' : hasProduct ? 'Transform Now' : hasData ? 'Onward & Upward' : 'New Chapter';
+      }
       subText = 'Your journey continues';
       break;
   }
+  
+  // Randomize animation types for each element
+  const animationChoice = random(`animation-${promptSeed}-${index}`);
+  const animations = [
+    // Fade animations
+    { type: 'fade' as const, name: 'fadeIn', properties: { opacity: [0, 1] } },
+    { type: 'fade' as const, name: 'fadeInUp', properties: { opacity: [0, 1], y: [10, 0] } },
+    { type: 'fade' as const, name: 'fadeInDown', properties: { opacity: [0, 1], y: [-10, 0] } },
+    
+    // Slide animations  
+    { type: 'slide' as const, name: 'slideUp', properties: { y: [100, 0], opacity: [0, 1] } },
+    { type: 'slide' as const, name: 'slideDown', properties: { y: [-100, 0], opacity: [0, 1] } },
+    { type: 'slide' as const, name: 'slideLeft', properties: { x: [100, 0], opacity: [0, 1] } },
+    { type: 'slide' as const, name: 'slideRight', properties: { x: [-100, 0], opacity: [0, 1] } },
+    
+    // Scale animations
+    { type: 'scale' as const, name: 'scaleIn', properties: { scale: [0.5, 1], opacity: [0, 1] } },
+    { type: 'scale' as const, name: 'zoomIn', properties: { scale: [0.8, 1], opacity: [0, 1] } },
+    { type: 'scale' as const, name: 'bounceIn', properties: { scale: [0, 1.1, 0.95, 1], opacity: [0, 1, 1, 1] } },
+  ];
+  
+  // Select animations for this scene
+  const mainAnimation = animations[Math.floor(animationChoice * animations.length)];
+  const subAnimation = animations[Math.floor(random(`sub-anim-${promptSeed}-${index}`) * animations.length)];
+  const bgAnimation = animations[Math.floor(random(`bg-anim-${promptSeed}-${index}`) * animations.length)];
+  
+  // Randomize positions and layouts
+  const layoutVariation = random(`layout-${promptSeed}-${index}`);
+  let mainX = 50, mainY = 40, subX = 50, subY = 60;
+  let textAlign: 'left' | 'center' | 'right' = 'center';
+  
+  if (layoutVariation < 0.25) {
+    // Centered layout
+    mainX = 50; mainY = 40;
+    subX = 50; subY = 60;
+    textAlign = 'center';
+  } else if (layoutVariation < 0.5) {
+    // Left-aligned layout
+    mainX = 30; mainY = 35;
+    subX = 30; subY = 55;
+    textAlign = 'left';
+  } else if (layoutVariation < 0.75) {
+    // Right-aligned layout
+    mainX = 70; mainY = 35;
+    subX = 70; subY = 55;
+    textAlign = 'right';
+  } else {
+    // Split layout - center the text elements even though they're positioned differently
+    mainX = 35; mainY = 50;
+    subX = 65; subY = 50;
+    textAlign = 'center';
+  }
+  
+  // Randomize colors and styles
+  const colorScheme = random(`color-${promptSeed}-${index}`);
+  const mainColors = ['#ffffff', '#f0f9ff', '#fef3c7', '#fce7f3', '#dcfce7'];
+  const subColors = ['#94a3b8', '#bae6fd', '#fde68a', '#fbcfe8', '#86efac'];
+  const bgColors = [
+    '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b',
+    '#06b6d4', '#6366f1', '#ef4444', '#14b8a6', '#f97316'
+  ];
+  
+  const mainColor = mainColors[Math.floor(colorScheme * mainColors.length)];
+  const subColor = subColors[Math.floor(random(`sub-color-${promptSeed}-${index}`) * subColors.length)];
+  const bgColor = bgColors[Math.floor(random(`bg-color-${promptSeed}-${index}`) * bgColors.length)];
+  
+  // Randomize shape variations
+  const shapeVariation = random(`shape-${promptSeed}-${index}`);
+  let shapeSize = 400;
+  let shapeBorderRadius = 200;
+  
+  if (shapeVariation < 0.25) {
+    // Large circle
+    shapeSize = 500;
+    shapeBorderRadius = 250;
+  } else if (shapeVariation < 0.5) {
+    // Medium rounded square
+    shapeSize = 400;
+    shapeBorderRadius = 50;
+  } else if (shapeVariation < 0.75) {
+    // Small circle
+    shapeSize = 300;
+    shapeBorderRadius = 150;
+  } else {
+    // Rectangle
+    shapeSize = 600;
+    shapeBorderRadius = 20;
+  }
+  
+  // Randomize timing
+  const timingVariation = random(`timing-${promptSeed}-${index}`);
+  const mainDelay = timingVariation * 0.5;
+  const subDelay = mainDelay + 0.3 + (random(`sub-delay-${promptSeed}-${index}`) * 0.3);
+  const bgDelay = random(`bg-delay-${promptSeed}-${index}`) * 0.2;
   
   return {
     description,
@@ -536,42 +735,38 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
         id: `text-main-${index}`,
         type: 'text' as const,
         content: mainText,
-        position: { x: 50, y: 40, z: 2 },
+        position: { x: mainX, y: mainY, z: 2 },
         size: { width: 800, height: 120 },
         style: {
           fontSize: 64,
           fontWeight: 800,
-          color: '#ffffff',
-          textAlign: 'center'
+          color: mainColor,
+          textAlign
         },
         animation: {
-          type: 'fade' as const,
-          name: 'fadeIn',
-          duration: 1,
-          delay: 0.2,
-          easing: 'ease-out',
-          properties: { opacity: [0, 1] }
+          ...mainAnimation,
+          duration: 0.8 + random(`main-dur-${promptSeed}-${index}`) * 0.5,
+          delay: mainDelay,
+          easing: random(`main-ease-${promptSeed}-${index}`) > 0.5 ? 'ease-out' : 'ease-in-out',
         }
       },
       {
         id: `text-sub-${index}`,
         type: 'text' as const,
         content: subText,
-        position: { x: 50, y: 60, z: 1 },
+        position: { x: subX, y: subY, z: 1 },
         size: { width: 600, height: 60 },
         style: {
           fontSize: 32,
           fontWeight: 400,
-          color: '#94a3b8',
-          textAlign: 'center'
+          color: subColor,
+          textAlign
         },
         animation: {
-          type: 'slide' as const,
-          name: 'slideUp',
-          duration: 0.8,
-          delay: 0.5,
+          ...subAnimation,
+          duration: 0.6 + random(`sub-dur-${promptSeed}-${index}`) * 0.4,
+          delay: subDelay,
           easing: 'ease-out',
-          properties: { y: [65, 60], opacity: [0, 1] }
         }
       },
       {
@@ -579,19 +774,17 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
         type: 'shape' as const,
         content: '',
         position: { x: 50, y: 50, z: 0 },
-        size: { width: 400, height: 400 },
+        size: { width: shapeSize, height: shapeSize },
         style: {
-          fill: sceneType === 'hook' ? '#3b82f6' : sceneType === 'climax' ? '#8b5cf6' : '#1e293b',
-          borderRadius: 200,
-          opacity: 0.2
+          fill: bgColor,
+          borderRadius: shapeBorderRadius,
+          opacity: 0.15 + random(`bg-opacity-${promptSeed}-${index}`) * 0.1
         },
         animation: {
-          type: 'scale' as const,
-          name: 'scaleIn',
-          duration: 1.5,
-          delay: 0,
+          ...bgAnimation,
+          duration: 1.2 + random(`bg-dur-${promptSeed}-${index}`) * 0.8,
+          delay: bgDelay,
           easing: 'ease-out',
-          properties: { scale: [0.5, 1], opacity: [0, 0.2] }
         }
       }
     ],
@@ -605,21 +798,61 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
 function inferColorPalette(prompt: string): string[] {
   const lower = prompt.toLowerCase();
   
+  // Create a deterministic but varied selection based on prompt
+  const promptSeed = prompt.substring(0, 50).replace(/\s+/g, '-');
+  const paletteVariation = random(`palette-${promptSeed}`);
+  
+  // Multiple palettes per category
+  const palettes = {
+    tech: [
+      ['#3b82f6', '#1e293b', '#f1f5f9', '#10b981'], // GitHub blue
+      ['#06b6d4', '#0891b2', '#0e7490', '#155e75'], // Cyan tech
+      ['#6366f1', '#4f46e5', '#4338ca', '#3730a3'], // Indigo code
+      ['#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6'], // Purple dev
+    ],
+    social: [
+      ['#ec4899', '#8b5cf6', '#3b82f6', '#f59e0b'], // Vibrant social
+      ['#f43f5e', '#fb7185', '#fda4af', '#fecdd3'], // Pink energy
+      ['#f59e0b', '#fbbf24', '#fcd34d', '#fde047'], // Golden bright
+      ['#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4'], // Teal fresh
+    ],
+    corporate: [
+      ['#1e293b', '#475569', '#94a3b8', '#3b82f6'], // Blue-gray
+      ['#0f172a', '#1e293b', '#334155', '#475569'], // Slate dark
+      ['#1e40af', '#1e3a8a', '#1e293b', '#172554'], // Deep blue
+      ['#374151', '#4b5563', '#6b7280', '#9ca3af'], // Gray professional
+    ],
+    nature: [
+      ['#10b981', '#059669', '#34d399', '#6ee7b7'], // Green nature
+      ['#84cc16', '#65a30d', '#4d7c0f', '#3f6212'], // Lime fresh
+      ['#22c55e', '#16a34a', '#15803d', '#166534'], // Emerald growth
+      ['#06b6d4', '#0891b2', '#0e7490', '#155e75'], // Ocean cyan
+    ],
+    creative: [
+      ['#ec4899', '#f97316', '#eab308', '#8b5cf6'], // Rainbow bold
+      ['#d946ef', '#c026d3', '#a21caf', '#86198f'], // Fuchsia creative
+      ['#f97316', '#fb923c', '#fdba74', '#fed7aa'], // Orange warm
+      ['#10b981', '#3b82f6', '#8b5cf6', '#ec4899'], // Multi-color
+    ],
+  };
+  
+  let selectedPalettes: string[][] = [];
+  
   if (lower.includes('github') || lower.includes('tech') || lower.includes('code')) {
-    return ['#3b82f6', '#1e293b', '#f1f5f9', '#10b981']; // GitHub blue theme
-  }
-  if (lower.includes('social') || lower.includes('creative') || lower.includes('fun')) {
-    return ['#ec4899', '#8b5cf6', '#3b82f6', '#f59e0b']; // Vibrant social
-  }
-  if (lower.includes('corporate') || lower.includes('business') || lower.includes('professional')) {
-    return ['#1e293b', '#475569', '#94a3b8', '#3b82f6']; // Corporate blue-gray
-  }
-  if (lower.includes('nature') || lower.includes('green') || lower.includes('eco')) {
-    return ['#10b981', '#059669', '#34d399', '#6ee7b7']; // Green nature
+    selectedPalettes = palettes.tech;
+  } else if (lower.includes('social') || lower.includes('creative') || lower.includes('fun')) {
+    selectedPalettes = palettes.social;
+  } else if (lower.includes('corporate') || lower.includes('business') || lower.includes('professional')) {
+    selectedPalettes = palettes.corporate;
+  } else if (lower.includes('nature') || lower.includes('green') || lower.includes('eco')) {
+    selectedPalettes = palettes.nature;
+  } else {
+    selectedPalettes = palettes.creative;
   }
   
-  // Default cinematic palette
-  return ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b'];
+  // Pick one palette from the category based on variation
+  const paletteIndex = Math.floor(paletteVariation * selectedPalettes.length);
+  return selectedPalettes[paletteIndex];
 }
 
 // Types are already exported at definition above
