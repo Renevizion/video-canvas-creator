@@ -430,8 +430,11 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
   // Determine content type and scene structure
   const contentType = inferContentType(options);
   
+  // Create a unique seed from the prompt for consistent randomization per prompt
+  const promptSeed = prompt.substring(0, 50).replace(/\s+/g, '-');
+  
   // Add variation to scene count instead of always using duration/10
-  const sceneCountVariation = random(`scene-count-${prompt.substring(0, 20)}`);
+  const sceneCountVariation = random(`scene-count-${promptSeed}`);
   const baseSceneCount = Math.ceil(duration / 10); // Base calculation
   
   // Vary between shorter scenes (more cuts) and longer scenes (less cuts)
@@ -456,11 +459,11 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
   
   // Create a narrative arc with proper scene planning
   for (let i = 0; i < sceneCount; i++) {
-    const sceneType = getSceneType(i, sceneCount);
-    const sceneContent = generateSceneContent(prompt, sceneType, i);
+    const sceneType = getSceneType(i, sceneCount, promptSeed);
+    const sceneContent = generateSceneContent(prompt, sceneType, i, promptSeed);
     
     // Vary transition types
-    const transitionVariation = random(`transition-${i}`);
+    const transitionVariation = random(`transition-${promptSeed}-${i}`);
     let transition = null;
     if (i < sceneCount - 1) {
       if (transitionVariation < 0.25) {
@@ -513,17 +516,17 @@ async function generateBasePlan(options: SophisticatedVideoOptions): Promise<Vid
  * Determine scene type with randomized narrative structures
  * Uses deterministic randomness to vary scene types while maintaining coherence
  */
-function getSceneType(index: number, total: number): 'hook' | 'setup' | 'build' | 'climax' | 'resolution' {
+function getSceneType(index: number, total: number, promptSeed: string): 'hook' | 'setup' | 'build' | 'climax' | 'resolution' {
   const position = index / (total - 1);
   
   // First scene should always grab attention (but can vary the approach)
   if (index === 0) {
-    const hookVariation = random(`scene-${index}-hook-variation`);
+    const hookVariation = random(`scene-${promptSeed}-${index}-hook-variation`);
     return hookVariation > 0.3 ? 'hook' : 'climax'; // 70% hook, 30% start with climax (in medias res)
   }
   
   // Use randomness to vary the narrative structure
-  const narrativeStyle = random(`narrative-style-${index}`);
+  const narrativeStyle = random(`narrative-style-${promptSeed}-${index}`);
   
   // Multiple narrative patterns instead of always the same arc
   if (narrativeStyle < 0.25) {
@@ -534,7 +537,7 @@ function getSceneType(index: number, total: number): 'hook' | 'setup' | 'build' 
     return 'resolution';
   } else if (narrativeStyle < 0.5) {
     // Pattern 2: Multiple climaxes (hook → build → climax → build → climax)
-    if (position < 0.33) return random(`alt-${index}`) > 0.5 ? 'build' : 'setup';
+    if (position < 0.33) return random(`alt-${promptSeed}-${index}`) > 0.5 ? 'build' : 'setup';
     if (position < 0.66) return 'climax';
     if (position < 0.9) return 'build';
     return 'climax';
@@ -556,7 +559,7 @@ function getSceneType(index: number, total: number): 'hook' | 'setup' | 'build' 
 /**
  * Generate scene content based on prompt and scene type with randomized variations
  */
-function generateSceneContent(prompt: string, sceneType: string, index: number) {
+function generateSceneContent(prompt: string, sceneType: string, index: number, promptSeed: string) {
   const lowerPrompt = prompt.toLowerCase();
   
   // Extract key terms from prompt
@@ -569,7 +572,7 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
   let subText = '';
   
   // Add variation to text content based on scene type
-  const textVariation = random(`text-variation-${index}`);
+  const textVariation = random(`text-variation-${promptSeed}-${index}`);
   
   switch (sceneType) {
     case 'hook':
@@ -632,7 +635,7 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
   }
   
   // Randomize animation types for each element
-  const animationChoice = random(`animation-${index}`);
+  const animationChoice = random(`animation-${promptSeed}-${index}`);
   const animations = [
     // Fade animations
     { type: 'fade' as const, name: 'fadeIn', properties: { opacity: [0, 1] } },
@@ -653,33 +656,38 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
   
   // Select animations for this scene
   const mainAnimation = animations[Math.floor(animationChoice * animations.length)];
-  const subAnimation = animations[Math.floor(random(`sub-anim-${index}`) * animations.length)];
-  const bgAnimation = animations[Math.floor(random(`bg-anim-${index}`) * animations.length)];
+  const subAnimation = animations[Math.floor(random(`sub-anim-${promptSeed}-${index}`) * animations.length)];
+  const bgAnimation = animations[Math.floor(random(`bg-anim-${promptSeed}-${index}`) * animations.length)];
   
   // Randomize positions and layouts
-  const layoutVariation = random(`layout-${index}`);
+  const layoutVariation = random(`layout-${promptSeed}-${index}`);
   let mainX = 50, mainY = 40, subX = 50, subY = 60;
+  let textAlign: 'left' | 'center' | 'right' = 'center';
   
   if (layoutVariation < 0.25) {
     // Centered layout
     mainX = 50; mainY = 40;
     subX = 50; subY = 60;
+    textAlign = 'center';
   } else if (layoutVariation < 0.5) {
     // Left-aligned layout
     mainX = 30; mainY = 35;
     subX = 30; subY = 55;
+    textAlign = 'left';
   } else if (layoutVariation < 0.75) {
     // Right-aligned layout
     mainX = 70; mainY = 35;
     subX = 70; subY = 55;
+    textAlign = 'right';
   } else {
-    // Split layout
+    // Split layout - center the text elements even though they're positioned differently
     mainX = 35; mainY = 50;
     subX = 65; subY = 50;
+    textAlign = 'center';
   }
   
   // Randomize colors and styles
-  const colorScheme = random(`color-${index}`);
+  const colorScheme = random(`color-${promptSeed}-${index}`);
   const mainColors = ['#ffffff', '#f0f9ff', '#fef3c7', '#fce7f3', '#dcfce7'];
   const subColors = ['#94a3b8', '#bae6fd', '#fde68a', '#fbcfe8', '#86efac'];
   const bgColors = [
@@ -688,11 +696,11 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
   ];
   
   const mainColor = mainColors[Math.floor(colorScheme * mainColors.length)];
-  const subColor = subColors[Math.floor(random(`sub-color-${index}`) * subColors.length)];
-  const bgColor = bgColors[Math.floor(random(`bg-color-${index}`) * bgColors.length)];
+  const subColor = subColors[Math.floor(random(`sub-color-${promptSeed}-${index}`) * subColors.length)];
+  const bgColor = bgColors[Math.floor(random(`bg-color-${promptSeed}-${index}`) * bgColors.length)];
   
   // Randomize shape variations
-  const shapeVariation = random(`shape-${index}`);
+  const shapeVariation = random(`shape-${promptSeed}-${index}`);
   let shapeSize = 400;
   let shapeBorderRadius = 200;
   
@@ -715,10 +723,10 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
   }
   
   // Randomize timing
-  const timingVariation = random(`timing-${index}`);
+  const timingVariation = random(`timing-${promptSeed}-${index}`);
   const mainDelay = timingVariation * 0.5;
-  const subDelay = mainDelay + 0.3 + (random(`sub-delay-${index}`) * 0.3);
-  const bgDelay = random(`bg-delay-${index}`) * 0.2;
+  const subDelay = mainDelay + 0.3 + (random(`sub-delay-${promptSeed}-${index}`) * 0.3);
+  const bgDelay = random(`bg-delay-${promptSeed}-${index}`) * 0.2;
   
   return {
     description,
@@ -733,13 +741,13 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
           fontSize: 64,
           fontWeight: 800,
           color: mainColor,
-          textAlign: layoutVariation < 0.25 ? 'center' : layoutVariation < 0.5 ? 'left' : 'right'
+          textAlign
         },
         animation: {
           ...mainAnimation,
-          duration: 0.8 + random(`main-dur-${index}`) * 0.5,
+          duration: 0.8 + random(`main-dur-${promptSeed}-${index}`) * 0.5,
           delay: mainDelay,
-          easing: random(`main-ease-${index}`) > 0.5 ? 'ease-out' : 'ease-in-out',
+          easing: random(`main-ease-${promptSeed}-${index}`) > 0.5 ? 'ease-out' : 'ease-in-out',
         }
       },
       {
@@ -752,11 +760,11 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
           fontSize: 32,
           fontWeight: 400,
           color: subColor,
-          textAlign: layoutVariation < 0.25 ? 'center' : layoutVariation < 0.5 ? 'left' : 'right'
+          textAlign
         },
         animation: {
           ...subAnimation,
-          duration: 0.6 + random(`sub-dur-${index}`) * 0.4,
+          duration: 0.6 + random(`sub-dur-${promptSeed}-${index}`) * 0.4,
           delay: subDelay,
           easing: 'ease-out',
         }
@@ -770,11 +778,11 @@ function generateSceneContent(prompt: string, sceneType: string, index: number) 
         style: {
           fill: bgColor,
           borderRadius: shapeBorderRadius,
-          opacity: 0.15 + random(`bg-opacity-${index}`) * 0.1
+          opacity: 0.15 + random(`bg-opacity-${promptSeed}-${index}`) * 0.1
         },
         animation: {
           ...bgAnimation,
-          duration: 1.2 + random(`bg-dur-${index}`) * 0.8,
+          duration: 1.2 + random(`bg-dur-${promptSeed}-${index}`) * 0.8,
           delay: bgDelay,
           easing: 'ease-out',
         }
@@ -791,7 +799,8 @@ function inferColorPalette(prompt: string): string[] {
   const lower = prompt.toLowerCase();
   
   // Create a deterministic but varied selection based on prompt
-  const paletteVariation = random(`palette-${prompt.substring(0, 20)}`);
+  const promptSeed = prompt.substring(0, 50).replace(/\s+/g, '-');
+  const paletteVariation = random(`palette-${promptSeed}`);
   
   // Multiple palettes per category
   const palettes = {
