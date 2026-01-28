@@ -49,30 +49,42 @@ Update `remotion-render-server/package.json`:
 
 ### 2. Update Codec Settings (NEW - Required for Color Accuracy!)
 
-Your render endpoint needs to accept and use `codecSettings` from the request:
+**Add codec settings handling to your render endpoint:**
 
-```javascript
+```typescript
+// In your render endpoint (e.g., src/index.ts)
 app.post('/render', async (req, res) => {
-  const { planId, code, composition, codecSettings, webhookUrl } = req.body;
+  const { 
+    planId, 
+    code, 
+    composition, 
+    codecSettings,  // ← NEW: Extract this
+    webhookUrl 
+  } = req.body;
   
-  // Use codecSettings for accurate color reproduction
-  const output = await renderMedia({
-    composition: {
-      id: composition.id,
-      width: composition.width,
-      height: composition.height,
-      fps: composition.fps,
-      durationInFrames: composition.durationInFrames,
-    },
+  // ... your bundle logic ...
+  
+  // Apply codec settings when rendering
+  await renderMedia({
+    composition: composition.id,
     serveUrl: bundleLocation,
     codec: codecSettings?.codec || 'h264',
-    pixelFormat: codecSettings?.pixelFormat || 'yuv444p', // ← Critical for color accuracy!
+    pixelFormat: codecSettings?.pixelFormat || 'yuv444p', // ← KEY: Use yuv444p
     videoBitrate: codecSettings?.videoBitrate || '8M',
-    outputLocation: outputPath,
+    outputLocation: `out/${planId}.mp4`,
     // ... other settings
   });
 });
 ```
+
+**What this fixes:**
+- Colors now match between frontend preview and final video
+- No more washed out colors or color banding
+- Professional quality output with accurate brand colors
+
+See [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for complete implementation details.
+
+### 3. No Other Code Changes Needed!
 
 **Why yuv444p?** It preserves full color information without chroma subsampling, ensuring colors match between frontend preview and backend render.
 
