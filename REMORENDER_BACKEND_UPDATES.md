@@ -1,5 +1,12 @@
 # Remorender Backend Updates for Sophisticated Video System
 
+## ⚠️ IMPORTANT: Color Consistency Update Required
+
+**Your backend needs an update to fix color inconsistencies!**  
+See [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for detailed instructions.
+
+**Quick summary:** Add `codecSettings` handling to your render endpoint to accept `pixelFormat: 'yuv444p'` for accurate color reproduction.
+
 ## Current State
 Your remorender backend (https://github.com/Renevizion/remorender) is already well-configured with:
 - ✅ Remotion 4.0.x
@@ -40,13 +47,34 @@ Update `remotion-render-server/package.json`:
 }
 ```
 
-### 2. No Code Changes Needed!
+### 2. Update Codec Settings (NEW - Required for Color Accuracy!)
 
-**Good news:** Your existing render endpoint at `/render` already accepts:
-- `code` - The React/Remotion component code
-- `composition` - Composition metadata
-- `inputProps` - Props to pass to the component
-- `webhookUrl`, `jobId`, `planId` - For async processing
+Your render endpoint needs to accept and use `codecSettings` from the request:
+
+```javascript
+app.post('/render', async (req, res) => {
+  const { planId, code, composition, codecSettings, webhookUrl } = req.body;
+  
+  // Use codecSettings for accurate color reproduction
+  const output = await renderMedia({
+    composition: {
+      id: composition.id,
+      width: composition.width,
+      height: composition.height,
+      fps: composition.fps,
+      durationInFrames: composition.durationInFrames,
+    },
+    serveUrl: bundleLocation,
+    codec: codecSettings?.codec || 'h264',
+    pixelFormat: codecSettings?.pixelFormat || 'yuv444p', // ← Critical for color accuracy!
+    videoBitrate: codecSettings?.videoBitrate || '8M',
+    outputLocation: outputPath,
+    // ... other settings
+  });
+});
+```
+
+**Why yuv444p?** It preserves full color information without chroma subsampling, ensuring colors match between frontend preview and backend render.
 
 This is **exactly** what the sophisticated video system needs. The frontend will send the `SophisticatedVideo` component code with the enhanced video plan as `inputProps`.
 
