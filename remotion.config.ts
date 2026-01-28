@@ -6,8 +6,10 @@ import { Config } from '@remotion/cli/config';
 Config.setVideoImageFormat('jpeg');
 Config.setOverwriteOutput(true);
 
-// High quality settings for production renders
-Config.setPixelFormat('yuv420p');
+// High quality settings for production renders with color accuracy
+// yuv444p provides better color fidelity than yuv420p (no chroma subsampling)
+// This ensures colors match between frontend preview and backend rendering
+Config.setPixelFormat('yuv444p');
 Config.setCodec('h264');
 
 // Concurrency settings - adjust based on your server capacity

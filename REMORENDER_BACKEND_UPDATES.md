@@ -1,5 +1,12 @@
 # Remorender Backend Updates for Sophisticated Video System
 
+## ⚠️ IMPORTANT: Color Consistency Update Required
+
+**Your backend needs an update to fix color inconsistencies!**  
+See [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for detailed instructions.
+
+**Quick summary:** Add `codecSettings` handling to your render endpoint to accept `pixelFormat: 'yuv444p'` for accurate color reproduction.
+
 ## Current State
 Your remorender backend (https://github.com/Renevizion/remorender) is already well-configured with:
 - ✅ Remotion 4.0.x
@@ -40,7 +47,44 @@ Update `remotion-render-server/package.json`:
 }
 ```
 
-### 2. No Code Changes Needed!
+### 2. Update Codec Settings (NEW - Required for Color Accuracy!)
+
+**Add codec settings handling to your render endpoint:**
+
+```typescript
+// In your render endpoint (e.g., src/index.ts)
+app.post('/render', async (req, res) => {
+  const { 
+    planId, 
+    code, 
+    composition, 
+    codecSettings,  // ← NEW: Extract this
+    webhookUrl 
+  } = req.body;
+  
+  // ... your bundle logic ...
+  
+  // Apply codec settings when rendering
+  await renderMedia({
+    composition: composition.id,
+    serveUrl: bundleLocation,
+    codec: codecSettings?.codec || 'h264',
+    pixelFormat: codecSettings?.pixelFormat || 'yuv444p', // ← KEY: Use yuv444p
+    videoBitrate: codecSettings?.videoBitrate || '8M',
+    outputLocation: `out/${planId}.mp4`,
+    // ... other settings
+  });
+});
+```
+
+**What this fixes:**
+- Colors now match between frontend preview and final video
+- No more washed out colors or color banding
+- Professional quality output with accurate brand colors
+
+See [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for complete implementation details.
+
+### 3. No Other Code Changes Needed!
 
 **Good news:** Your existing render endpoint at `/render` already accepts:
 - `code` - The React/Remotion component code

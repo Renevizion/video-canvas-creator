@@ -108,7 +108,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   const { fps } = useVideoConfig();
   const frame = useCurrentFrame();
   
-  const codeContent = element.content || `const MyVideo = () => {
+  const codeContent = element.content || `const DynamicVideo = () => {
   return (
     <AbsoluteFill>
       <Video

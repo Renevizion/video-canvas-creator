@@ -139,7 +139,7 @@ const terminalDemoPlan: VideoPlan = {
         {
           id: 'terminal',
           type: 'shape',
-          content: '$ npx remotion render MyVideo out/video.mp4\n⠋ Rendering frames...\n✓ Video rendered successfully\n✓ Output: out/video.mp4 (2.4 MB)',
+          content: '$ npx remotion render DynamicVideo out/video.mp4\n⠋ Rendering frames...\n✓ Video rendered successfully\n✓ Output: out/video.mp4 (2.4 MB)',
           position: { x: 50, y: 58, z: 1 },
           size: { width: 580, height: 320 },
           style: { elementType: 'terminal' },

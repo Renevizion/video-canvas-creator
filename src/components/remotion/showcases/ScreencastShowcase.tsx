@@ -18,7 +18,7 @@ export const ScreencastShowcase: React.FC<ScreencastShowcaseProps> = ({ code }) 
   
   const exampleCode = code || `import { AbsoluteFill, Video } from 'remotion';
 
-export const MyVideo = () => {
+export const DynamicVideo = () => {
   return (
     <AbsoluteFill>
       <Video
