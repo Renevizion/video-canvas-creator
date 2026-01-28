@@ -87,7 +87,6 @@ app.post('/render', async (req, res) => {
     codec: codecSettings?.codec || 'h264',
     pixelFormat: codecSettings?.pixelFormat || 'yuv444p',
     videoBitrate: codecSettings?.videoBitrate || '8M',
-    crf: undefined, // Use videoBitrate instead
     outputLocation: `out/${planId}.mp4`,
     onProgress: ({ progress }) => {
       console.log(`Rendering: ${Math.round(progress * 100)}%`);
@@ -153,13 +152,15 @@ ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,pix_fmt out
 ## Trade-offs
 
 ### File Size
-- Videos will be **~15-20% larger** due to full color preservation
+- Videos will be **~15-20% larger** due to full chroma preservation
 - Example: 10MB video → 12MB video
+- **Note:** Actual size increase varies based on content complexity and bitrate settings
 - **Worth it** for professional quality
 
 ### Encoding Time
 - Slightly longer encoding: **~5-10% increase**
 - Example: 30 second video: 45s → 48s
+- **Note:** Varies based on video complexity and hardware
 - **Negligible** impact
 
 ### Compatibility
@@ -219,9 +220,9 @@ YUV color space separates:
 | Aspect | Browser Preview | Video Encoding (old) | Video Encoding (new) |
 |--------|----------------|---------------------|---------------------|
 | Color Space | sRGB | YUV 4:2:0 | YUV 4:4:4 |
-| Color Depth | 8-bit per channel | 8-bit (subsampled) | 8-bit (full) |
+| Color Depth | 8-bit per channel | 8-bit (subsampled) | 8-bit (full chroma) |
 | Gamma | 2.2 | H.264 transfer | H.264 transfer |
-| Interpolation | Linear RGB | YUV (lossy) | YUV (lossless) |
+| Interpolation | Linear RGB | YUV 4:2:0 (subsampled) | YUV 4:4:4 (full chroma) |
 
 ## References
 

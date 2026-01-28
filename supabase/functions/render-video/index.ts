@@ -678,7 +678,7 @@ Deno.serve(async (req) => {
         },
         codecSettings: {
           codec: 'h264',
-          pixelFormat: 'yuv444p', // Better color fidelity than yuv420p
+          pixelFormat: 'yuv444p', // Full color preservation - yuv444p uses 4:4:4 sampling vs yuv420p's 4:2:0 subsampling
           videoBitrate: '8M', // High quality
         },
         webhookUrl,

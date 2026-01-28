@@ -71,7 +71,6 @@ app.post('/render', async (req, res) => {
     codec: codecSettings?.codec || 'h264',
     pixelFormat: codecSettings?.pixelFormat || 'yuv444p', // ← KEY: Use yuv444p
     videoBitrate: codecSettings?.videoBitrate || '8M',
-    crf: undefined, // Don't use CRF when videoBitrate is set
     outputLocation: `out/${planId}.mp4`,
     // ... other settings
   });
