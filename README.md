@@ -1,9 +1,13 @@
 # Welcome to your Lovable project
 
-## 🎨 Color Consistency Fix
+## 🎥 What Makes This Different?
 
-**Fixed:** Videos now have consistent colors between frontend preview and backend rendering!  
-**See:** [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for details and backend update instructions.
+This is an **AI-powered video production system** that generates professional videos from simple text prompts, URLs, or data. Unlike manual Remotion coding (writing React components for each video), our system uses intelligent agents and sophisticated orchestration to create videos at scale.
+
+**New to the project?** Start here:
+- [QUICK_COMPARISON.md](./QUICK_COMPARISON.md) - Quick overview of our approach vs manual Remotion
+- [VIDEO_CREATION_COMPARISON.md](./VIDEO_CREATION_COMPARISON.md) - Detailed comparison and architecture
+- [SYSTEM_ARCHITECTURE_VISUAL.md](./SYSTEM_ARCHITECTURE_VISUAL.md) - Visual diagrams and flow charts
 
 ## ⚠️ Troubleshooting "Module not found" Errors
 
