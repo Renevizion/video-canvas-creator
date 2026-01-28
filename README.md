@@ -9,6 +9,11 @@ This is an **AI-powered video production system** that generates professional vi
 - [VIDEO_CREATION_COMPARISON.md](./VIDEO_CREATION_COMPARISON.md) - Detailed comparison and architecture
 - [SYSTEM_ARCHITECTURE_VISUAL.md](./SYSTEM_ARCHITECTURE_VISUAL.md) - Visual diagrams and flow charts
 
+## 🎨 Color Consistency Fix
+
+**Fixed:** Videos now have consistent colors between frontend preview and backend rendering!  
+**See:** [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for details and backend update instructions.
+
 ## ⚠️ Troubleshooting "Module not found" Errors
 
 If you see errors like `Module not found: Error: Can't resolve '@remotion/shapes'`, this means your **backend render service needs npm packages installed**. 

@@ -86,11 +86,7 @@ See [COLOR_CONSISTENCY_FIX.md](./COLOR_CONSISTENCY_FIX.md) for complete implemen
 
 ### 3. No Other Code Changes Needed!
 
-**Good news:** Your existing render endpoint at `/render` already accepts:
-- `code` - The React/Remotion component code
-- `composition` - Composition metadata
-- `inputProps` - Props to pass to the component
-- `webhookUrl`, `jobId`, `planId` - For async processing
+**Why yuv444p?** It preserves full color information without chroma subsampling, ensuring colors match between frontend preview and backend render.
 
 This is **exactly** what the sophisticated video system needs. The frontend will send the `SophisticatedVideo` component code with the enhanced video plan as `inputProps`.
 
