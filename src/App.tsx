@@ -3,7 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import Analyze from "./pages/Analyze";
 import Create from "./pages/Create";
 import Patterns from "./pages/Patterns";
@@ -22,29 +25,32 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/analyze" element={<Analyze />} />
-          <Route path="/create" element={<Create />} />
-          <Route path="/patterns" element={<Patterns />} />
-          <Route path="/patterns/:id" element={<PatternDetail />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/project/:id" element={<ProjectDetail />} />
-          <Route path="/editor/:id" element={<Editor />} />
-          <Route path="/showcase" element={<AnimationShowcase />} />
-          <Route path="/test-video" element={<TestVideo />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/wizard" element={<VideoCreationWizard />} />
-          <Route path="/simple-create" element={<SimpleVideoCreator />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+            <Route path="/analyze" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
+            <Route path="/create" element={<ProtectedRoute><Create /></ProtectedRoute>} />
+            <Route path="/patterns" element={<ProtectedRoute><Patterns /></ProtectedRoute>} />
+            <Route path="/patterns/:id" element={<ProtectedRoute><PatternDetail /></ProtectedRoute>} />
+            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+            <Route path="/project/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+            <Route path="/editor/:id" element={<ProtectedRoute><Editor /></ProtectedRoute>} />
+            <Route path="/showcase" element={<ProtectedRoute><AnimationShowcase /></ProtectedRoute>} />
+            <Route path="/test-video" element={<ProtectedRoute><TestVideo /></ProtectedRoute>} />
+            <Route path="/resources" element={<ProtectedRoute><Resources /></ProtectedRoute>} />
+            <Route path="/wizard" element={<ProtectedRoute><VideoCreationWizard /></ProtectedRoute>} />
+            <Route path="/simple-create" element={<ProtectedRoute><SimpleVideoCreator /></ProtectedRoute>} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
