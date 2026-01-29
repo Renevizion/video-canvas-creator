@@ -1,13 +1,23 @@
 import { motion } from 'framer-motion';
-import { Film, Sparkles, Settings, Menu } from 'lucide-react';
+import { Film, Sparkles, Settings, Menu, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navItems = [
     { href: '/', label: 'Dashboard' },
@@ -16,6 +26,11 @@ export function Header() {
     { href: '/analyze', label: 'Analyze' },
     { href: '/patterns', label: 'Patterns' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   return (
     <motion.header
@@ -68,6 +83,31 @@ export function Header() {
               <Sparkles className="w-4 h-4" />
               New Project
             </Button>
+            
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="hidden md:flex">
+                  <User className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">Account</p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Button
               variant="ghost"
               size="icon"
@@ -108,6 +148,16 @@ export function Header() {
                 <Sparkles className="w-4 h-4" />
                 New Project
               </Button>
+              <div className="mx-4 mt-2 pt-2 border-t border-border/30">
+                <Button 
+                  variant="ghost" 
+                  onClick={handleSignOut}
+                  className="w-full justify-start gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </Button>
+              </div>
             </nav>
           </motion.div>
         )}

@@ -2,9 +2,17 @@ import { supabase } from '@/integrations/supabase/client';
 import type { VideoProject, StoredPattern, VideoPlan } from '@/types/video';
 
 export async function fetchVideoPlans(): Promise<VideoProject[]> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('video_plans')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -25,9 +33,17 @@ export async function fetchVideoPlans(): Promise<VideoProject[]> {
 }
 
 export async function fetchPatterns(): Promise<StoredPattern[]> {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('video_patterns')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -93,10 +109,18 @@ export async function generateAsset(
 }
 
 export async function updatePlanStatus(planId: string, status: string, additionalFields?: Record<string, unknown>) {
+  // Get current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be authenticated');
+  }
+
   const { error } = await supabase
     .from('video_plans')
     .update({ status, ...additionalFields })
-    .eq('id', planId);
+    .eq('id', planId)
+    .eq('user_id', user.id);
 
   if (error) throw error;
 }
