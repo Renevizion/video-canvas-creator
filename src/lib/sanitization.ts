@@ -45,6 +45,8 @@ export function escapeHtml(input: string | null | undefined): string {
 
 /**
  * Sanitize URL input
+ * Note: This function only accepts absolute HTTP/HTTPS URLs.
+ * Relative URLs and other protocols are rejected.
  */
 export function sanitizeUrl(input: string | null | undefined): string {
   if (!input) return '';
@@ -137,6 +139,7 @@ export function sanitizeNumber(
 
 /**
  * Sanitize filename for storage
+ * Note: Only preserves the last extension (e.g., .tar.gz becomes .gz)
  */
 export function sanitizeFilename(input: string | null | undefined): string {
   if (!input) return '';
@@ -150,9 +153,14 @@ export function sanitizeFilename(input: string | null | undefined): string {
   // Limit length
   const MAX_LENGTH = 255;
   if (sanitized.length > MAX_LENGTH) {
-    const ext = sanitized.split('.').pop() || '';
-    const nameLength = MAX_LENGTH - ext.length - 1;
-    sanitized = sanitized.substring(0, nameLength) + '.' + ext;
+    const lastDotIndex = sanitized.lastIndexOf('.');
+    if (lastDotIndex > 0) {
+      const ext = sanitized.substring(lastDotIndex);
+      const nameLength = MAX_LENGTH - ext.length;
+      sanitized = sanitized.substring(0, nameLength) + ext;
+    } else {
+      sanitized = sanitized.substring(0, MAX_LENGTH);
+    }
   }
   
   return sanitized;

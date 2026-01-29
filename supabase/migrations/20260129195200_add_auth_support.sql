@@ -1,4 +1,7 @@
 -- Add user_id columns to existing tables
+-- Note: These columns are nullable to support migration of existing data.
+-- New records will have user_id set automatically via application code.
+-- Consider adding NOT NULL constraint after migrating all existing data.
 ALTER TABLE public.video_patterns ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
 ALTER TABLE public.video_plans ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
 
@@ -60,6 +63,15 @@ CREATE POLICY "Users can insert assets for their plans" ON public.generated_asse
     )
   );
 
+CREATE POLICY "Users can update assets for their plans" ON public.generated_assets
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.video_plans
+      WHERE video_plans.id = generated_assets.plan_id
+      AND video_plans.user_id = auth.uid()
+    )
+  );
+
 CREATE POLICY "Users can delete assets for their plans" ON public.generated_assets
   FOR DELETE USING (
     EXISTS (
@@ -80,6 +92,8 @@ DROP POLICY IF EXISTS "Public read access for rendered videos" ON storage.object
 DROP POLICY IF EXISTS "Public upload for rendered videos" ON storage.objects;
 
 -- Create user-specific storage policies
+-- Note: Files must be uploaded with the path structure: bucket_name/user_id/filename
+-- Files uploaded without this structure will be rejected by these policies.
 CREATE POLICY "Users can read their own reference videos" ON storage.objects
   FOR SELECT USING (
     bucket_id = 'reference-videos' AND
