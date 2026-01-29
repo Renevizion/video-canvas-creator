@@ -1,5 +1,14 @@
 # Welcome to your Lovable project
 
+## 🔐 Authentication & Security
+
+**NEW:** This app now requires authentication! All user data is isolated and secure.
+
+- **Authentication:** Sign up and sign in with email/password
+- **Data Isolation:** Each user has their own data (Row-Level Security)
+- **Protected Routes:** All pages require authentication
+- **See:** [AUTH_SETUP_GUIDE.md](./AUTH_SETUP_GUIDE.md) for setup instructions
+
 ## 🎥 What Makes This Different?
 
 This is an **AI-powered video production system** that generates professional videos from simple text prompts, URLs, or data. Unlike manual Remotion coding (writing React components for each video), our system uses intelligent agents and sophisticated orchestration to create videos at scale.
@@ -8,6 +17,12 @@ This is an **AI-powered video production system** that generates professional vi
 - [QUICK_COMPARISON.md](./QUICK_COMPARISON.md) - Quick overview of our approach vs manual Remotion
 - [VIDEO_CREATION_COMPARISON.md](./VIDEO_CREATION_COMPARISON.md) - Detailed comparison and architecture
 - [SYSTEM_ARCHITECTURE_VISUAL.md](./SYSTEM_ARCHITECTURE_VISUAL.md) - Visual diagrams and flow charts
+
+## 📚 Important Documentation
+
+- **[AUTH_SETUP_GUIDE.md](./AUTH_SETUP_GUIDE.md)** - Authentication setup and usage
+- **[LOVABLE_INTEGRATION_ANALYSIS.md](./LOVABLE_INTEGRATION_ANALYSIS.md)** - Analysis of Lovable integration tradeoffs
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Summary of auth implementation
 
 ## 🎨 Color Consistency Fix
 
@@ -41,6 +56,9 @@ There are several ways of editing your application.
 Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
+
+**⚠️ Important Note About Lovable:**
+See [LOVABLE_INTEGRATION_ANALYSIS.md](./LOVABLE_INTEGRATION_ANALYSIS.md) for lessons learned about using Lovable and recommendations for verification.
 
 **Use your preferred IDE**
 
