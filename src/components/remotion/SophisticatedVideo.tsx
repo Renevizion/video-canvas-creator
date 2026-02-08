@@ -10,8 +10,14 @@
  */
 
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, spring } from 'remotion';
 import type { EnhancedVideoPlan } from '@/services/SophisticatedVideoGenerator';
+
+// Import professional element components
+import { PhoneMockup } from './elements/PhoneMockup';
+import { DataVisualization } from './elements/DataVisualization';
+import { LogoGrid } from './elements/LogoGrid';
+import { CodeEditor } from './elements/CodeEditor';
 
 interface SophisticatedVideoProps {
   videoPlan: EnhancedVideoPlan;
@@ -477,6 +483,15 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
       );
       
     case 'code-editor':
+      return (
+        <CodeEditor
+          element={element}
+          style={{}}
+          colors={['#3b82f6', '#8b5cf6', '#22d3ee']}
+          sceneFrame={frame}
+        />
+      );
+      
     case 'terminal':
       return (
         <div
@@ -494,13 +509,102 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
             border: '1px solid rgba(255,255,255,0.1)'
           }}
         >
-          <div style={{ color: '#6c7086', marginBottom: 8 }}>
-            {element.type === 'terminal' ? '$ ' : '// '}
-          </div>
+          <div style={{ color: '#6c7086', marginBottom: 8 }}>$ </div>
           <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>
             {element.content}
           </pre>
         </div>
+      );
+
+    case 'phone-mockup':
+      return (
+        <PhoneMockup
+          element={element}
+          style={{}}
+          colors={['#3b82f6', '#8b5cf6', '#22d3ee']}
+          sceneFrame={frame}
+        >
+          {/* Render app screen content inside phone */}
+          <div style={{
+            width: '100%',
+            height: '100%',
+            background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: 20,
+          }}>
+            {/* Status bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+              <span style={{ color: 'white', fontSize: 12, fontWeight: 600 }}>9:41</span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <div style={{ width: 16, height: 10, background: 'white', borderRadius: 2 }} />
+              </div>
+            </div>
+            {/* App header */}
+            <div style={{ color: 'white', fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+              Dashboard
+            </div>
+            {/* Stats cards */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+              {[
+                { label: 'Users', value: '12.5K', color: '#3b82f6' },
+                { label: 'Revenue', value: '$48K', color: '#10b981' },
+              ].map((stat, i) => (
+                <div key={i} style={{
+                  flex: 1,
+                  background: `${stat.color}22`,
+                  borderRadius: 12,
+                  padding: 12,
+                }}>
+                  <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 11 }}>{stat.label}</div>
+                  <div style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+            {/* Chart placeholder */}
+            <div style={{
+              flex: 1,
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: 12,
+              display: 'flex',
+              alignItems: 'flex-end',
+              padding: 16,
+              gap: 8,
+            }}>
+              {[40, 65, 45, 80, 55, 70].map((h, i) => (
+                <div
+                  key={i}
+                  style={{
+                    flex: 1,
+                    height: `${h}%`,
+                    background: 'linear-gradient(180deg, #3b82f6, #6366f1)',
+                    borderRadius: 4,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </PhoneMockup>
+      );
+
+    case 'data-viz':
+      return (
+        <DataVisualization
+          element={element}
+          style={{}}
+          colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']}
+          sceneFrame={frame}
+        />
+      );
+
+    case 'logo-grid':
+      return (
+        <LogoGrid
+          element={element}
+          style={{}}
+          colors={['#ffffff', '#3b82f6']}
+          sceneFrame={frame}
+        />
       );
       
     case 'progress':
@@ -528,22 +632,24 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
       );
       
     default:
+      // For unknown types, render a nice gradient placeholder instead of showing type labels
       return (
         <div
           style={{
             width: '100%',
             height: '100%',
-            background: 'rgba(255,255,255,0.05)',
-            border: '1px dashed rgba(255,255,255,0.2)',
-            borderRadius: 8,
+            background: 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2))',
+            borderRadius: 16,
+            border: '1px solid rgba(255,255,255,0.1)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 12,
-            color: 'rgba(255,255,255,0.4)'
           }}
         >
-          {element.type}: {String(element.content).slice(0, 30)}
+          {/* Show content if it's emoji or short text */}
+          {element.content && element.content.length <= 4 && (
+            <span style={{ fontSize: baseStyle.fontSize || 48 }}>{element.content}</span>
+          )}
         </div>
       );
   }
