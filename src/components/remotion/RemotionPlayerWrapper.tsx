@@ -35,8 +35,13 @@ export const RemotionPlayerWrapper = forwardRef<HTMLDivElement, RemotionPlayerWr
       console.log('   Note: Plan without sophisticated metadata - will render basic features only');
     }
 
+    // Stop event propagation to prevent clicks from bubbling up to parent elements
+    const handleClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+    };
+
     return (
-      <div ref={ref} className={className}>
+      <div ref={ref} className={className} onClick={handleClick} onPointerDown={handleClick}>
         <Player
           component={SophisticatedVideo}
           inputProps={{ videoPlan: enhancedPlan }}
