@@ -33,6 +33,7 @@ import {
   ModernRenderProgress,
 } from '../components/remotion/showcases/ModernShowcases';
 import { ClaudeStyleExample } from '../components/remotion/showcases/ClaudeStyleExample';
+import { MobajumpMegaShowcase } from '../components/remotion/showcases/MobajumpMegaShowcase';
 
 // Default video plan for testing
 const defaultPlan: VideoPlan = {
@@ -498,6 +499,19 @@ export const RemotionRoot: React.FC = () => {
         id="ClaudeStyleExample"
         component={ClaudeStyleExample}
         durationInFrames={495}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={{}}
+      />
+
+      {/* ========== MOBAJUMP MEGA SHOWCASE ========== */}
+      
+      {/* Mobajump - EVERY animation from the playground */}
+      <Composition
+        id="MobajumpMegaShowcase"
+        component={MobajumpMegaShowcase}
+        durationInFrames={1350}
         fps={30}
         width={1920}
         height={1080}
