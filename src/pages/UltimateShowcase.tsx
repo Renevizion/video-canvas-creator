@@ -428,16 +428,42 @@ const parallaxShowcasePlan: VideoPlan = {
       { id: 'stars', type: 'shape', content: '✦', position: { x: 20, y: 20, z: 0.1 }, size: { width: 40, height: 40 }, style: { opacity: 0.4, fontSize: 32 }, animation: { name: 'float', type: 'custom', duration: 4, delay: 0, easing: 'linear', properties: {} } },
       { id: 'stars2', type: 'shape', content: '✦', position: { x: 80, y: 30, z: 0.1 }, size: { width: 40, height: 40 }, style: { opacity: 0.3, fontSize: 24 }, animation: { name: 'float', type: 'custom', duration: 4, delay: 0.5, easing: 'linear', properties: {} } },
       { id: 'stars3', type: 'shape', content: '✦', position: { x: 50, y: 15, z: 0.1 }, size: { width: 40, height: 40 }, style: { opacity: 0.5, fontSize: 20 }, animation: { name: 'float', type: 'custom', duration: 4, delay: 1, easing: 'linear', properties: {} } },
+
       // Mid background nebula
       { id: 'nebula', type: 'shape', content: '', position: { x: 50, y: 50, z: 0.3 }, size: { width: 800, height: 400 }, style: { background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.2) 0%, transparent 70%)', borderRadius: 999 }, animation: { name: 'pulse', type: 'scale', duration: 6, delay: 0, easing: 'ease-in-out', properties: {} } },
+
       // Environment layer
       { id: 'planet', type: 'shape', content: '🪐', position: { x: 15, y: 70, z: 0.6 }, size: { width: 120, height: 120 }, style: { fontSize: 80, opacity: 0.8 }, animation: { name: 'float', type: 'custom', duration: 5, delay: 0.3, easing: 'ease-in-out', properties: {} } },
-      // Title (subject layer)
+
+      // Mid-ground UI card (explicit mid-ground layer)
+      {
+        id: 'midground-card',
+        type: 'shape',
+        content: 'Mid-ground UI',
+        position: { x: 72, y: 66, z: 0.8 },
+        size: { width: 360, height: 180 },
+        style: {
+          background: 'rgba(255,255,255,0.07)',
+          backdropFilter: 'blur(18px)',
+          borderRadius: 24,
+          border: '1px solid rgba(255,255,255,0.14)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.35)',
+          fontSize: 22,
+          fontWeight: 700,
+          color: 'rgba(255,255,255,0.92)',
+        },
+        animation: { name: 'slideUp', type: 'slide', duration: 0.8, delay: 0.35, easing: 'spring', properties: {} },
+      },
+
+      // Subject layer
+      { id: 'ship', type: 'shape', content: '🚀', position: { x: 64, y: 72, z: 1 }, size: { width: 120, height: 120 }, style: { fontSize: 84, filter: 'drop-shadow(0 18px 35px rgba(59,130,246,0.35))' }, animation: { name: 'float', type: 'custom', duration: 4, delay: 0.4, easing: 'ease-in-out', properties: {} } },
       { id: 'title', type: 'text', content: '6-Layer Parallax', position: { x: 50, y: 35, z: 1 }, size: { width: 800, height: 100 }, style: { fontSize: 72, fontWeight: 900 }, animation: { name: 'scaleIn', type: 'scale', duration: 0.8, delay: 0.2, easing: 'spring', properties: {} } },
       { id: 'subtitle', type: 'text', content: 'Far → Mid → Environment → Mid-ground → Subject → Foreground', position: { x: 50, y: 50, z: 1 }, size: { width: 900, height: 40 }, style: { fontSize: 24, color: 'rgba(255,255,255,0.7)' }, animation: { name: 'fadeIn', type: 'fade', duration: 0.6, delay: 0.5, easing: 'ease-out', properties: {} } },
+
       // Foreground particles
       { id: 'particle1', type: 'shape', content: '•', position: { x: 10, y: 80, z: 1.5 }, size: { width: 20, height: 20 }, style: { fontSize: 32, color: '#3b82f6', opacity: 0.6 }, animation: { name: 'float', type: 'custom', duration: 2, delay: 0, easing: 'linear', properties: {} } },
       { id: 'particle2', type: 'shape', content: '•', position: { x: 90, y: 20, z: 1.5 }, size: { width: 20, height: 20 }, style: { fontSize: 48, color: '#8b5cf6', opacity: 0.4 }, animation: { name: 'float', type: 'custom', duration: 2.5, delay: 0.3, easing: 'linear', properties: {} } },
+      { id: 'particle3', type: 'shape', content: '•', position: { x: 55, y: 88, z: 1.8 }, size: { width: 20, height: 20 }, style: { fontSize: 40, color: '#22d3ee', opacity: 0.35 }, animation: { name: 'float', type: 'custom', duration: 1.9, delay: 0.15, easing: 'linear', properties: {} } },
     ],
     animations: [],
     transition: null,

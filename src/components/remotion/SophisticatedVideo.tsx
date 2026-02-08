@@ -47,24 +47,42 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
     return null;
   }, [videoPlan, frame]);
   
-  // Calculate camera position with organic drift
-  // Even without cameraState, create subtle drift to show parallax effect
+  // Parallax should not make *every* preview drift.
+  // Only enable automatic drift when we actually intend to showcase / use parallax
+  // and there's no explicit camera path providing motion.
+  const planId = (videoPlan as any)?.id as string | undefined;
+  const rawParallaxConfig = (videoPlan.parallaxConfigData || (videoPlan as any).parallaxConfig) as
+    | Record<string, any>
+    | undefined;
+
+  const hasParallaxData = React.useMemo(() => {
+    return !!rawParallaxConfig && Object.keys(rawParallaxConfig).length > 0;
+  }, [rawParallaxConfig]);
+
+  const shouldAutoParallax = React.useMemo(() => {
+    return hasParallaxData || (typeof planId === 'string' && /parallax/i.test(planId));
+  }, [hasParallaxData, planId]);
+
+  const shouldAutoDrift = React.useMemo(() => {
+    // Drift is a fallback only: if we have a real camera path, don't add extra drift.
+    return shouldAutoParallax && !cameraState;
+  }, [shouldAutoParallax, cameraState]);
+
+  // Camera position: use real camera path when present; otherwise only drift for parallax demos/plans.
   const cameraPosition = React.useMemo(() => {
-    // Create organic camera drift using multiple sine waves for natural movement
-    const driftX = Math.sin(frame * 0.02) * 8 + Math.sin(frame * 0.007) * 5;
-    const driftY = Math.cos(frame * 0.015) * 6 + Math.cos(frame * 0.01) * 4;
-    
+    const driftX = shouldAutoDrift ? Math.sin(frame * 0.02) * 8 + Math.sin(frame * 0.007) * 5 : 0;
+    const driftY = shouldAutoDrift ? Math.cos(frame * 0.015) * 6 + Math.cos(frame * 0.01) * 4 : 0;
+
     if (cameraState) {
       return {
-        x: (cameraState.position?.x || 0) + driftX,
-        y: (cameraState.position?.y || 0) + driftY,
-        z: cameraState.position?.z || 100
+        x: cameraState.position?.x || 0,
+        y: cameraState.position?.y || 0,
+        z: cameraState.position?.z || 100,
       };
     }
-    
-    // Default drift even without camera state - enables parallax for all videos
+
     return { x: driftX, y: driftY, z: 100 };
-  }, [cameraState, frame]);
+  }, [cameraState, frame, shouldAutoDrift]);
   
   // Get color grading from serialized data OR live instance
   const colorGrade = React.useMemo(() => {
@@ -168,21 +186,23 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
           const layerConfig = parallaxConfig[parallaxKey] as Record<string, any> | undefined;
           
           // Calculate parallax based on z-position: lower z = slower movement (background), higher z = faster (foreground)
-          // This creates the depth illusion even without explicit parallaxConfig
+          // Only applied for plans that explicitly use/showcase parallax.
           const zDepth = element.position.z ?? 1;
+          const isParallaxActive = shouldAutoParallax;
+
           // Much stronger multipliers for visible parallax effect
           const autoMoveMultiplier = zDepth < 0.3 ? 0.15 : zDepth < 0.5 ? 0.3 : zDepth < 1 ? 0.6 : zDepth < 1.5 ? 1.2 : 2;
-          
+
           // Use explicit config if available, otherwise use auto-calculated based on z
           const moveMultiplier = layerConfig?.moveMultiplier ?? layerConfig?.speed ?? autoMoveMultiplier;
-          
-          // Calculate parallax offset using camera drift - stronger multiplier for visible motion
+
+          // Translate in *pixels* to avoid mixing units (scene positioning is in %)
           const parallaxOffset = {
-            x: cameraPosition.x * moveMultiplier * 0.4, // Increased from 0.15 to 0.4
-            y: cameraPosition.y * moveMultiplier * 0.4,
-            scale: layerConfig?.scale ?? 1,
-            blur: layerConfig?.blur ?? (zDepth < 0.3 ? 2 : 0), // stronger blur on far background
-            opacity: layerConfig?.opacity ?? 1
+            x: isParallaxActive ? -cameraPosition.x * moveMultiplier * 0.35 : 0,
+            y: isParallaxActive ? -cameraPosition.y * moveMultiplier * 0.35 : 0,
+            scale: isParallaxActive ? (layerConfig?.scale ?? 1) : 1,
+            blur: isParallaxActive ? (layerConfig?.blur ?? (zDepth < 0.3 ? 2 : 0)) : 0,
+            opacity: isParallaxActive ? (layerConfig?.opacity ?? 1) : 1,
           };
           
           // Get character path animation if exists
@@ -217,35 +237,90 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
           
           const animName = element.animation?.name || 'fadeIn';
           
+          const localFrame = Math.max(0, frame - animStartFrame);
+
           switch (animName) {
             case 'fadeIn':
               animOpacity = animProgress;
               break;
+
+            case 'springIn': {
+              const props = (element.animation?.properties || {}) as Record<string, any>;
+              const s = spring({
+                fps,
+                frame: localFrame,
+                durationInFrames: Math.max(1, Math.round(animDuration)),
+                config: {
+                  damping: props.damping ?? 14,
+                  stiffness: props.stiffness ?? 120,
+                  mass: props.mass ?? 0.9,
+                },
+              });
+
+              animOpacity = 1;
+              animScale = 0.6 + s * 0.4;
+              animTranslateY = interpolate(s, [0, 1], [36, 0], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
+              break;
+            }
+
+            case 'bounceIn':
+            case 'bounce': {
+              const props = (element.animation?.properties || {}) as Record<string, any>;
+              const s = spring({
+                fps,
+                frame: localFrame,
+                durationInFrames: Math.max(1, Math.round(animDuration)),
+                config: {
+                  damping: props.damping ?? 9,
+                  stiffness: props.stiffness ?? 140,
+                  mass: props.mass ?? 0.7,
+                },
+              });
+
+              animOpacity = 1;
+              const rawScale = 0.5 + s * 0.5; // allows overshoot when s > 1
+              animScale = Math.min(1.18, Math.max(0, rawScale));
+              animTranslateY = interpolate(s, [0, 1], [44, 0], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
+              break;
+            }
+
             case 'popIn':
             case 'scale':
             case 'zoomIn':
               animOpacity = animProgress;
               animScale = interpolate(animProgress, [0, 1], [0.7, 1], { extrapolateRight: 'clamp' });
               break;
+
             case 'slideUp':
               animOpacity = animProgress;
               animTranslateY = interpolate(animProgress, [0, 1], [30, 0], { extrapolateRight: 'clamp' });
               break;
+
             case 'slideIn':
               animOpacity = animProgress;
               animTranslateY = interpolate(animProgress, [0, 1], [-30, 0], { extrapolateRight: 'clamp' });
               break;
+
             case 'float':
               animOpacity = animProgress;
               animTranslateY = Math.sin(frame * 0.05) * 5;
               break;
+
             case 'pulse':
               animOpacity = 0.8 + Math.sin(frame * 0.1) * 0.2;
               animScale = 1 + Math.sin(frame * 0.08) * 0.03;
               break;
+
             case 'rotate':
               animOpacity = animProgress;
               break;
+
             default:
               animOpacity = animProgress;
           }
@@ -277,21 +352,23 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
               key={element.id}
               style={{
                 position: 'absolute',
-                left: `${elementX + parallaxOffset.x}%`,
-                top: `${elementY + parallaxOffset.y}%`,
+                left: `${elementX}%`,
+                top: `${elementY}%`,
                 width: sizeWidth,
                 height: sizeHeight,
                 transform: `
                   translate(-50%, -50%)
+                  translate3d(${parallaxOffset.x}px, ${parallaxOffset.y}px, 0px)
                   rotate(${elementRotation}deg)
                   scale(${elementScale * animScale * parallaxOffset.scale})
                   translateY(${animTranslateY}px)
                   ${kenBurnsTransform}
                 `.trim().replace(/\s+/g, ' '),
+                transformStyle: 'preserve-3d',
                 opacity: animOpacity * parallaxOffset.opacity,
                 filter: parallaxOffset.blur > 0 ? `blur(${parallaxOffset.blur}px)` : undefined,
-                zIndex: element.position.z,
-                transition: 'filter 0.3s ease'
+                zIndex: Math.round(((element.position.z ?? 0) as number) * 1000),
+                willChange: 'transform',
               }}
             >
               <ElementRenderer element={element} frame={frame} sceneProgress={sceneProgress} />
@@ -329,6 +406,7 @@ interface ElementRendererProps {
 }
 
 const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, sceneProgress }) => {
+  const { fps } = useVideoConfig();
   const baseStyle = element.style || {};
   
   switch (element.type) {
@@ -508,46 +586,80 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         />
       );
       
-    case '3d-card':
-      // Get 3D rotation values from style
-      const rotateY = baseStyle.rotateY || 0;
-      const rotateX = baseStyle.rotateX || 0;
-      
-      // Animate the rotation with spring physics
+    case '3d-card': {
+      const rotateY = typeof baseStyle.rotateY === 'number' ? baseStyle.rotateY : 0;
+      const rotateX = typeof baseStyle.rotateX === 'number' ? baseStyle.rotateX : 0;
+
+      // Stronger spring + preserve-3d context so the effect reads as *actually* 3D.
       const cardSpring = spring({
-        fps: 30,
+        fps,
         frame,
-        config: { damping: 20, stiffness: 80 },
+        config: { damping: 14, stiffness: 120, mass: 0.9 },
       });
-      
-      const animatedRotateY = interpolate(cardSpring, [0, 1], [rotateY * 2, rotateY]);
-      const animatedRotateX = interpolate(cardSpring, [0, 1], [rotateX * 2, rotateX]);
-      
+
+      const animatedRotateY = interpolate(cardSpring, [0, 1], [rotateY * 2.2, rotateY]);
+      const animatedRotateX = interpolate(cardSpring, [0, 1], [rotateX * 2.2, rotateX]);
+
+      // Light cue that shifts with rotation (helps the brain perceive depth)
+      const lightAlpha = interpolate(animatedRotateY, [-35, 35], [0.26, 0.06], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      });
+
+      const borderRadius = baseStyle.borderRadius || 20;
+
       return (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            background: baseStyle.background || 'linear-gradient(145deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.15) 100%)',
-            backdropFilter: baseStyle.backdropFilter || 'blur(20px)',
-            borderRadius: baseStyle.borderRadius || 20,
-            border: '1px solid rgba(255,255,255,0.15)',
-            boxShadow: '0 25px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-            padding: 24,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff',
-            fontSize: baseStyle.fontSize || 20,
-            fontWeight: 600,
-            fontFamily: 'Inter, system-ui, sans-serif',
-            transform: `perspective(1000px) rotateY(${animatedRotateY}deg) rotateX(${animatedRotateX}deg)`,
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {element.content}
+        <div style={{ width: '100%', height: '100%', perspective: '1200px', transformStyle: 'preserve-3d' }}>
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              position: 'relative',
+              background:
+                baseStyle.background ||
+                'linear-gradient(145deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.15) 100%)',
+              backdropFilter: baseStyle.backdropFilter || 'blur(20px)',
+              borderRadius,
+              border: '1px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 25px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+              padding: 24,
+              transform: `rotateY(${animatedRotateY}deg) rotateX(${animatedRotateX}deg)`,
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            {/* Moving specular highlight */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius,
+                background: `linear-gradient(135deg, rgba(255,255,255,${lightAlpha}) 0%, transparent 55%)`,
+                transform: 'translateZ(20px)',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {/* Lifted content plane */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: 'translateZ(36px)',
+                color: '#ffffff',
+                fontSize: baseStyle.fontSize || 20,
+                fontWeight: 600,
+                fontFamily: 'Inter, system-ui, sans-serif',
+              }}
+            >
+              {element.content}
+            </div>
+          </div>
         </div>
       );
+    }
       
     case 'code-editor':
       return (
