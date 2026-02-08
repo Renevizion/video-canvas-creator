@@ -246,13 +246,17 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
             kenBurnsTransform = `scale(${kbScale}) translateX(${kbX}%)`;
           }
           
-          // Element sizing
+          // Element sizing - be consistent: if either dimension > 100, treat both as pixels
+          const widthNum = typeof element.size.width === 'number' ? element.size.width : 100;
+          const heightNum = typeof element.size.height === 'number' ? element.size.height : 100;
+          const usePixels = widthNum > 100 || heightNum > 100;
+          
           const sizeWidth = typeof element.size.width === 'number' 
-            ? (element.size.width > 100 ? element.size.width : `${element.size.width}%`)
+            ? (usePixels ? `${element.size.width}px` : `${element.size.width}%`)
             : element.size.width;
           const sizeHeight = element.size.height 
             ? (typeof element.size.height === 'number' 
-              ? (element.size.height > 100 ? element.size.height : `${element.size.height}%`)
+              ? (usePixels ? `${element.size.height}px` : `${element.size.height}%`)
               : element.size.height)
             : 'auto';
           
@@ -393,10 +397,43 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
       );
       
     case 'shape':
-      const shapeType = element.content?.toLowerCase() || 'rect';
+      const shapeContent = element.content || '';
+      const shapeType = shapeContent.toLowerCase();
       const shapeColor = baseStyle.color || baseStyle.fill || baseStyle.background || '#3b82f6';
       
-      // Handle different shape types
+      // Check if content is emoji or text that should be displayed
+      const isEmoji = /^[\p{Emoji}]+$/u.test(shapeContent);
+      const isShortText = shapeContent.length > 0 && shapeContent.length <= 50 && !['circle', 'rect', 'triangle', 'star', 'hexagon', ''].includes(shapeType);
+      
+      if (isEmoji || isShortText) {
+        // Render as a styled container with text/emoji content
+        return (
+          <div
+            style={{
+              width: '100%',
+              height: '100%',
+              background: baseStyle.background || 'transparent',
+              borderRadius: baseStyle.borderRadius || 0,
+              border: baseStyle.border,
+              boxShadow: baseStyle.boxShadow,
+              backdropFilter: baseStyle.backdropFilter,
+              filter: baseStyle.filter,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: baseStyle.fontSize || 48,
+              fontWeight: baseStyle.fontWeight || 600,
+              color: baseStyle.color || 'white',
+              fontFamily: 'Inter, system-ui, sans-serif',
+              opacity: baseStyle.opacity ?? 1,
+            }}
+          >
+            {shapeContent}
+          </div>
+        );
+      }
+      
+      // Handle pure shape types
       if (shapeType === 'circle') {
         return (
           <div
@@ -442,7 +479,7 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         );
       }
       
-      // Default rectangle
+      // Default rectangle (including empty shapes for gradients/nebulas)
       return (
         <div
           style={{
@@ -452,30 +489,48 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
             borderRadius: baseStyle.borderRadius || 0,
             border: baseStyle.border,
             boxShadow: baseStyle.boxShadow,
-            backdropFilter: baseStyle.backdropFilter
+            backdropFilter: baseStyle.backdropFilter,
+            filter: baseStyle.filter,
+            opacity: baseStyle.opacity ?? 1,
           }}
         />
       );
       
     case '3d-card':
+      // Get 3D rotation values from style
+      const rotateY = baseStyle.rotateY || 0;
+      const rotateX = baseStyle.rotateX || 0;
+      
+      // Animate the rotation with spring physics
+      const cardSpring = spring({
+        fps: 30,
+        frame,
+        config: { damping: 20, stiffness: 80 },
+      });
+      
+      const animatedRotateY = interpolate(cardSpring, [0, 1], [rotateY * 2, rotateY]);
+      const animatedRotateX = interpolate(cardSpring, [0, 1], [rotateX * 2, rotateX]);
+      
       return (
         <div
           style={{
             width: '100%',
             height: '100%',
-            background: baseStyle.background || 'rgba(255,255,255,0.1)',
+            background: baseStyle.background || 'linear-gradient(145deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.15) 100%)',
             backdropFilter: baseStyle.backdropFilter || 'blur(20px)',
-            borderRadius: baseStyle.borderRadius || 16,
-            border: '1px solid rgba(255,255,255,0.2)',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-            padding: 20,
+            borderRadius: baseStyle.borderRadius || 20,
+            border: '1px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
+            padding: 24,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#ffffff',
-            fontSize: 16,
-            fontFamily: 'monospace',
-            whiteSpace: 'pre-wrap'
+            fontSize: baseStyle.fontSize || 20,
+            fontWeight: 600,
+            fontFamily: 'Inter, system-ui, sans-serif',
+            transform: `perspective(1000px) rotateY(${animatedRotateY}deg) rotateX(${animatedRotateX}deg)`,
+            transformStyle: 'preserve-3d',
           }}
         >
           {element.content}
@@ -605,6 +660,61 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
           colors={['#ffffff', '#3b82f6']}
           sceneFrame={frame}
         />
+      );
+
+    case 'audio-visualization':
+      // Inline audio visualization with animated bars
+      const vizType = baseStyle.visualizationType || 'bars';
+      const barCount = 32;
+      const vizColor = baseStyle.color || '#3b82f6';
+      
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            gap: 6,
+            padding: 20,
+          }}
+        >
+          {Array.from({ length: barCount }).map((_, i) => {
+            // Simulate audio reactivity with sine waves at different frequencies
+            const frequency = 0.05 + (i / barCount) * 0.12;
+            const phase = i * 0.3;
+            const amplitude = Math.sin(frame * frequency + phase) * 0.5 + 0.5;
+            
+            // Add spring-like entrance animation
+            const entranceDelay = i * 0.5;
+            const entranceProgress = interpolate(
+              frame - entranceDelay,
+              [0, 15],
+              [0, 1],
+              { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
+            );
+            
+            const barHeight = interpolate(amplitude, [0, 1], [15, 200]) * entranceProgress;
+            
+            // Color gradient based on position
+            const hue = interpolate(i, [0, barCount], [210, 280]);
+            
+            return (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  maxWidth: 20,
+                  height: barHeight,
+                  background: `linear-gradient(180deg, hsl(${hue}, 80%, 60%) 0%, hsl(${hue}, 70%, 45%) 100%)`,
+                  borderRadius: 4,
+                  boxShadow: `0 0 15px hsla(${hue}, 80%, 50%, 0.4)`,
+                }}
+              />
+            );
+          })}
+        </div>
       );
       
     case 'progress':
