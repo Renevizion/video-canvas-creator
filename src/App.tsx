@@ -12,6 +12,7 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Editor from "./pages/Editor";
 import AnimationShowcase from "./pages/AnimationShowcase";
+import ComponentShowcase from "./pages/ComponentShowcase";
 import TestVideo from "./pages/TestVideo";
 import Resources from "./pages/Resources";
 import VideoCreationWizard from "./pages/VideoCreationWizard";
@@ -36,7 +37,8 @@ const App = () => (
           <Route path="/projects" element={<Projects />} />
           <Route path="/project/:id" element={<ProjectDetail />} />
           <Route path="/editor/:id" element={<Editor />} />
-          <Route path="/showcase" element={<AnimationShowcase />} />
+          <Route path="/showcase" element={<ComponentShowcase />} />
+          <Route path="/animation-showcase" element={<AnimationShowcase />} />
           <Route path="/test-video" element={<TestVideo />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/wizard" element={<VideoCreationWizard />} />
