@@ -99,21 +99,21 @@ const phoneShowcasePlan: VideoPlan = {
   },
 };
 
-const dataVizShowcasePlan: VideoPlan = {
-  id: 'data-viz-showcase',
-  duration: 8,
+const barChartShowcasePlan: VideoPlan = {
+  id: 'bar-chart-showcase',
+  duration: 6,
   fps: 30,
   resolution: { width: 1920, height: 1080 },
   scenes: [{
     id: 'scene-1',
     startTime: 0,
-    duration: 8,
-    description: 'Data visualization showcase',
+    duration: 6,
+    description: 'Bar chart showcase',
     elements: [
       {
         id: 'title',
         type: 'text',
-        content: 'Data Visualizations',
+        content: 'Bar Chart',
         position: { x: 50, y: 12, z: 2 },
         size: { width: 600, height: 80 },
         style: { fontSize: 52, fontWeight: 800 },
@@ -143,6 +143,158 @@ const dataVizShowcasePlan: VideoPlan = {
   requiredAssets: [],
   style: {
     colorPalette: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+    typography: { primary: 'Inter', secondary: 'Inter', sizes: {} },
+    spacing: 16,
+    borderRadius: 16,
+  },
+};
+
+const lineChartShowcasePlan: VideoPlan = {
+  id: 'line-chart-showcase',
+  duration: 6,
+  fps: 30,
+  resolution: { width: 1920, height: 1080 },
+  scenes: [{
+    id: 'scene-1',
+    startTime: 0,
+    duration: 6,
+    description: 'Line chart showcase',
+    elements: [
+      {
+        id: 'title',
+        type: 'text',
+        content: 'Line Chart',
+        position: { x: 50, y: 12, z: 2 },
+        size: { width: 600, height: 80 },
+        style: { fontSize: 52, fontWeight: 800 },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, delay: 0, easing: 'ease-out', properties: {} },
+      },
+      {
+        id: 'line-chart',
+        type: 'data-viz',
+        content: 'line chart',
+        position: { x: 50, y: 55, z: 1 },
+        size: { width: 700, height: 400 },
+        style: { 
+          chartType: 'line',
+          data: [
+            { label: 'Week 1', value: 20 },
+            { label: 'Week 2', value: 35 },
+            { label: 'Week 3', value: 28 },
+            { label: 'Week 4', value: 55 },
+            { label: 'Week 5', value: 75 },
+            { label: 'Week 6', value: 92 },
+          ]
+        },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, delay: 0.2, easing: 'ease-out', properties: {} },
+      },
+    ],
+    animations: [],
+    transition: null,
+  }],
+  requiredAssets: [],
+  style: {
+    colorPalette: ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444'],
+    typography: { primary: 'Inter', secondary: 'Inter', sizes: {} },
+    spacing: 16,
+    borderRadius: 16,
+  },
+};
+
+const pieChartShowcasePlan: VideoPlan = {
+  id: 'pie-chart-showcase',
+  duration: 6,
+  fps: 30,
+  resolution: { width: 1920, height: 1080 },
+  scenes: [{
+    id: 'scene-1',
+    startTime: 0,
+    duration: 6,
+    description: 'Pie chart showcase',
+    elements: [
+      {
+        id: 'title',
+        type: 'text',
+        content: 'Pie Chart',
+        position: { x: 50, y: 12, z: 2 },
+        size: { width: 600, height: 80 },
+        style: { fontSize: 52, fontWeight: 800 },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, delay: 0, easing: 'ease-out', properties: {} },
+      },
+      {
+        id: 'pie-chart',
+        type: 'data-viz',
+        content: 'pie chart',
+        position: { x: 50, y: 55, z: 1 },
+        size: { width: 600, height: 400 },
+        style: { 
+          chartType: 'pie',
+          data: [
+            { label: 'Product A', value: 35 },
+            { label: 'Product B', value: 25 },
+            { label: 'Product C', value: 22 },
+            { label: 'Product D', value: 18 },
+          ]
+        },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, delay: 0.2, easing: 'ease-out', properties: {} },
+      },
+    ],
+    animations: [],
+    transition: null,
+  }],
+  requiredAssets: [],
+  style: {
+    colorPalette: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+    typography: { primary: 'Inter', secondary: 'Inter', sizes: {} },
+    spacing: 16,
+    borderRadius: 16,
+  },
+};
+
+const donutChartShowcasePlan: VideoPlan = {
+  id: 'donut-chart-showcase',
+  duration: 6,
+  fps: 30,
+  resolution: { width: 1920, height: 1080 },
+  scenes: [{
+    id: 'scene-1',
+    startTime: 0,
+    duration: 6,
+    description: 'Donut chart showcase',
+    elements: [
+      {
+        id: 'title',
+        type: 'text',
+        content: 'Donut Chart',
+        position: { x: 50, y: 12, z: 2 },
+        size: { width: 600, height: 80 },
+        style: { fontSize: 52, fontWeight: 800 },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, delay: 0, easing: 'ease-out', properties: {} },
+      },
+      {
+        id: 'donut-chart',
+        type: 'data-viz',
+        content: 'donut chart',
+        position: { x: 50, y: 55, z: 1 },
+        size: { width: 600, height: 400 },
+        style: { 
+          chartType: 'donut',
+          data: [
+            { label: 'Mobile', value: 45 },
+            { label: 'Desktop', value: 30 },
+            { label: 'Tablet', value: 15 },
+            { label: 'Other', value: 10 },
+          ]
+        },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, delay: 0.2, easing: 'ease-out', properties: {} },
+      },
+    ],
+    animations: [],
+    transition: null,
+  }],
+  requiredAssets: [],
+  style: {
+    colorPalette: ['#6366f1', '#22d3ee', '#a855f7', '#f472b6'],
     typography: { primary: 'Inter', secondary: 'Inter', sizes: {} },
     spacing: 16,
     borderRadius: 16,
@@ -551,7 +703,10 @@ interface ShowcaseItem {
 const SHOWCASES: ShowcaseItem[] = [
   // Elements
   { id: 'phone', name: 'Phone Mockups', description: 'Realistic iPhone/Android with animations', plan: phoneShowcasePlan, category: 'elements', tags: ['mockup', 'mobile', 'device'] },
-  { id: 'data-viz', name: 'Data Visualizations', description: 'Bar, line, pie, donut charts', plan: dataVizShowcasePlan, category: 'elements', tags: ['charts', 'data', 'analytics'] },
+  { id: 'bar-chart', name: 'Bar Chart', description: 'Animated bar chart with spring physics', plan: barChartShowcasePlan, category: 'elements', tags: ['charts', 'data', 'bar'] },
+  { id: 'line-chart', name: 'Line Chart', description: 'Animated line chart with path drawing', plan: lineChartShowcasePlan, category: 'elements', tags: ['charts', 'data', 'line'] },
+  { id: 'pie-chart', name: 'Pie Chart', description: 'Animated pie chart with segments', plan: pieChartShowcasePlan, category: 'elements', tags: ['charts', 'data', 'pie'] },
+  { id: 'donut-chart', name: 'Donut Chart', description: 'Animated donut chart with center value', plan: donutChartShowcasePlan, category: 'elements', tags: ['charts', 'data', 'donut'] },
   { id: 'code', name: 'Code Editor', description: 'Syntax highlighting with typing', plan: codeEditorShowcasePlan, category: 'elements', tags: ['code', 'developer', 'tech'] },
   { id: 'logos', name: 'Logo Grid', description: 'Animated partner/client logos', plan: logoGridShowcasePlan, category: 'elements', tags: ['logos', 'brands', 'partners'] },
   
