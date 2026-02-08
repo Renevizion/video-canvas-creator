@@ -170,17 +170,18 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
           // Calculate parallax based on z-position: lower z = slower movement (background), higher z = faster (foreground)
           // This creates the depth illusion even without explicit parallaxConfig
           const zDepth = element.position.z ?? 1;
-          const autoMoveMultiplier = zDepth < 0.5 ? 0.2 : zDepth < 1 ? 0.5 : zDepth < 1.5 ? 1 : 1.5;
+          // Much stronger multipliers for visible parallax effect
+          const autoMoveMultiplier = zDepth < 0.3 ? 0.15 : zDepth < 0.5 ? 0.3 : zDepth < 1 ? 0.6 : zDepth < 1.5 ? 1.2 : 2;
           
           // Use explicit config if available, otherwise use auto-calculated based on z
           const moveMultiplier = layerConfig?.moveMultiplier ?? layerConfig?.speed ?? autoMoveMultiplier;
           
-          // Calculate parallax offset using camera drift
+          // Calculate parallax offset using camera drift - stronger multiplier for visible motion
           const parallaxOffset = {
-            x: cameraPosition.x * moveMultiplier * 0.15,
-            y: cameraPosition.y * moveMultiplier * 0.15,
+            x: cameraPosition.x * moveMultiplier * 0.4, // Increased from 0.15 to 0.4
+            y: cameraPosition.y * moveMultiplier * 0.4,
             scale: layerConfig?.scale ?? 1,
-            blur: layerConfig?.blur ?? (zDepth < 0.3 ? 1 : 0), // slight blur on far background
+            blur: layerConfig?.blur ?? (zDepth < 0.3 ? 2 : 0), // stronger blur on far background
             opacity: layerConfig?.opacity ?? 1
           };
           
