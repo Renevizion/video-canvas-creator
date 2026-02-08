@@ -1303,76 +1303,104 @@ const DataScene: React.FC = () => (
   </AbsoluteFill>
 );
 
-// Scene 7: All Transitions Demo
+// Scene 7: Seamless Integration - No demo labels
 const TransitionsScene: React.FC = () => (
   <AbsoluteFill style={{
     background: MOBAJUMP_COLORS.dark,
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 40,
+    gap: 60,
   }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 10 }}>Fade</div>
+    <h2 style={{ 
+      fontSize: 48, 
+      fontWeight: 700, 
+      color: 'white',
+      fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      textAlign: 'center',
+    }}>
+      Seamless Updates
+    </h2>
+    
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 50 }}>
       <FadeBox startFrame={0} />
+      <SlideBox startFrame={15} />
+      <ScaleBox startFrame={30} />
+      <FlipCard startFrame={45} />
     </div>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 10 }}>Slide</div>
-      <SlideBox startFrame={0} />
-    </div>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 10 }}>Scale</div>
-      <ScaleBox startFrame={0} />
-    </div>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 10 }}>Flip</div>
-      <FlipCard startFrame={0} />
-    </div>
+    
+    <p style={{ 
+      fontSize: 28, 
+      color: '#888',
+      fontFamily: 'SF Pro Display, system-ui, sans-serif',
+    }}>
+      Push changes instantly to your users
+    </p>
   </AbsoluteFill>
 );
 
-// Scene 8: Physics Demo
+// Scene 8: Powerful Performance - No demo labels
 const PhysicsScene: React.FC = () => (
   <AbsoluteFill style={{
     background: `linear-gradient(180deg, #1A1A2E 0%, #16213E 100%)`,
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 100,
+    gap: 50,
   }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 30 }}>Spring Bounce</div>
+    <h2 style={{ 
+      fontSize: 48, 
+      fontWeight: 700, 
+      color: 'white',
+      fontFamily: 'SF Pro Display, system-ui, sans-serif',
+    }}>
+      Native Performance
+    </h2>
+    
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 80 }}>
       <SpringBounceBall startFrame={0} />
+      <ElasticStretch startFrame={20} />
+      <DepthRings startFrame={40} />
     </div>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 30 }}>Elastic</div>
-      <ElasticStretch startFrame={0} />
-    </div>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#888', fontSize: 14, marginBottom: 30 }}>Depth Rings</div>
-      <DepthRings startFrame={0} />
-    </div>
+    
+    <p style={{ 
+      fontSize: 28, 
+      color: '#888',
+      fontFamily: 'SF Pro Display, system-ui, sans-serif',
+    }}>
+      60fps animations, smooth scrolling, native gestures
+    </p>
   </AbsoluteFill>
 );
 
-// Scene 9: Parallax & Audio
+// Scene 9: Trusted by Developers - No demo labels
 const ParallaxAudioScene: React.FC = () => (
   <AbsoluteFill style={{
     background: MOBAJUMP_COLORS.cream,
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 80,
+    gap: 40,
   }}>
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>Parallax Depth</div>
-      <ParallaxLandscape startFrame={0} />
-    </div>
+    <h2 style={{ 
+      fontSize: 42, 
+      fontWeight: 700, 
+      color: MOBAJUMP_COLORS.dark,
+      fontFamily: 'SF Pro Display, system-ui, sans-serif',
+    }}>
+      Trusted by Developers
+    </h2>
     
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ color: '#666', fontSize: 14, marginBottom: 20 }}>Audio Waveform</div>
-      <Waveform startFrame={0} />
-      <LogoGrid startFrame={20} />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 60 }}>
+      <ParallaxLandscape startFrame={0} />
+      
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        <Waveform startFrame={0} />
+        <LogoGrid startFrame={20} />
+      </div>
     </div>
   </AbsoluteFill>
 );
