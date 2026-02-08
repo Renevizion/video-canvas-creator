@@ -1,55 +1,43 @@
 /**
- * ULTIMATE MEGA VIDEO - EVERY FEATURE COMBINED
+ * ULTIMATE MEGA VIDEO - Professional Commercial Version
  * 
- * This video uses ABSOLUTELY EVERYTHING:
- * ✅ Music Visualization (from showcase)
- * ✅ TikTok Captions (from showcase)
- * ✅ Screencast with code typing (from showcase)
- * ✅ Year in Review stats (from showcase)
- * ✅ Real audio visualization (NEW)
- * ✅ Professional color grading (NEW)
- * ✅ Film grain + vignette + bloom (NEW)
- * ✅ Vertical aspect ratio (NEW)
- * ✅ Phone mockup
- * ✅ Logo grid
- * ✅ Data visualization
- * ✅ Remotion transitions
- * 
- * YOU CAN RENDER THIS and it has EVERYTHING!
+ * Transformed from a component demo into a polished commercial
+ * with professional marketing copy and cinematic presentation.
  */
 
-import { AbsoluteFill, Sequence, staticFile, useCurrentFrame, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from 'remotion';
 import { linearTiming, TransitionSeries } from '@remotion/transitions';
 import { slide } from '@remotion/transitions/slide';
 import { wipe } from '@remotion/transitions/wipe';
 import { fade } from '@remotion/transitions/fade';
 
 // NEW features
-import { AudioVisualization } from '../elements/AudioVisualization';
 import { ResponsiveContainer } from '../elements/AspectRatioSupport';
 import { ColorGrading, FilmGrain, Vignette, Bloom } from '../elements/ColorGrading';
 
-// Original showcases
-import { MusicVisualization } from './MusicVisualization';
-import { CaptionsShowcase } from './CaptionsShowcase';
-import { ScreencastShowcase } from './ScreencastShowcase';
-import { YearInReview } from './YearInReview';
-import { CommunityPackagesShowcase } from './CommunityPackagesShowcase';
-
-// Other elements
+// Commercial elements
 import { PhoneMockup } from '../elements/PhoneMockup';
 import { LogoGrid } from '../elements/LogoGrid';
 import { DataVisualization } from '../elements/DataVisualization';
+import { CodeEditor } from '../elements/CodeEditor';
+
+// Brand colors for professional look
+const BRAND = {
+  primary: '#6366f1',
+  secondary: '#8b5cf6',
+  accent: '#22d3ee',
+  dark: '#0a0e17',
+  gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #22d3ee 100%)',
+};
 
 export const UltimateMegaVideo: React.FC = () => {
   return (
-    // Vertical format with professional color grading
-    <ResponsiveContainer aspectRatio="vertical" safeArea backgroundColor="#000">
+    <ResponsiveContainer aspectRatio="vertical" safeArea backgroundColor={BRAND.dark}>
       <ColorGrading preset="cinematic">
         <TransitionSeries>
-          {/* Scene 1: Title + Real Audio Viz (NEW) */}
+          {/* Scene 1: Hero Opening */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene1RealAudio />
+            <HeroScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -57,9 +45,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 20 })}
           />
 
-          {/* Scene 2: Music Visualization Showcase */}
+          {/* Scene 2: Problem Statement */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene2MusicShowcase />
+            <ProblemScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -67,9 +55,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 20 })}
           />
 
-          {/* Scene 3: TikTok Captions Showcase */}
+          {/* Scene 3: Solution Introduction */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene3CaptionsShowcase />
+            <SolutionScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -77,9 +65,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 15 })}
           />
 
-          {/* Scene 4: Screencast Showcase */}
+          {/* Scene 4: Developer Experience */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene4ScreencastShowcase />
+            <DeveloperScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -87,9 +75,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 20 })}
           />
 
-          {/* Scene 5: Year in Review Stats */}
+          {/* Scene 5: Performance Metrics */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene5YearInReview />
+            <MetricsScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -97,9 +85,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 20 })}
           />
 
-          {/* Scene 6: Community Packages (Transitions, Lottie, Fonts) */}
-          <TransitionSeries.Sequence durationInFrames={120}>
-            <Scene6CommunityPackages />
+          {/* Scene 6: Mobile Experience */}
+          <TransitionSeries.Sequence durationInFrames={90}>
+            <MobileScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -107,9 +95,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 20 })}
           />
 
-          {/* Scene 7: Phone Mockup */}
+          {/* Scene 7: Social Proof */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene7PhoneMockup />
+            <SocialProofScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -117,9 +105,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 15 })}
           />
 
-          {/* Scene 8: Logo Grid */}
+          {/* Scene 8: Growth Stats */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene8LogoGrid />
+            <GrowthScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -127,9 +115,9 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 20 })}
           />
 
-          {/* Scene 9: Data Visualization */}
+          {/* Scene 9: Features Grid */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene9DataViz />
+            <FeaturesScene />
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
@@ -137,300 +125,390 @@ export const UltimateMegaVideo: React.FC = () => {
             timing={linearTiming({ durationInFrames: 15 })}
           />
 
-          {/* Scene 10: Grand Finale */}
+          {/* Scene 10: Call to Action */}
           <TransitionSeries.Sequence durationInFrames={90}>
-            <Scene10Finale />
+            <CTAScene />
           </TransitionSeries.Sequence>
         </TransitionSeries>
 
-        {/* Professional effects on ENTIRE video */}
-        <FilmGrain intensity={0.15} />
-        <Vignette intensity={0.25} color="black" />
-        <Bloom intensity={0.2} />
+        {/* Professional cinematic effects */}
+        <FilmGrain intensity={0.12} />
+        <Vignette intensity={0.2} color="black" />
+        <Bloom intensity={0.15} />
       </ColorGrading>
     </ResponsiveContainer>
   );
 };
 
-/* Scene 1: NEW Real Audio Visualization */
-function Scene1RealAudio() {
+/* Scene 1: Hero Opening */
+function HeroScene() {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const titleScale = spring({ frame, fps, config: { damping: 15, stiffness: 100 } });
+  const subtitleOpacity = interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
-    <AbsoluteFill style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: 100,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          opacity: interpolate(frame, [0, 20], [0, 1]),
-        }}
-      >
-        <h1 style={{ color: 'white', fontSize: 64, fontWeight: 'bold', margin: 0 }}>
-          MEGA VIDEO
-        </h1>
-        <p style={{ color: '#3b82f6', fontSize: 32, marginTop: 16 }}>
-          Every Feature Combined
-        </p>
-      </div>
+    <AbsoluteFill style={{ 
+      background: `linear-gradient(180deg, ${BRAND.dark} 0%, #1a1a2e 100%)`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 60,
+    }}>
+      {/* Animated background glow */}
+      <div style={{
+        position: 'absolute',
+        width: 600,
+        height: 600,
+        background: `radial-gradient(circle, ${BRAND.primary}40 0%, transparent 70%)`,
+        filter: 'blur(80px)',
+        transform: `scale(${1 + Math.sin(frame * 0.05) * 0.1})`,
+      }} />
 
-      <div style={{ position: 'absolute', bottom: 200, left: 0, right: 0, height: 400 }}>
-        <AudioVisualization
-          audioSrc={staticFile('audio-sample.mp3')}
-          visualizationType="bars"
-          numberOfSamples={32}
-          color="#3b82f6"
-        />
-      </div>
+      <h1 style={{
+        color: 'white',
+        fontSize: 80,
+        fontWeight: 800,
+        textAlign: 'center',
+        margin: 0,
+        transform: `scale(${titleScale})`,
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+        letterSpacing: '-2px',
+      }}>
+        Build Faster
+      </h1>
 
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 100,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-          opacity: interpolate(frame, [40, 60], [0, 1]),
-        }}
-      >
-        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 24 }}>
-          🎵 Real Audio Visualization
-        </p>
+      <p style={{
+        color: BRAND.accent,
+        fontSize: 36,
+        fontWeight: 600,
+        marginTop: 20,
+        opacity: subtitleOpacity,
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Ship with confidence
+      </p>
+
+      <div style={{
+        position: 'absolute',
+        bottom: 120,
+        display: 'flex',
+        gap: 40,
+        opacity: interpolate(frame, [50, 70], [0, 1]),
+      }}>
+        {['10x Faster', 'Zero Config', 'Production Ready'].map((text, i) => (
+          <div key={i} style={{
+            background: 'rgba(255,255,255,0.1)',
+            padding: '16px 28px',
+            borderRadius: 50,
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+          }}>
+            <span style={{ color: 'white', fontSize: 20, fontWeight: 500 }}>{text}</span>
+          </div>
+        ))}
       </div>
     </AbsoluteFill>
   );
 }
 
-/* Scene 2: Music Visualization Showcase */
-function Scene2MusicShowcase() {
-  return (
-    <div style={{ width: 1080, height: 1920, position: 'relative', overflow: 'hidden' }}>
-      {/* Scale down the 1920x1080 composition to fit 1080x1920 vertical */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) scale(0.56)',
-          transformOrigin: 'center',
-        }}
-      >
-        <MusicVisualization />
-      </div>
+/* Scene 2: Problem Statement */
+function ProblemScene() {
+  const frame = useCurrentFrame();
 
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            background: 'rgba(0,0,0,0.7)',
-            padding: '16px 32px',
-            borderRadius: 50,
-          }}
-        >
-          <p style={{ color: 'white', fontSize: 28, margin: 0, fontWeight: 'bold' }}>
-            🎵 Music Visualization
-          </p>
-        </div>
+  const painPoints = [
+    'Endless configuration',
+    'Slow build times', 
+    'Complex deployments',
+  ];
+
+  return (
+    <AbsoluteFill style={{
+      background: 'linear-gradient(180deg, #1f1f2e 0%, #0f0f1a 100%)',
+      padding: 80,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+    }}>
+      <h2 style={{
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: 28,
+        fontWeight: 500,
+        marginBottom: 20,
+        opacity: interpolate(frame, [0, 15], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        SOUND FAMILIAR?
+      </h2>
+
+      <div style={{ marginTop: 40 }}>
+        {painPoints.map((point, i) => {
+          const delay = i * 15;
+          const opacity = interpolate(frame - delay, [10, 25], [0, 1], { extrapolateRight: 'clamp' });
+          const x = interpolate(frame - delay, [10, 25], [-50, 0], { extrapolateRight: 'clamp' });
+
+          return (
+            <div key={i} style={{
+              opacity,
+              transform: `translateX(${x}px)`,
+              marginBottom: 30,
+            }}>
+              <span style={{
+                color: '#ef4444',
+                fontSize: 52,
+                fontWeight: 700,
+                fontFamily: 'SF Pro Display, system-ui, sans-serif',
+              }}>
+                ✕ {point}
+              </span>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </AbsoluteFill>
   );
 }
 
-/* Scene 3: TikTok Captions Showcase */
-function Scene3CaptionsShowcase() {
+/* Scene 3: Solution Introduction */
+function SolutionScene() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const scale = spring({ frame: frame - 10, fps, config: { damping: 12, stiffness: 100 } });
+
   return (
-    <div style={{ width: 1080, height: 1920, position: 'relative', overflow: 'hidden' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) scale(0.56)',
-          transformOrigin: 'center',
-        }}
-      >
-        <CaptionsShowcase />
+    <AbsoluteFill style={{
+      background: `linear-gradient(180deg, ${BRAND.dark} 0%, #1a1a2e 100%)`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {/* Background gradient orbs */}
+      <div style={{
+        position: 'absolute',
+        width: 500,
+        height: 500,
+        background: `radial-gradient(circle, ${BRAND.primary}30 0%, transparent 70%)`,
+        filter: 'blur(100px)',
+        top: '20%',
+        left: '20%',
+      }} />
+      <div style={{
+        position: 'absolute',
+        width: 400,
+        height: 400,
+        background: `radial-gradient(circle, ${BRAND.secondary}30 0%, transparent 70%)`,
+        filter: 'blur(80px)',
+        bottom: '20%',
+        right: '20%',
+      }} />
+
+      <div style={{
+        transform: `scale(${Math.max(0, scale)})`,
+        textAlign: 'center',
+      }}>
+        <h2 style={{
+          color: 'white',
+          fontSize: 72,
+          fontWeight: 800,
+          margin: 0,
+          fontFamily: 'SF Pro Display, system-ui, sans-serif',
+        }}>
+          There's a
+        </h2>
+        <h2 style={{
+          background: BRAND.gradient,
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          fontSize: 72,
+          fontWeight: 800,
+          margin: 0,
+          fontFamily: 'SF Pro Display, system-ui, sans-serif',
+        }}>
+          better way
+        </h2>
       </div>
 
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            background: 'rgba(0,0,0,0.7)',
-            padding: '16px 32px',
-            borderRadius: 50,
-          }}
-        >
-          <p style={{ color: 'white', fontSize: 28, margin: 0, fontWeight: 'bold' }}>
-            💬 TikTok-Style Captions
-          </p>
-        </div>
-      </div>
-    </div>
+      <p style={{
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 28,
+        marginTop: 40,
+        opacity: interpolate(frame, [40, 60], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Modern tools for modern developers
+      </p>
+    </AbsoluteFill>
   );
 }
 
-/* Scene 4: Screencast Showcase */
-function Scene4ScreencastShowcase() {
-  return (
-    <div style={{ width: 1080, height: 1920, position: 'relative', overflow: 'hidden' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) scale(0.56)',
-          transformOrigin: 'center',
-        }}
-      >
-        <ScreencastShowcase />
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            background: 'rgba(0,0,0,0.7)',
-            padding: '16px 32px',
-            borderRadius: 50,
-          }}
-        >
-          <p style={{ color: 'white', fontSize: 28, margin: 0, fontWeight: 'bold' }}>
-            💻 Code Screencast
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Scene 5: Year in Review Stats */
-function Scene5YearInReview() {
-  return (
-    <div style={{ width: 1080, height: 1920, position: 'relative', overflow: 'hidden' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) scale(0.56)',
-          transformOrigin: 'center',
-        }}
-      >
-        <YearInReview />
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            background: 'rgba(0,0,0,0.7)',
-            padding: '16px 32px',
-            borderRadius: 50,
-          }}
-        >
-          <p style={{ color: 'white', fontSize: 28, margin: 0, fontWeight: 'bold' }}>
-            📊 Year in Review
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Scene 6: Community Packages (Transitions, Lottie, Fonts) */
-function Scene6CommunityPackages() {
-  return (
-    <div style={{ width: 1080, height: 1920, position: 'relative', overflow: 'hidden' }}>
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%) scale(0.56)',
-          transformOrigin: 'center',
-        }}
-      >
-        <CommunityPackagesShowcase />
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 60,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'inline-block',
-            background: 'rgba(0,0,0,0.7)',
-            padding: '16px 32px',
-            borderRadius: 50,
-          }}
-        >
-          <p style={{ color: 'white', fontSize: 28, margin: 0, fontWeight: 'bold' }}>
-            🎁 Community Packages
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* Scene 7: Phone Mockup */
-function Scene7PhoneMockup() {
+/* Scene 4: Developer Experience with Code */
+function DeveloperScene() {
   const frame = useCurrentFrame();
 
   return (
-    <AbsoluteFill
-      style={{
-        background: 'linear-gradient(180deg, #4338ca 0%, #2563eb 100%)',
+    <AbsoluteFill style={{
+      background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
+      padding: 60,
+      display: 'flex',
+      flexDirection: 'column',
+    }}>
+      <h2 style={{
+        color: 'white',
+        fontSize: 48,
+        fontWeight: 700,
+        marginBottom: 20,
+        opacity: interpolate(frame, [0, 20], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Developer First
+      </h2>
+      <p style={{
+        color: 'rgba(255,255,255,0.6)',
+        fontSize: 24,
+        marginBottom: 40,
+        opacity: interpolate(frame, [10, 30], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Write code that just works
+      </p>
+
+      <div style={{
+        flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-      }}
-    >
-      <div style={{ opacity: interpolate(frame, [0, 20], [0, 1]) }}>
+        opacity: interpolate(frame, [20, 40], [0, 1]),
+        transform: `translateY(${interpolate(frame, [20, 40], [30, 0])}px)`,
+      }}>
+        <CodeEditor
+          element={{
+            id: 'code',
+            type: 'code-editor',
+            content: '',
+            position: { x: 50, y: 50, z: 1 },
+            size: { width: 900, height: 500 },
+            style: {},
+          }}
+          style={{}}
+          colors={[BRAND.primary, BRAND.secondary]}
+          sceneFrame={frame}
+        />
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+/* Scene 5: Performance Metrics */
+function MetricsScene() {
+  const frame = useCurrentFrame();
+
+  const metrics = [
+    { value: '99.9%', label: 'Uptime' },
+    { value: '<50ms', label: 'Latency' },
+    { value: '10M+', label: 'Requests/day' },
+  ];
+
+  return (
+    <AbsoluteFill style={{
+      background: `linear-gradient(180deg, ${BRAND.dark} 0%, #1a1a2e 100%)`,
+      padding: 80,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      <h2 style={{
+        color: 'white',
+        fontSize: 52,
+        fontWeight: 700,
+        marginBottom: 80,
+        opacity: interpolate(frame, [0, 20], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Built for Scale
+      </h2>
+
+      <div style={{ display: 'flex', gap: 60 }}>
+        {metrics.map((metric, i) => {
+          const delay = i * 10;
+          const scale = interpolate(frame - delay, [15, 30], [0, 1], { extrapolateRight: 'clamp' });
+
+          return (
+            <div key={i} style={{
+              textAlign: 'center',
+              transform: `scale(${scale})`,
+            }}>
+              <div style={{
+                color: BRAND.accent,
+                fontSize: 72,
+                fontWeight: 800,
+                fontFamily: 'SF Pro Display, system-ui, sans-serif',
+              }}>
+                {metric.value}
+              </div>
+              <div style={{
+                color: 'rgba(255,255,255,0.6)',
+                fontSize: 24,
+                marginTop: 10,
+                fontFamily: 'SF Pro Display, system-ui, sans-serif',
+              }}>
+                {metric.label}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+/* Scene 6: Mobile Experience */
+function MobileScene() {
+  const frame = useCurrentFrame();
+
+  return (
+    <AbsoluteFill style={{
+      background: `linear-gradient(180deg, ${BRAND.primary} 0%, ${BRAND.secondary} 100%)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <div style={{
+        textAlign: 'center',
+        marginRight: 100,
+        opacity: interpolate(frame, [0, 25], [0, 1]),
+        transform: `translateX(${interpolate(frame, [0, 25], [-50, 0])}px)`,
+      }}>
+        <h2 style={{
+          color: 'white',
+          fontSize: 56,
+          fontWeight: 700,
+          margin: 0,
+          fontFamily: 'SF Pro Display, system-ui, sans-serif',
+        }}>
+          Mobile Native
+        </h2>
+        <p style={{
+          color: 'rgba(255,255,255,0.8)',
+          fontSize: 24,
+          marginTop: 20,
+          fontFamily: 'SF Pro Display, system-ui, sans-serif',
+        }}>
+          Seamless experience<br />across all devices
+        </p>
+      </div>
+
+      <div style={{
+        opacity: interpolate(frame, [15, 35], [0, 1]),
+        transform: `translateY(${interpolate(frame, [15, 35], [50, 0])}px)`,
+      }}>
         <PhoneMockup
           element={{
-            id: 'phone-demo',
+            id: 'phone',
             type: 'phone-mockup',
             content: '',
             position: { x: 50, y: 50, z: 1 },
@@ -438,74 +516,58 @@ function Scene7PhoneMockup() {
             style: { phoneType: 'iphone' },
           }}
           style={{}}
-          colors={['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7']}
+          colors={[BRAND.primary, BRAND.secondary, BRAND.accent]}
           sceneFrame={frame}
         />
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 100,
-          left: 0,
-          right: 0,
-          textAlign: 'center',
-        }}
-      >
-        <p style={{ color: 'white', fontSize: 32, fontWeight: 'bold', margin: 0 }}>
-          📱 iPhone Mockup
-        </p>
       </div>
     </AbsoluteFill>
   );
 }
 
-/* Scene 8: Logo Grid */
-function Scene8LogoGrid() {
+/* Scene 7: Social Proof */
+function SocialProofScene() {
   const frame = useCurrentFrame();
 
   const logos = [
-    { url: 'https://logo.clearbit.com/apple.com', name: 'Apple' },
-    { url: 'https://logo.clearbit.com/google.com', name: 'Google' },
-    { url: 'https://logo.clearbit.com/microsoft.com', name: 'Microsoft' },
-    { url: 'https://logo.clearbit.com/amazon.com', name: 'Amazon' },
+    { url: 'https://logo.clearbit.com/stripe.com', name: 'Stripe' },
+    { url: 'https://logo.clearbit.com/vercel.com', name: 'Vercel' },
+    { url: 'https://logo.clearbit.com/notion.so', name: 'Notion' },
+    { url: 'https://logo.clearbit.com/linear.app', name: 'Linear' },
   ];
 
   return (
-    <AbsoluteFill
-      style={{
-        background: 'linear-gradient(180deg, #059669 0%, #10b981 100%)',
-        padding: 60,
-      }}
-    >
-      <div
-        style={{
-          textAlign: 'center',
-          marginBottom: 60,
-          opacity: interpolate(frame, [0, 20], [0, 1]),
-        }}
-      >
-        <h2 style={{ color: 'white', fontSize: 56, fontWeight: 'bold', margin: 0 }}>
-          Trusted By
-        </h2>
-      </div>
+    <AbsoluteFill style={{
+      background: `linear-gradient(180deg, ${BRAND.dark} 0%, #1a1a2e 100%)`,
+      padding: 80,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <h2 style={{
+        color: 'rgba(255,255,255,0.5)',
+        fontSize: 24,
+        fontWeight: 500,
+        marginBottom: 60,
+        letterSpacing: 4,
+        opacity: interpolate(frame, [0, 20], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        TRUSTED BY INDUSTRY LEADERS
+      </h2>
 
       <div style={{ opacity: interpolate(frame, [20, 40], [0, 1]) }}>
         <LogoGrid
           element={{
-            id: 'logo-grid',
+            id: 'logos',
             type: 'logo-grid',
             content: '',
             position: { x: 50, y: 50, z: 1 },
-            size: { width: 600, height: 400 },
-            style: { 
-              logos: logos,
-              columns: 2,
-              animation: 'fade',
-            },
+            size: { width: 800, height: 200 },
+            style: { logos, columns: 4, animation: 'fade' },
           }}
           style={{}}
-          colors={['#059669', '#10b981']}
+          colors={[BRAND.primary, BRAND.secondary]}
           sceneFrame={frame}
         />
       </div>
@@ -513,52 +575,50 @@ function Scene8LogoGrid() {
   );
 }
 
-/* Scene 9: Data Visualization */
-function Scene9DataViz() {
+/* Scene 8: Growth Stats */
+function GrowthScene() {
   const frame = useCurrentFrame();
 
   return (
-    <AbsoluteFill
-      style={{
-        background: 'linear-gradient(180deg, #dc2626 0%, #f59e0b 100%)',
-        padding: 60,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          textAlign: 'center',
-          marginBottom: 40,
-          opacity: interpolate(frame, [0, 20], [0, 1]),
-        }}
-      >
-        <h2 style={{ color: 'white', fontSize: 56, fontWeight: 'bold', margin: 0 }}>
-          Performance
-        </h2>
-      </div>
+    <AbsoluteFill style={{
+      background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+      padding: 80,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <h2 style={{
+        color: 'white',
+        fontSize: 52,
+        fontWeight: 700,
+        marginBottom: 60,
+        opacity: interpolate(frame, [0, 20], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Explosive Growth
+      </h2>
 
       <div style={{ opacity: interpolate(frame, [20, 40], [0, 1]) }}>
         <DataVisualization
           element={{
-            id: 'data-viz',
+            id: 'chart',
             type: 'data-viz',
             content: '',
             position: { x: 50, y: 50, z: 1 },
-            size: { width: 600, height: 400 },
+            size: { width: 700, height: 400 },
             style: {
               chartType: 'bar',
               data: [
-                { label: 'Q1', value: 45 },
-                { label: 'Q2', value: 67 },
-                { label: 'Q3', value: 82 },
-                { label: 'Q4', value: 93 },
+                { label: '2021', value: 25 },
+                { label: '2022', value: 48 },
+                { label: '2023', value: 72 },
+                { label: '2024', value: 95 },
               ],
             },
           }}
           style={{}}
-          colors={['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b']}
+          colors={['#ffffff', '#34d399']}
           sceneFrame={frame}
         />
       </div>
@@ -566,105 +626,143 @@ function Scene9DataViz() {
   );
 }
 
-/* Scene 10: Grand Finale */
-function Scene10Finale() {
+/* Scene 9: Features Grid */
+function FeaturesScene() {
   const frame = useCurrentFrame();
 
   const features = [
-    '🎵 Audio Viz',
-    '💬 Captions',
-    '💻 Screencast',
-    '📊 Stats',
-    '🎁 Community',
-    '📱 Mockups',
-    '🎨 Grading',
-    '✨ Effects',
-    '🎬 Transitions',
+    { icon: '⚡', title: 'Lightning Fast' },
+    { icon: '🔒', title: 'Enterprise Security' },
+    { icon: '🌍', title: 'Global CDN' },
+    { icon: '🔄', title: 'Auto Scaling' },
+    { icon: '📊', title: 'Real-time Analytics' },
+    { icon: '🛠️', title: 'Developer Tools' },
   ];
 
   return (
-    <AbsoluteFill
-      style={{
-        background: 'linear-gradient(180deg, #7c3aed 0%, #ec4899 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 60,
-      }}
-    >
-      <h1
-        style={{
-          color: 'white',
-          fontSize: 72,
-          fontWeight: 'bold',
-          textAlign: 'center',
-          marginBottom: 60,
-          opacity: interpolate(frame, [0, 20], [0, 1]),
-        }}
-      >
-        All Features
-        <br />
-        In One Video
-      </h1>
+    <AbsoluteFill style={{
+      background: `linear-gradient(180deg, ${BRAND.dark} 0%, #1a1a2e 100%)`,
+      padding: 60,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      <h2 style={{
+        color: 'white',
+        fontSize: 48,
+        fontWeight: 700,
+        marginBottom: 60,
+        opacity: interpolate(frame, [0, 20], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Everything You Need
+      </h2>
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 20,
-          marginBottom: 60,
-        }}
-      >
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
+        gap: 30,
+      }}>
         {features.map((feature, i) => {
-          const delay = i * 5;
-          const scale = interpolate(frame - delay - 20, [0, 10], [0, 1], {
-            extrapolateRight: 'clamp',
-          });
+          const delay = i * 8;
+          const scale = interpolate(frame - delay, [15, 28], [0, 1], { extrapolateRight: 'clamp' });
 
           return (
-            <div
-              key={i}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                padding: '20px 30px',
-                borderRadius: 20,
-                transform: `scale(${scale})`,
-                backdropFilter: 'blur(10px)',
-              }}
-            >
-              <p
-                style={{
-                  color: 'white',
-                  fontSize: 28,
-                  fontWeight: 'bold',
-                  margin: 0,
-                  textAlign: 'center',
-                }}
-              >
-                {feature}
-              </p>
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 20,
+              padding: '30px 40px',
+              textAlign: 'center',
+              transform: `scale(${scale})`,
+              backdropFilter: 'blur(10px)',
+            }}>
+              <div style={{ fontSize: 40, marginBottom: 15 }}>{feature.icon}</div>
+              <div style={{
+                color: 'white',
+                fontSize: 20,
+                fontWeight: 600,
+                fontFamily: 'SF Pro Display, system-ui, sans-serif',
+              }}>
+                {feature.title}
+              </div>
             </div>
           );
         })}
       </div>
+    </AbsoluteFill>
+  );
+}
 
-      <div
-        style={{
-          opacity: interpolate(frame, [60, 75], [0, 1]),
-        }}
-      >
-        <div
-          style={{
-            background: 'white',
-            color: '#7c3aed',
-            padding: '24px 60px',
-            borderRadius: 50,
-            fontSize: 36,
-            fontWeight: 'bold',
-          }}
-        >
-          Ready to Use! 🚀
+/* Scene 10: Call to Action */
+function CTAScene() {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const buttonScale = spring({ frame: frame - 30, fps, config: { damping: 10, stiffness: 100 } });
+
+  return (
+    <AbsoluteFill style={{
+      background: `linear-gradient(180deg, ${BRAND.primary} 0%, ${BRAND.secondary} 100%)`,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {/* Floating particles */}
+      {[...Array(6)].map((_, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          width: 8 + i * 4,
+          height: 8 + i * 4,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.3)',
+          left: `${15 + i * 15}%`,
+          top: `${20 + Math.sin(frame * 0.03 + i) * 10}%`,
+          transform: `translateY(${Math.sin(frame * 0.05 + i * 0.5) * 20}px)`,
+        }} />
+      ))}
+
+      <h1 style={{
+        color: 'white',
+        fontSize: 72,
+        fontWeight: 800,
+        textAlign: 'center',
+        margin: 0,
+        opacity: interpolate(frame, [0, 25], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Start Building
+        <br />
+        Today
+      </h1>
+
+      <p style={{
+        color: 'rgba(255,255,255,0.8)',
+        fontSize: 28,
+        marginTop: 30,
+        marginBottom: 50,
+        opacity: interpolate(frame, [15, 35], [0, 1]),
+        fontFamily: 'SF Pro Display, system-ui, sans-serif',
+      }}>
+        Join thousands of developers worldwide
+      </p>
+
+      <div style={{
+        transform: `scale(${Math.max(0, buttonScale)})`,
+      }}>
+        <div style={{
+          background: 'white',
+          color: BRAND.primary,
+          padding: '24px 80px',
+          borderRadius: 60,
+          fontSize: 32,
+          fontWeight: 700,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          fontFamily: 'SF Pro Display, system-ui, sans-serif',
+        }}>
+          Get Started Free →
         </div>
       </div>
     </AbsoluteFill>
