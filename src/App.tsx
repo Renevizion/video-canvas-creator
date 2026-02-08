@@ -16,6 +16,7 @@ import TestVideo from "./pages/TestVideo";
 import Resources from "./pages/Resources";
 import VideoCreationWizard from "./pages/VideoCreationWizard";
 import SimpleVideoCreator from "./pages/SimpleVideoCreator";
+import UltimateShowcase from "./pages/UltimateShowcase";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/resources" element={<Resources />} />
           <Route path="/wizard" element={<VideoCreationWizard />} />
           <Route path="/simple-create" element={<SimpleVideoCreator />} />
+          <Route path="/ultimate-showcase" element={<UltimateShowcase />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

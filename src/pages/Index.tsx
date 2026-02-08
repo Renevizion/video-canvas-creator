@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Plus, Video, Sparkles, TrendingUp } from 'lucide-react';
+import { Plus, Video, Sparkles, TrendingUp, Layers, Zap } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { ProjectCard } from '@/components/dashboard/ProjectCard';
 import { Button } from '@/components/ui/button';
@@ -35,10 +35,46 @@ const Index = () => {
               Describe your video or paste a website URL. AI extracts your brand and generates professional motion graphics.
             </p>
 
-            <Button size="lg" onClick={() => navigate('/create')} className="gap-2">
-              <Plus className="w-5 h-5" />
-              Create Video
-            </Button>
+            <div className="flex items-center justify-center gap-4">
+              <Button size="lg" onClick={() => navigate('/create')} className="gap-2">
+                <Plus className="w-5 h-5" />
+                Create Video
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => navigate('/ultimate-showcase')} className="gap-2 border-primary/50 hover:bg-primary/10">
+                <Zap className="w-5 h-5 text-primary" />
+                See All Capabilities
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Showcase Banner */}
+      <section className="px-4 pb-8">
+        <div className="container mx-auto max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onClick={() => navigate('/ultimate-showcase')}
+            className="glass-card p-6 cursor-pointer group hover:border-primary/50 transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                  <Layers className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                    Ultimate Showcase
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Explore 12+ components, 20+ animations, 50+ styles, and more
+                  </p>
+                </div>
+              </div>
+              <Sparkles className="w-6 h-6 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           </motion.div>
         </div>
       </section>

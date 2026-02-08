@@ -85,10 +85,10 @@ describe("Video Generation Randomization", () => {
     video.scenes.forEach((scene) => {
       scene.elements.forEach((element) => {
         if (element.style?.color) {
-          colors.add(element.style.color);
+          colors.add(String(element.style.color));
         }
         if (element.style?.fill) {
-          colors.add(element.style.fill);
+          colors.add(String(element.style.fill));
         }
       });
     });
