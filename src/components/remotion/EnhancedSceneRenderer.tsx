@@ -86,21 +86,22 @@ const EnhancedElement: React.FC<{
 }> = ({ element, index, frame, fps, sceneType }) => {
   const delay = element.animation?.delay || 0;
   const delayFrames = Math.floor(delay * fps);
+  const elType = element.type as string;
   
   // Determine element type and render appropriately
-  if (element.type === 'emoji' || element.type === 'icon') {
+  if (elType === 'emoji' || elType === 'icon') {
     return <AnimatedEmoji element={element} frame={frame} fps={fps} delayFrames={delayFrames} />;
   }
   
-  if (element.type === 'text' || element.type === 'heading' || element.type === 'title') {
+  if (elType === 'text' || elType === 'heading' || elType === 'title') {
     return <AnimatedText element={element} frame={frame} fps={fps} delayFrames={delayFrames} index={index} />;
   }
   
-  if (element.type === 'cta-button' || element.type === 'button') {
+  if (elType === 'cta-button' || elType === 'button') {
     return <AnimatedButton element={element} frame={frame} fps={fps} delayFrames={delayFrames} />;
   }
   
-  if (element.type === 'list-item') {
+  if (elType === 'list-item') {
     return <AnimatedListItem element={element} frame={frame} fps={fps} delayFrames={delayFrames} index={index} />;
   }
   
@@ -130,13 +131,13 @@ const AnimatedEmoji: React.FC<{
   
   // Optional glow effect for special emojis
   const hasGlow = element.style?.glow || element.content?.includes('💡') || element.content?.includes('🚀');
-  const glowColor = element.style?.glowColor || '#ffd700';
+  const glowColor = String(element.style?.glowColor || '#ffd700');
   
   return (
     <div
       style={{
-        fontSize: element.style?.fontSize || 120,
-        marginBottom: element.style?.marginBottom || 30,
+        fontSize: Number(element.style?.fontSize) || 120,
+        marginBottom: Number(element.style?.marginBottom) || 30,
         transform: `scale(${scale})`,
         filter: hasGlow ? `drop-shadow(0 0 30px ${glowColor})` : undefined,
         ...getPositionStyle(element)
@@ -168,8 +169,10 @@ const AnimatedText: React.FC<{
     }
   );
   
+  const elType = element.type as string;
+  
   // Optional slide animation for headlines
-  const slideY = element.type === 'heading' ? interpolate(
+  const slideY = elType === 'heading' ? interpolate(
     frame,
     [delayFrames, delayFrames + 20],
     [10, 0],
@@ -177,26 +180,27 @@ const AnimatedText: React.FC<{
   ) : 0;
   
   // Determine text styling based on type
-  const isHeadline = element.type === 'heading' || element.type === 'title' || element.style?.fontWeight > 700;
-  const isBody = element.type === 'text' || element.type === 'body';
+  const fontWeightNum = Number(element.style?.fontWeight) || 500;
+  const isHeadline = elType === 'heading' || elType === 'title' || fontWeightNum > 700;
+  const isBody = elType === 'text' || elType === 'body';
   const isQuote = element.content?.includes('"') || element.content?.includes('"');
   
-  let fontSize = element.style?.fontSize || 36;
-  let fontWeight = element.style?.fontWeight || 500;
-  let color = element.style?.color || '#fff';
-  let marginBottom = element.style?.marginBottom || 20;
+  let fontSize: number = Number(element.style?.fontSize) || 36;
+  let fontWeight: number = fontWeightNum;
+  let color: string = String(element.style?.color || '#fff');
+  let marginBottom: number = Number(element.style?.marginBottom) || 20;
   
   if (isHeadline) {
-    fontSize = element.style?.fontSize || 56;
-    fontWeight = element.style?.fontWeight || 800;
+    fontSize = Number(element.style?.fontSize) || 56;
+    fontWeight = Number(element.style?.fontWeight) || 800;
     marginBottom = 20;
   } else if (isBody) {
-    fontSize = element.style?.fontSize || 36;
+    fontSize = Number(element.style?.fontSize) || 36;
     fontWeight = 500;
   } else if (isQuote) {
-    fontSize = element.style?.fontSize || 32;
+    fontSize = Number(element.style?.fontSize) || 32;
     fontWeight = 400;
-    color = element.style?.color || '#ff6b6b';
+    color = String(element.style?.color || '#ff6b6b');
   }
   
   return (
@@ -207,9 +211,9 @@ const AnimatedText: React.FC<{
         fontWeight,
         textAlign: 'center',
         marginBottom,
-        fontFamily: element.style?.fontFamily || 'Arial, sans-serif',
+        fontFamily: String(element.style?.fontFamily || 'Arial, sans-serif'),
         lineHeight: '1.4',
-        maxWidth: element.style?.maxWidth || '800px',
+        maxWidth: Number(element.style?.maxWidth) || 800,
         opacity,
         transform: `translateY(${slideY}px)`,
         textShadow: isHeadline ? '2px 2px 4px rgba(0,0,0,0.3)' : undefined,
@@ -244,12 +248,12 @@ const AnimatedButton: React.FC<{
   return (
     <div
       style={{
-        background: element.style?.background || '#fff',
-        color: element.style?.color || '#764ba2',
-        fontSize: element.style?.fontSize || 40,
-        fontWeight: element.style?.fontWeight || 700,
-        padding: element.style?.padding || '25px 60px',
-        borderRadius: element.style?.borderRadius || '50px',
+        background: String(element.style?.background || '#fff'),
+        color: String(element.style?.color || '#764ba2'),
+        fontSize: Number(element.style?.fontSize) || 40,
+        fontWeight: Number(element.style?.fontWeight) || 700,
+        padding: String(element.style?.padding || '25px 60px'),
+        borderRadius: Number(element.style?.borderRadius) || 50,
         fontFamily: 'Arial, sans-serif',
         transform: `scale(${scale})`,
         boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
@@ -302,20 +306,20 @@ const AnimatedListItem: React.FC<{
         gap: '20px',
         opacity,
         transform: `translateX(${translateX}px)`,
-        marginBottom: element.style?.marginBottom || 30,
+        marginBottom: Number(element.style?.marginBottom) || 30,
         ...getPositionStyle(element)
       }}
     >
       {icon && (
-        <span style={{ fontSize: element.style?.iconSize || 48 }}>
+        <span style={{ fontSize: Number(element.style?.iconSize) || 48 }}>
           {icon}
         </span>
       )}
       {text && (
         <span
           style={{
-            color: element.style?.color || '#dfe6e9',
-            fontSize: element.style?.fontSize || 36,
+            color: String(element.style?.color || '#dfe6e9'),
+            fontSize: Number(element.style?.fontSize) || 36,
             fontFamily: 'Arial, sans-serif'
           }}
         >
@@ -330,17 +334,20 @@ const AnimatedListItem: React.FC<{
  * Get scene background styling (gradients, colors)
  */
 function getSceneBackground(scene: PlannedScene, style?: any): React.CSSProperties {
+  // Check for style in passed prop or scene description
+  const sceneStyle = style || (scene as any).style;
+  
   // Check for gradient in scene description or style
-  if (scene.style?.background?.includes('gradient') || scene.style?.gradient) {
+  if (sceneStyle?.background?.includes?.('gradient') || sceneStyle?.gradient) {
     return {
-      background: scene.style.background || scene.style.gradient
+      background: String(sceneStyle.background || sceneStyle.gradient)
     };
   }
   
   // Check for solid color
-  if (scene.style?.background || scene.style?.backgroundColor) {
+  if (sceneStyle?.background || sceneStyle?.backgroundColor) {
     return {
-      backgroundColor: scene.style.background || scene.style.backgroundColor
+      backgroundColor: String(sceneStyle.background || sceneStyle.backgroundColor)
     };
   }
   
