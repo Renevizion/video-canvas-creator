@@ -48,18 +48,22 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
   }, [videoPlan, frame]);
   
   // Calculate camera position with organic drift
+  // Even without cameraState, create subtle drift to show parallax effect
   const cameraPosition = React.useMemo(() => {
-    if (!cameraState) return { x: 0, y: 0, z: 100 };
+    // Create organic camera drift using multiple sine waves for natural movement
+    const driftX = Math.sin(frame * 0.02) * 8 + Math.sin(frame * 0.007) * 5;
+    const driftY = Math.cos(frame * 0.015) * 6 + Math.cos(frame * 0.01) * 4;
     
-    // Add subtle organic drift
-    const driftX = Math.sin(frame * 0.02) * 3;
-    const driftY = Math.cos(frame * 0.015) * 2;
+    if (cameraState) {
+      return {
+        x: (cameraState.position?.x || 0) + driftX,
+        y: (cameraState.position?.y || 0) + driftY,
+        z: cameraState.position?.z || 100
+      };
+    }
     
-    return {
-      x: (cameraState.position?.x || 0) + driftX,
-      y: (cameraState.position?.y || 0) + driftY,
-      z: cameraState.position?.z || 100
-    };
+    // Default drift even without camera state - enables parallax for all videos
+    return { x: driftX, y: driftY, z: 100 };
   }, [cameraState, frame]);
   
   // Get color grading from serialized data OR live instance
@@ -163,15 +167,22 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
           const parallaxKey = getParallaxKey(element.type);
           const layerConfig = parallaxConfig[parallaxKey] as Record<string, any> | undefined;
           
-          // Calculate parallax offset - handle both ParallaxConfig and serialized format
-          const moveMultiplier = layerConfig?.moveMultiplier ?? layerConfig?.speed ?? 1;
-          const parallaxOffset = layerConfig ? {
-            x: cameraPosition.x * moveMultiplier * 0.1,
-            y: cameraPosition.y * moveMultiplier * 0.1,
-            scale: layerConfig.scale ?? 1,
-            blur: layerConfig.blur ?? 0,
-            opacity: layerConfig.opacity ?? 1
-          } : { x: 0, y: 0, scale: 1, blur: 0, opacity: 1 };
+          // Calculate parallax based on z-position: lower z = slower movement (background), higher z = faster (foreground)
+          // This creates the depth illusion even without explicit parallaxConfig
+          const zDepth = element.position.z ?? 1;
+          const autoMoveMultiplier = zDepth < 0.5 ? 0.2 : zDepth < 1 ? 0.5 : zDepth < 1.5 ? 1 : 1.5;
+          
+          // Use explicit config if available, otherwise use auto-calculated based on z
+          const moveMultiplier = layerConfig?.moveMultiplier ?? layerConfig?.speed ?? autoMoveMultiplier;
+          
+          // Calculate parallax offset using camera drift
+          const parallaxOffset = {
+            x: cameraPosition.x * moveMultiplier * 0.15,
+            y: cameraPosition.y * moveMultiplier * 0.15,
+            scale: layerConfig?.scale ?? 1,
+            blur: layerConfig?.blur ?? (zDepth < 0.3 ? 1 : 0), // slight blur on far background
+            opacity: layerConfig?.opacity ?? 1
+          };
           
           // Get character path animation if exists
           const pathId = `${currentScene.id}-${element.id}`;
