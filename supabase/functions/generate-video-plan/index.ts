@@ -584,56 +584,37 @@ function enhanceWithSophisticatedMetadata(plan: any) {
   const fps = 30;
   const totalFrames = plan.duration * fps;
   
-  // Generate camera path keyframes
-  const cameraKeyframes = generateCameraKeyframes(plan, totalFrames);
-  
-  // Generate color grading keyframes
+  // Generate subtle color grading only — no camera rotation, no parallax, no random paths.
+  // Those features caused generated videos to "twist everywhere" and drift uncontrollably.
   const colorKeyframes = generateColorKeyframes(plan, totalFrames);
   
-  // Generate parallax configuration
-  const parallaxConfig = generateParallaxConfig();
-  
-  // Generate character paths for moving elements
-  const characterPaths = generateCharacterPaths(plan, fps);
-  
-  // Add sophisticated metadata
   plan.sophisticatedMetadata = {
     productionGrade: 'PROFESSIONAL',
     qualityScore: 92,
-    usesOrbitalCamera: true,
-    usesForwardTracking: true,
-    usesCurvedPaths: true,
-    usesParallax: true,
+    usesOrbitalCamera: false,
+    usesForwardTracking: false,
+    usesCurvedPaths: false,
+    usesParallax: false,
     usesColorGrading: true,
     appliedFeatures: [
-      'Advanced Camera System (Orbital + Forward Tracking)',
-      'Curved Bézier Path Animations',
-      '6-Layer Parallax Depth System',
       'Dynamic Color Grading with Mood Presets'
     ],
     processingInfo: {
       generatedAt: new Date().toISOString(),
-      generator: 'sophisticated-edge-function-v2'
+      generator: 'sophisticated-edge-function-v3'
     }
   };
   
-  // Add camera path data (serializable format)
-  plan.cameraPathData = {
-    keyframes: cameraKeyframes,
-    type: 'orbital-forward'
-  };
-  
-  // Add color grading data (serializable format)
+  // Color grading only — subtle and non-disorienting
   plan.colorGradingData = {
     keyframes: colorKeyframes,
     mood: detectMood(plan)
   };
   
-  // Add parallax config
-  plan.parallaxConfigData = parallaxConfig;
-  
-  // Add character paths data
-  plan.characterPathsData = characterPaths;
+  // Explicitly do NOT add these — they cause twisting/drifting:
+  // plan.cameraPathData   (orbital rotation = twisting)
+  // plan.parallaxConfigData (auto-drift on all elements)
+  // plan.characterPathsData (random bezier movement)
   
   return plan;
 }
