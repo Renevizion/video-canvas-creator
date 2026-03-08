@@ -243,7 +243,29 @@ IMPORTANT: The description in requiredAssets controls AI image generation. Be SP
   ✅ Background: "Deep space scene with large detailed moon surface filling lower third, dense starfield, nebula glow, NO spacecraft"
   ✅ Foreground: "Isolated sleek spacecraft on clean black background, side profile, engine glow, suitable for compositing"
   ❌ Background: "Spacecraft flying over the moon" (this bakes the subject into the background!)
-` : 'Image generation is disabled. Use geometric shapes, text, and the advanced element types listed above.'}
+
+FOREGROUND COMPOSITING HINTS:
+- For foreground/subject images, add "objectFit": "contain" in the style so the subject isn't cropped into a square
+- For subjects on dark/black backgrounds, add "mixBlendMode": "screen" in the style to blend away the black background
+- For subjects on clean backgrounds, add "mixBlendMode": "normal" (default)
+- Example foreground element style: { "objectFit": "contain", "mixBlendMode": "screen", "filter": "drop-shadow(0 0 20px rgba(255,255,255,0.3))" }
+- Background/environment images should use "objectFit": "cover" (default) to fill the frame
+` : `Image generation is DISABLED. You MUST build ALL visuals using code-rendered elements only.
+DO NOT use type: "image" with description text. Instead, BUILD visuals from shapes and gradients:
+
+CODE-RENDERED VISUAL TECHNIQUES:
+1. CELESTIAL BODIES (moon, sun, planets):
+   { "type": "shape", "content": "circle", "style": { "background": "radial-gradient(circle at 35% 35%, #e8e8e8, #999999 40%, #555555 70%, #333333)", "boxShadow": "0 0 60px rgba(200,200,200,0.3), inset -20px -20px 40px rgba(0,0,0,0.5)" } }
+   Add crater details with additional smaller circles at different positions.
+
+2. STARFIELDS: Multiple small circles (width: 2-4px) scattered at different positions with "pulse" animation and varying opacity
+3. NEBULAS/SPACE: Shapes with "background": "radial-gradient(ellipse at center, rgba(100,50,200,0.4), transparent 70%)"
+4. VEHICLES/OBJECTS: Build from layered shapes - body (rounded rect), wings (triangles), engine glow (circle with radial gradient and blur)
+5. ENVIRONMENTS: Full-screen shapes with multi-stop linear/radial gradients
+6. LIGHT EFFECTS: Circles with very low opacity, large blur via "filter": "blur(30px)", and glow via boxShadow
+
+Build LAYERED compositions: background gradient (z:0) → environment details (z:1) → subject shapes (z:2) → text (z:3) → foreground effects (z:4)
+Every visual should be a "shape" element with creative CSS gradients, shadows, and filters. NO "image" type elements.`}
 
 📐 SCENE STRUCTURE (EXAMPLE):
 {
