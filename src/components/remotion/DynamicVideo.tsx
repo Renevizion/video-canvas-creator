@@ -1063,6 +1063,16 @@ const ElementRenderer: React.FC<{
     );
   }
 
+  // Filter out semantic labels that shouldn't be rendered as visible text
+  const SEMANTIC_LABELS = new Set(['background', 'rect', 'circle', 'triangle', 'star', 'polygon', 'hexagon', 'square', 'dot', 'shape', 'container', 'wrapper', 'overlay', 'spacer', 'divider', 'bg', 'fg']);
+  const contentLower = (element.content || '').toLowerCase().trim();
+  const isSemanticLabel = SEMANTIC_LABELS.has(contentLower) || /^(bg|background)[\s_-]/.test(contentLower);
+
+  // If a "text" element has a semantic label, render as a shape instead
+  if (element.type === 'text' && isSemanticLabel) {
+    return null;
+  }
+
   // Render based on element type
   switch (element.type) {
     case 'text':
