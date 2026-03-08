@@ -421,15 +421,14 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
                 height: sizeHeight,
                 transform: `
                   translate(-50%, -50%)
-                  translate3d(${parallaxOffset.x}px, ${parallaxOffset.y}px, 0px)
-                  rotate(${elementRotation}deg)
+                  translate3d(${parallaxOffset.x + animTranslateX}px, ${parallaxOffset.y + animTranslateY}px, 0px)
+                  rotate(${elementRotation + propRotation}deg)
                   scale(${elementScale * animScale * parallaxOffset.scale})
-                  translateY(${animTranslateY}px)
                   ${kenBurnsTransform}
                 `.trim().replace(/\s+/g, ' '),
                 transformStyle: 'preserve-3d',
                 opacity: animOpacity * parallaxOffset.opacity,
-                filter: parallaxOffset.blur > 0 ? `blur(${parallaxOffset.blur}px)` : undefined,
+                filter: parallaxOffset.blur > 0 ? `blur(${parallaxOffset.blur}px)` : (element.style?.filter || undefined),
                 zIndex: Math.round(((element.position.z ?? 0) as number) * 1000),
                 willChange: 'transform',
               }}
