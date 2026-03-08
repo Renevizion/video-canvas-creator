@@ -309,8 +309,10 @@ Return ONLY the JSON structure, no other text.`
 
 IMPORTANT INSTRUCTIONS:
 - Analyze this prompt carefully and extract specific details
-- Determine content type: Is this tech/SaaS, product, service, brand, motion graphics, or explainer?
+- Determine content type: Is this tech/SaaS, product, service, brand, motion graphics, cinematic journey, or explainer?
 - For MOTION GRAPHICS: Use geometric shapes (circles, triangles, stars, etc.) with dynamic animations
+- For cinematic story prompts (space/travel/journey): avoid terminal, progress, and code-editor widgets
+- If prompt implies movement (travel/fly/orbit/around), create sequential story beats with changing perspectives
 - Create a video that REFLECTS THE UNIQUE ASPECTS of this prompt
 - Don't use generic templates - tailor everything to this specific content
 - Be creative with scene structures, animations, and element placement
