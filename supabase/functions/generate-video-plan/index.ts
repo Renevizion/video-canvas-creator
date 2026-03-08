@@ -292,7 +292,7 @@ CINEMATIC JOURNEY (travel/orbit/fly/around/through/explore prompts):
 - Keep text minimal; visual storytelling first
 
 NOW CREATE A ${duration}-SECOND VIDEO FOR: "${prompt}"
-Be creative, unique, and match the content to what the prompt is actually asking for.
+Be creative, unique, and match the content to what the prompt is actually asking for.`;
 
     console.log('Generating video plan for:', prompt, 'Reference mode:', referenceMode);
 
