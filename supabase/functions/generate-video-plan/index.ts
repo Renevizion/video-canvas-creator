@@ -626,6 +626,284 @@ function validateAndFixPlan(plan: any, duration: number, colors: string[]) {
   return enhanceWithSophisticatedMetadata(plan);
 }
 
+function applyPromptDrivenEnhancements(
+  plan: any,
+  options: {
+    prompt: string;
+    duration: number;
+    generateImages: boolean;
+    imageStyle: string;
+    aspectRatio: string;
+    resolution: { width: number; height: number };
+    colors: string[];
+    referenceMode: boolean;
+  }
+) {
+  if (!plan || options.referenceMode) return plan;
+
+  const promptLower = (options.prompt || '').toLowerCase();
+  const techPrompt = isTechPrompt(promptLower);
+  const journeyPrompt = isJourneyPrompt(promptLower);
+  const spacePrompt = isSpacePrompt(promptLower);
+
+  if (!techPrompt) {
+    plan = removeTechUiWidgets(plan);
+  }
+
+  if (spacePrompt && journeyPrompt && options.generateImages) {
+    return createSpaceJourneyPlan(options, plan.style);
+  }
+
+  if (journeyPrompt) {
+    plan = enforceJourneyNarrativeBeats(plan);
+  }
+
+  return plan;
+}
+
+function isTechPrompt(promptLower: string) {
+  const techKeywords = [
+    'saas', 'software', 'app', 'dashboard', 'terminal', 'code', 'developer', 'api', 'analytics', 'kpi',
+    'productivity tool', 'platform', 'startup'
+  ];
+  return techKeywords.some((keyword) => promptLower.includes(keyword));
+}
+
+function isJourneyPrompt(promptLower: string) {
+  const journeyKeywords = [
+    'travel', 'travelling', 'traveling', 'journey', 'orbit', 'around', 'through', 'explore', 'voyage', 'fly', 'flying', 'mission'
+  ];
+  return journeyKeywords.some((keyword) => promptLower.includes(keyword));
+}
+
+function isSpacePrompt(promptLower: string) {
+  const spaceKeywords = [
+    'space', 'moon', 'lunar', 'astronaut', 'spaceship', 'cosmos', 'galaxy', 'starfield', 'orbit'
+  ];
+  return spaceKeywords.some((keyword) => promptLower.includes(keyword));
+}
+
+function removeTechUiWidgets(plan: any) {
+  const blockedTypes = new Set(['terminal', 'progress', 'progress-bar', 'code-editor', 'laptop', 'laptop-mockup']);
+
+  plan.scenes = (plan.scenes || []).map((scene: any) => {
+    const filteredElements = (scene.elements || []).filter((element: any) => !blockedTypes.has(element.type));
+
+    if (filteredElements.length > 0) {
+      return { ...scene, elements: filteredElements };
+    }
+
+    return {
+      ...scene,
+      elements: [
+        {
+          id: `${scene.id || 'scene'}_bg_fallback`,
+          type: 'shape',
+          content: 'rect',
+          position: { x: 50, y: 50, z: 0 },
+          size: { width: 100, height: 100 },
+          style: { background: 'linear-gradient(135deg, #0a0e27, #1a1a2e)' },
+          animation: { name: 'fadeIn', type: 'fade', duration: 0.5, easing: 'ease-out', delay: 0, properties: { opacity: [0, 1] } }
+        }
+      ]
+    };
+  });
+
+  return plan;
+}
+
+function enforceJourneyNarrativeBeats(plan: any) {
+  if (!Array.isArray(plan.scenes) || plan.scenes.length === 0) return plan;
+
+  const beatDescriptions = [
+    { description: 'Departure and setup shot', voiceover: 'Leaving for the journey.' },
+    { description: 'Travel movement beat', voiceover: 'Crossing the route ahead.' },
+    { description: 'Destination reveal', voiceover: 'Arrival and final reveal.' }
+  ];
+
+  while (plan.scenes.length < 3) {
+    const cloneIndex = Math.max(0, plan.scenes.length - 1);
+    const clone = { ...plan.scenes[cloneIndex], id: `scene_${plan.scenes.length + 1}` };
+    plan.scenes.push(clone);
+  }
+
+  plan.scenes = plan.scenes.map((scene: any, index: number) => {
+    const beat = beatDescriptions[Math.min(index, 2)];
+    return {
+      ...scene,
+      description: scene.description || beat.description,
+      voiceover: scene.voiceover || beat.voiceover,
+      transition: scene.transition || { type: 'fade', duration: 0.5 }
+    };
+  });
+
+  return plan;
+}
+
+function createSpaceJourneyPlan(
+  options: {
+    prompt: string;
+    duration: number;
+    imageStyle: string;
+    aspectRatio: string;
+    resolution: { width: number; height: number };
+    colors: string[];
+  },
+  existingStyle: any
+) {
+  const totalDuration = Math.max(8, options.duration || 10);
+  let scene1Duration = Math.max(2.5, Number((totalDuration * 0.3).toFixed(2)));
+  let scene2Duration = Math.max(3, Number((totalDuration * 0.4).toFixed(2)));
+  let scene3Duration = Number((totalDuration - scene1Duration - scene2Duration).toFixed(2));
+
+  if (scene3Duration < 2.5) {
+    const needed = 2.5 - scene3Duration;
+    scene2Duration = Math.max(2.5, Number((scene2Duration - needed).toFixed(2)));
+    scene3Duration = Number((totalDuration - scene1Duration - scene2Duration).toFixed(2));
+  }
+
+  const assetSpecs = options.aspectRatio === 'portrait'
+    ? { width: 1024, height: 1536 }
+    : options.aspectRatio === 'square'
+      ? { width: 1024, height: 1024 }
+      : { width: 1536, height: 1024 };
+
+  const baseStyle = existingStyle || {
+    colorPalette: options.colors,
+    typography: { primary: 'Orbitron', secondary: 'JetBrains Mono', sizes: { h1: 72, h2: 42, body: 22 } },
+    spacing: 24,
+    borderRadius: 16,
+  };
+
+  return {
+    duration: totalDuration,
+    fps: 30,
+    resolution: options.resolution,
+    aspectRatio: options.aspectRatio,
+    scenes: [
+      {
+        id: 'scene_1_departure',
+        startTime: 0,
+        duration: scene1Duration,
+        description: 'First-person cockpit departure as the ship begins lunar approach.',
+        voiceover: 'Locking onto lunar orbit.',
+        elements: [
+          {
+            id: 'cockpit_pov',
+            type: 'image',
+            content: 'First-person view from inside a spacecraft cockpit, illuminated instrument panels, moon visible through front glass, stars outside, cinematic, ultra-detailed, realistic lighting',
+            position: { x: 50, y: 50, z: 0 },
+            size: { width: 100, height: 100 },
+            style: { kenBurns: true, filter: 'brightness(1.02) contrast(1.05)' },
+            animation: { name: 'zoomIn', type: 'scale', duration: scene1Duration, easing: 'ease-in-out', delay: 0, properties: { scale: [1, 1.08] } }
+          },
+          {
+            id: 'caption_departure',
+            type: 'text',
+            content: 'LUNAR APPROACH',
+            position: { x: 50, y: 88, z: 3 },
+            size: { width: 80, height: 12 },
+            style: { fontSize: 54, fontWeight: 800, color: '#ffffff', letterSpacing: 6 },
+            animation: { name: 'fadeIn', type: 'fade', duration: 0.7, easing: 'ease-out', delay: 0.2, properties: { opacity: [0, 1] } }
+          }
+        ],
+        transition: { type: 'fade', duration: 0.6 }
+      },
+      {
+        id: 'scene_2_orbit',
+        startTime: scene1Duration,
+        duration: scene2Duration,
+        description: 'Exterior tracking shot of the ship traveling around the moon with visible curvature and starfield depth.',
+        voiceover: 'We arc around the far side.',
+        elements: [
+          {
+            id: 'orbit_wide',
+            type: 'image',
+            content: 'Cinematic wide shot of a spacecraft traveling around the moon, visible lunar curvature, deep starfield, motion blur trails, dramatic rim lighting, photorealistic',
+            position: { x: 50, y: 50, z: 0 },
+            size: { width: 100, height: 100 },
+            style: { kenBurns: true, filter: 'contrast(1.08) saturate(1.05)' },
+            animation: { name: 'slideIn', type: 'slide', duration: scene2Duration, easing: 'ease-in-out', delay: 0, properties: { translateX: [3, -3] } }
+          },
+          {
+            id: 'ship_silhouette',
+            type: 'image',
+            content: 'Foreground silhouette of a sleek spacecraft wing edge and engine glow, close-up framing for speed sensation, realistic cinematic style',
+            position: { x: 82, y: 58, z: 2 },
+            size: { width: 34, height: 42 },
+            style: { opacity: 0.92 },
+            animation: { name: 'float', type: 'position', duration: scene2Duration, easing: 'ease-in-out', delay: 0, properties: { translateY: [-1.5, 1.5] } }
+          }
+        ],
+        transition: { type: 'fade', duration: 0.6 }
+      },
+      {
+        id: 'scene_3_reveal',
+        startTime: Number((scene1Duration + scene2Duration).toFixed(2)),
+        duration: scene3Duration,
+        description: 'Wide reveal of the moon, stars, and spacecraft completing the orbital loop.',
+        voiceover: 'Moonfall complete. Stars beyond.',
+        elements: [
+          {
+            id: 'moon_reveal',
+            type: 'image',
+            content: 'Epic cinematic reveal of spacecraft completing orbit around the moon, giant lunar horizon, dense stars and nebula in background, high detail, IMAX composition',
+            position: { x: 50, y: 50, z: 0 },
+            size: { width: 100, height: 100 },
+            style: { kenBurns: true, filter: 'brightness(1.06)' },
+            animation: { name: 'scale', type: 'scale', duration: scene3Duration, easing: 'ease-out', delay: 0, properties: { scale: [1.02, 1] } }
+          },
+          {
+            id: 'caption_reveal',
+            type: 'text',
+            content: 'AROUND THE MOON',
+            position: { x: 50, y: 14, z: 3 },
+            size: { width: 84, height: 14 },
+            style: { fontSize: 46, fontWeight: 700, color: '#ffffff', letterSpacing: 4 },
+            animation: { name: 'slideUp', type: 'slide', duration: 0.8, easing: 'ease-out', delay: 0.1, properties: { translateY: [8, 0] } }
+          }
+        ],
+        transition: { type: 'fade', duration: 0.5 }
+      }
+    ],
+    requiredAssets: [
+      {
+        id: 'cockpit_pov',
+        type: 'image',
+        description: 'First-person view from inside a spacecraft cockpit, illuminated instrument panels, moon visible through front glass, stars outside, cinematic, ultra-detailed, realistic lighting',
+        specifications: { ...assetSpecs, style: options.imageStyle },
+        providedByUser: false
+      },
+      {
+        id: 'orbit_wide',
+        type: 'image',
+        description: 'Cinematic wide shot of a spacecraft traveling around the moon, visible lunar curvature, deep starfield, motion blur trails, dramatic rim lighting, photorealistic',
+        specifications: { ...assetSpecs, style: options.imageStyle },
+        providedByUser: false
+      },
+      {
+        id: 'ship_silhouette',
+        type: 'image',
+        description: 'Foreground silhouette of a sleek spacecraft wing edge and engine glow, close-up framing for speed sensation, realistic cinematic style',
+        specifications: { width: 768, height: 768, style: options.imageStyle },
+        providedByUser: false
+      },
+      {
+        id: 'moon_reveal',
+        type: 'image',
+        description: 'Epic cinematic reveal of spacecraft completing orbit around the moon, giant lunar horizon, dense stars and nebula in background, high detail, IMAX composition',
+        specifications: { ...assetSpecs, style: options.imageStyle },
+        providedByUser: false
+      }
+    ],
+    style: {
+      ...baseStyle,
+      colorPalette: baseStyle.colorPalette || options.colors,
+    },
+    sourcePrompt: options.prompt,
+  };
+}
+
 /**
  * Enhance video plan with sophisticated metadata for A-grade rendering
  * This enables camera paths, parallax, color grading, and curved animations
