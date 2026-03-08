@@ -686,6 +686,14 @@ function applyPromptDrivenEnhancements(
     return createSpaceJourneyPlan(options, plan.style);
   }
 
+  if (spacePrompt && journeyPrompt && !options.generateImages) {
+    return createCodeOnlySpaceJourneyPlan(options, plan.style);
+  }
+
+  if (!options.generateImages) {
+    plan = enforceNoAiImageElements(plan, { spacePrompt, colors: options.colors });
+  }
+
   if (journeyPrompt) {
     plan = enforceJourneyNarrativeBeats(plan);
   }
