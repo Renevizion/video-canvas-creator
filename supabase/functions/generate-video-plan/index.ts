@@ -685,8 +685,108 @@ function validateAndFixPlan(plan: any, duration: number, colors: string[]) {
     plan.scenes = createFallbackPlan("Video", duration, colors).scenes;
   }
   
+  // Ensure every scene has visual density (minimum 4 elements)
+  plan = enforceMinimumVisualDensity(plan, colors);
+  
   // Add sophisticated metadata for A-grade rendering
   return enhanceWithSophisticatedMetadata(plan);
+}
+
+/**
+ * Ensures every scene has at least 4 elements for visual richness.
+ * Auto-injects ambient particles, gradient orbs, and accent shapes into thin scenes.
+ */
+function enforceMinimumVisualDensity(plan: any, colors: string[]) {
+  if (!plan || !Array.isArray(plan.scenes)) return plan;
+
+  const MIN_ELEMENTS = 4;
+  const accent = colors[3] || colors[1] || '#3b82f6';
+  const secondary = colors[2] || colors[1] || '#1e293b';
+
+  plan.scenes = plan.scenes.map((scene: any, sceneIdx: number) => {
+    const elements = scene.elements || [];
+    if (elements.length >= MIN_ELEMENTS) return scene;
+
+    const sceneId = scene.id || `scene_${sceneIdx + 1}`;
+    const injected = [...elements];
+    let counter = 0;
+
+    // Ensure a full-screen background exists
+    const hasBg = elements.some((el: any) =>
+      el.size?.width >= 100 && el.size?.height >= 100 && (el.position?.z ?? 1) <= 0.5
+    );
+    if (!hasBg) {
+      injected.push({
+        id: `${sceneId}_auto_bg`,
+        type: 'shape', content: 'rect',
+        position: { x: 50, y: 50, z: 0 },
+        size: { width: 100, height: 100 },
+        style: { background: `linear-gradient(135deg, ${colors[0] || '#0a0e27'}, ${secondary})` },
+        animation: { name: 'fadeIn', type: 'fade', duration: 0.5, easing: 'ease-out', delay: 0, properties: {} }
+      });
+      counter++;
+    }
+
+    // Add ambient gradient orb
+    if (injected.length < MIN_ELEMENTS) {
+      injected.push({
+        id: `${sceneId}_auto_orb`,
+        type: 'shape', content: 'circle',
+        position: { x: 25 + (sceneIdx * 20) % 50, y: 30 + (sceneIdx * 15) % 40, z: 0.5 },
+        size: { width: 500, height: 500 },
+        style: {
+          background: `radial-gradient(circle, ${accent}18 0%, transparent 70%)`,
+          filter: 'blur(50px)',
+          opacity: 0.5
+        },
+        animation: { name: 'float', type: 'fade', duration: 4, easing: 'ease-out', delay: 0, properties: { translateY: [-2, 2] } }
+      });
+      counter++;
+    }
+
+    // Add scattered star/dot particles
+    const starPositions = [
+      { x: 15, y: 12 }, { x: 82, y: 18 }, { x: 45, y: 8 }, { x: 68, y: 28 },
+      { x: 22, y: 42 }, { x: 90, y: 35 }, { x: 55, y: 5 }, { x: 35, y: 22 }
+    ];
+    while (injected.length < MIN_ELEMENTS && counter < starPositions.length) {
+      const p = starPositions[counter % starPositions.length];
+      const sz = 1.5 + (counter % 3);
+      const brightness = 0.4 + (counter % 4) * 0.15;
+      injected.push({
+        id: `${sceneId}_auto_particle_${counter}`,
+        type: 'shape', content: 'circle',
+        position: { x: p.x, y: p.y, z: 0.5 },
+        size: { width: sz, height: sz },
+        style: {
+          background: `rgba(255,255,255,${brightness})`,
+          boxShadow: `0 0 ${sz * 3}px rgba(255,255,255,${brightness * 0.5})`
+        },
+        animation: { name: 'pulse', type: 'fade', duration: 1.5 + counter * 0.4, easing: 'ease-out', delay: counter * 0.08, properties: { scale: [0.7, 1.4] } }
+      });
+      counter++;
+    }
+
+    // Add a subtle accent shape for depth
+    if (injected.length < MIN_ELEMENTS + 1) {
+      injected.push({
+        id: `${sceneId}_auto_accent`,
+        type: 'shape', content: 'circle',
+        position: { x: 75 - (sceneIdx * 10) % 30, y: 65 + (sceneIdx * 8) % 20, z: 0.8 },
+        size: { width: 200, height: 200 },
+        style: {
+          background: `radial-gradient(circle, ${accent}10 0%, transparent 60%)`,
+          filter: 'blur(30px)',
+          opacity: 0.3
+        },
+        animation: { name: 'scale', type: 'fade', duration: 6, easing: 'ease-out', delay: 0.5, properties: { scale: [1, 1.08] } }
+      });
+    }
+
+    return { ...scene, elements: injected };
+  });
+
+  return plan;
 }
 
 function applyPromptDrivenEnhancements(
