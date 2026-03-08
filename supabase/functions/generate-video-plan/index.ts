@@ -283,10 +283,14 @@ BRAND/LIFESTYLE: Large AI-generated lifestyle photos with Ken Burns effect, emot
 TECH/SAAS: Code-editor, terminal, laptop mockups, data visualizations, metrics
 MOTION GRAPHICS: Abstract geometric shapes, flowing particles, dynamic typography, no AI images
 EXPLAINER: Mix of icons, illustrations, step-by-step reveals, clear hierarchy
-FOOD/BEVERAGE: Close-up product shots, steam effects, appetite appeal, rich colors
+CINEMATIC JOURNEY (travel/orbit/fly/around/through/explore prompts):
+- Build a clear 3-beat narrative: setup location → movement/travel beat → destination/reveal
+- Change camera perspective between scenes (POV interior, exterior tracking, wide reveal)
+- Use environmental imagery (location, sky, stars, terrain) not abstract placeholders
+- Keep text minimal; visual storytelling first
 
 NOW CREATE A ${duration}-SECOND VIDEO FOR: "${prompt}"
-Be creative, unique, and match the content to what the prompt is actually asking for.`;
+Be creative, unique, and match the content to what the prompt is actually asking for.
 
     console.log('Generating video plan for:', prompt, 'Reference mode:', referenceMode);
 
