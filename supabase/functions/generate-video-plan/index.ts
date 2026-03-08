@@ -944,6 +944,337 @@ function createSpaceJourneyPlan(
   };
 }
 
+function isDirectAssetUrl(content: unknown) {
+  if (typeof content !== 'string') return false;
+  return content.startsWith('http') || content.startsWith('/') || content.startsWith('data:');
+}
+
+function enforceNoAiImageElements(
+  plan: any,
+  context: { spacePrompt: boolean; colors: string[] }
+) {
+  if (!plan || !Array.isArray(plan.scenes)) return plan;
+
+  plan.requiredAssets = [];
+
+  plan.scenes = plan.scenes.map((scene: any, sceneIndex: number) => {
+    const mappedElements = (scene.elements || []).flatMap((element: any, elIndex: number) => {
+      if (element?.type !== 'image') {
+        return [element];
+      }
+
+      // Keep real URLs (user-provided or previously generated assets), convert only prompt-text images.
+      if (isDirectAssetUrl(element.content)) {
+        return [element];
+      }
+
+      const prompt = String(element.content || '').toLowerCase();
+      const z = element.position?.z ?? 1;
+
+      // Space-aware conversion for richer code-rendered visuals
+      if (context.spacePrompt) {
+        if (/moon|lunar|planet|earth/.test(prompt)) {
+          return [{
+            ...element,
+            id: `${element.id || `el_${sceneIndex}_${elIndex}`}_moon_shape`,
+            type: 'shape',
+            content: 'circle',
+            style: {
+              background: 'radial-gradient(circle at 35% 35%, #f0f0f0 0%, #b5b5b5 35%, #777777 65%, #3a3a3a 100%)',
+              boxShadow: '0 0 70px rgba(220,220,220,0.22), inset -18px -18px 45px rgba(0,0,0,0.5)',
+            },
+            animation: element.animation || { name: 'scale', duration: 6, properties: { scale: [1.05, 1] } },
+            position: { ...(element.position || { x: 50, y: 50 }), z },
+          }];
+        }
+
+        if (/star|galaxy|space|nebula|cosmos/.test(prompt)) {
+          return [{
+            ...element,
+            id: `${element.id || `el_${sceneIndex}_${elIndex}`}_space_shape`,
+            type: 'shape',
+            content: 'rect',
+            style: {
+              background: 'radial-gradient(ellipse at 50% 35%, rgba(58,78,120,0.45) 0%, rgba(20,24,48,0.55) 35%, #05070f 100%)',
+            },
+            animation: element.animation || { name: 'fadeIn', duration: 1 },
+            position: { ...(element.position || { x: 50, y: 50 }), z: Math.min(z, 0) },
+          }];
+        }
+
+        if (/ship|spaceship|rocket|astronaut|helmet|cockpit|spaceman|person/.test(prompt)) {
+          return [{
+            ...element,
+            id: `${element.id || `el_${sceneIndex}_${elIndex}`}_subject_shape`,
+            type: 'shape',
+            content: 'rect',
+            style: {
+              background: 'linear-gradient(135deg, #f5f7ff 0%, #9aa9d4 38%, #4a5e94 100%)',
+              borderRadius: 999,
+              boxShadow: '0 0 30px rgba(145,182,255,0.32), 0 14px 40px rgba(0,0,0,0.45)',
+            },
+            animation: element.animation || { name: 'float', duration: 6, properties: { translateY: [-1.2, 1.2] } },
+            position: { ...(element.position || { x: 50, y: 50 }), z: Math.max(z, 2) },
+          }];
+        }
+      }
+
+      return [{
+        ...element,
+        id: `${element.id || `el_${sceneIndex}_${elIndex}`}_shape_fallback`,
+        type: 'shape',
+        content: 'rect',
+        style: {
+          background: `linear-gradient(135deg, ${context.colors?.[0] || '#0a0e27'}, ${context.colors?.[1] || '#1a1a2e'})`,
+          borderRadius: 16,
+          boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
+        },
+        animation: element.animation || { name: 'fadeIn', duration: 0.8 },
+      }];
+    });
+
+    // Ensure minimal depth/ambience in no-image mode
+    const hasStarLayer = mappedElements.some((el: any) => el?.id?.includes('auto_star_particle'));
+    if (context.spacePrompt && !hasStarLayer) {
+      mappedElements.push({
+        id: `${scene.id || `scene_${sceneIndex + 1}`}_auto_star_particle`,
+        type: 'shape',
+        content: 'circle',
+        position: { x: 82, y: 18, z: 1 },
+        size: { width: 2, height: 2 },
+        style: { color: '#ffffffaa' },
+        animation: { name: 'pulse', duration: 2.4, properties: { scale: [1, 1.8] } },
+      });
+    }
+
+    return { ...scene, elements: mappedElements };
+  });
+
+  return plan;
+}
+
+function createCodeOnlySpaceJourneyPlan(
+  options: {
+    prompt: string;
+    duration: number;
+    imageStyle: string;
+    aspectRatio: string;
+    resolution: { width: number; height: number };
+    colors: string[];
+  },
+  existingStyle: any
+) {
+  const totalDuration = Math.max(8, options.duration || 10);
+  let scene1Duration = Math.max(2.5, Number((totalDuration * 0.3).toFixed(2)));
+  let scene2Duration = Math.max(3, Number((totalDuration * 0.4).toFixed(2)));
+  let scene3Duration = Number((totalDuration - scene1Duration - scene2Duration).toFixed(2));
+
+  if (scene3Duration < 2.5) {
+    const needed = 2.5 - scene3Duration;
+    scene2Duration = Math.max(2.5, Number((scene2Duration - needed).toFixed(2)));
+    scene3Duration = Number((totalDuration - scene1Duration - scene2Duration).toFixed(2));
+  }
+
+  const baseStyle = existingStyle || {
+    colorPalette: options.colors,
+    typography: { primary: 'Orbitron', secondary: 'JetBrains Mono', sizes: { h1: 70, h2: 42, body: 22 } },
+    spacing: 24,
+    borderRadius: 16,
+  };
+
+  return {
+    duration: totalDuration,
+    fps: 30,
+    resolution: options.resolution,
+    aspectRatio: options.aspectRatio,
+    scenes: [
+      {
+        id: 'scene_1_departure_code',
+        startTime: 0,
+        duration: scene1Duration,
+        description: 'Code-rendered launch setup with layered space background and departing spacecraft silhouette.',
+        voiceover: 'Initiating lunar approach.',
+        elements: [
+          {
+            id: 'bg_space_1',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 50, y: 50, z: 0 },
+            size: { width: 100, height: 100 },
+            style: { background: 'radial-gradient(ellipse at 50% 32%, rgba(58,78,120,0.45), rgba(14,20,40,0.7) 38%, #04060d 100%)' },
+            animation: { name: 'fadeIn', duration: 1 }
+          },
+          {
+            id: 'moon_far_1',
+            type: 'shape',
+            content: 'circle',
+            position: { x: 70, y: 38, z: 1 },
+            size: { width: 28, height: 28 },
+            style: {
+              background: 'radial-gradient(circle at 35% 35%, #ececec 0%, #b6b6b6 38%, #777777 70%, #3b3b3b 100%)',
+              boxShadow: '0 0 50px rgba(220,220,220,0.24), inset -12px -12px 30px rgba(0,0,0,0.45)'
+            },
+            animation: { name: 'scale', duration: scene1Duration, properties: { scale: [1.03, 1] } }
+          },
+          {
+            id: 'ship_body_1',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 34, y: 62, z: 3 },
+            size: { width: 20, height: 6 },
+            style: {
+              background: 'linear-gradient(135deg, #f2f5ff 0%, #a8b4d9 40%, #4f5f91 100%)',
+              borderRadius: 999,
+              boxShadow: '0 12px 30px rgba(0,0,0,0.45)'
+            },
+            animation: { name: 'slideIn', duration: scene1Duration, properties: { translateX: [-12, 4] } }
+          },
+          {
+            id: 'engine_glow_1',
+            type: 'shape',
+            content: 'circle',
+            position: { x: 25, y: 62, z: 2 },
+            size: { width: 5, height: 5 },
+            style: { background: 'radial-gradient(circle, rgba(111,196,255,0.95) 0%, rgba(111,196,255,0.2) 60%, transparent 100%)', filter: 'blur(1px)' },
+            animation: { name: 'pulse', duration: 1.6, properties: { scale: [0.9, 1.4] } }
+          },
+          {
+            id: 'title_departure_1',
+            type: 'text',
+            content: 'LUNAR ORBIT START',
+            position: { x: 50, y: 86, z: 4 },
+            size: { width: 82, height: 12 },
+            style: { fontSize: 52, fontWeight: 800, color: '#ffffff', letterSpacing: 5 },
+            animation: { name: 'slideUp', duration: 0.9, delay: 0.2, properties: { translateY: [8, 0] } }
+          }
+        ],
+        transition: { type: 'fade', duration: 0.5 }
+      },
+      {
+        id: 'scene_2_orbit_code',
+        startTime: scene1Duration,
+        duration: scene2Duration,
+        description: 'Code-rendered orbit pass with large lunar body, drifting stars, and lateral spacecraft motion.',
+        voiceover: 'Sweeping past the moon.',
+        elements: [
+          {
+            id: 'bg_space_2',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 50, y: 50, z: 0 },
+            size: { width: 100, height: 100 },
+            style: { background: 'linear-gradient(180deg, #050812 0%, #0d1327 45%, #0a0e1d 100%)' },
+            animation: { name: 'fadeIn', duration: 0.8 }
+          },
+          {
+            id: 'moon_main_2',
+            type: 'shape',
+            content: 'circle',
+            position: { x: 60, y: 66, z: 1 },
+            size: { width: 78, height: 78 },
+            style: {
+              background: 'radial-gradient(circle at 32% 32%, #f1f1f1 0%, #bfbfbf 35%, #818181 65%, #404040 100%)',
+              boxShadow: '0 0 80px rgba(200,200,200,0.2), inset -22px -22px 50px rgba(0,0,0,0.55)'
+            },
+            animation: { name: 'scale', duration: scene2Duration, properties: { scale: [1.03, 0.98] } }
+          },
+          {
+            id: 'ship_orbit_2',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 25, y: 42, z: 3 },
+            size: { width: 16, height: 5 },
+            style: {
+              background: 'linear-gradient(135deg, #f7f9ff 0%, #a8b7de 40%, #4d629f 100%)',
+              borderRadius: 999,
+              boxShadow: '0 0 24px rgba(130,182,255,0.32), 0 10px 22px rgba(0,0,0,0.4)'
+            },
+            animation: { name: 'slideIn', duration: scene2Duration, properties: { translateX: [-18, 34], translateY: [-2, 3] } }
+          },
+          {
+            id: 'ship_trail_2',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 18, y: 42, z: 2 },
+            size: { width: 10, height: 2 },
+            style: { background: 'linear-gradient(90deg, rgba(120,210,255,0.7), rgba(120,210,255,0))', borderRadius: 999, filter: 'blur(0.5px)' },
+            animation: { name: 'slideIn', duration: scene2Duration, properties: { translateX: [-18, 34], translateY: [-2, 3] } }
+          },
+          {
+            id: 'star_orb_2',
+            type: 'shape',
+            content: 'star',
+            position: { x: 86, y: 16, z: 1 },
+            size: { width: 3, height: 3 },
+            style: { color: '#ffffffc2' },
+            animation: { name: 'pulse', duration: 1.8, properties: { scale: [1, 1.8] } }
+          }
+        ],
+        transition: { type: 'fade', duration: 0.6 }
+      },
+      {
+        id: 'scene_3_reveal_code',
+        startTime: Number((scene1Duration + scene2Duration).toFixed(2)),
+        duration: scene3Duration,
+        description: 'Code-rendered reveal with moon horizon and final hero silhouette completing the orbital story.',
+        voiceover: 'Orbit complete. Horizon unlocked.',
+        elements: [
+          {
+            id: 'bg_space_3',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 50, y: 50, z: 0 },
+            size: { width: 100, height: 100 },
+            style: { background: 'radial-gradient(ellipse at 50% 25%, rgba(52,76,138,0.35), rgba(9,14,28,0.72) 42%, #04060d 100%)' },
+            animation: { name: 'fadeIn', duration: 0.9 }
+          },
+          {
+            id: 'moon_horizon_3',
+            type: 'shape',
+            content: 'circle',
+            position: { x: 50, y: 126, z: 1 },
+            size: { width: 160, height: 160 },
+            style: {
+              background: 'radial-gradient(circle at 50% 0%, #d7d7d7 0%, #9a9a9a 48%, #565656 80%, #353535 100%)',
+              boxShadow: 'inset 0 -20px 40px rgba(0,0,0,0.45)'
+            },
+            animation: { name: 'scale', duration: scene3Duration, properties: { scale: [1.02, 1] } }
+          },
+          {
+            id: 'hero_silhouette_3',
+            type: 'shape',
+            content: 'rect',
+            position: { x: 35, y: 66, z: 3 },
+            size: { width: 13, height: 28 },
+            style: {
+              background: 'linear-gradient(180deg, #b7c8ef 0%, #6072a6 45%, #27355f 100%)',
+              borderRadius: 999,
+              boxShadow: '0 10px 24px rgba(0,0,0,0.42)'
+            },
+            animation: { name: 'float', duration: scene3Duration, properties: { translateY: [-1.2, 1.2] } }
+          },
+          {
+            id: 'final_title_3',
+            type: 'text',
+            content: 'AROUND THE MOON',
+            position: { x: 50, y: 18, z: 4 },
+            size: { width: 84, height: 14 },
+            style: { fontSize: 48, fontWeight: 760, color: '#ffffff', letterSpacing: 4 },
+            animation: { name: 'zoomIn', duration: 1.2, delay: 0.2, properties: { scale: [0.9, 1] } }
+          }
+        ],
+        transition: { type: 'fade', duration: 0.5 }
+      }
+    ],
+    requiredAssets: [],
+    style: {
+      ...baseStyle,
+      colorPalette: baseStyle.colorPalette || options.colors,
+    },
+    sourcePrompt: options.prompt,
+  };
+}
+
 /**
  * Enhance video plan with sophisticated metadata for A-grade rendering
  * This enables camera paths, parallax, color grading, and curved animations
