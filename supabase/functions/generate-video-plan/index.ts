@@ -880,7 +880,7 @@ function createSpaceJourneyPlan(
       {
         id: 'cockpit_pov',
         type: 'image',
-        description: 'First-person view from inside a spacecraft cockpit, illuminated instrument panels, moon visible through front glass, stars outside, cinematic, ultra-detailed, realistic lighting',
+        description: 'First-person view from inside a spacecraft cockpit, illuminated instrument panels and HUD displays, moon visible through front window, stars outside, NO external spacecraft visible, interior-only POV shot, cinematic, ultra-detailed, realistic lighting',
         specifications: { ...assetSpecs, style: options.imageStyle },
         providedByUser: false
       },
