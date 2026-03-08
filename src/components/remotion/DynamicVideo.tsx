@@ -1570,6 +1570,38 @@ const ShapeElement: React.FC<{
 });
 
 // ============================================================================
+// SVG ELEMENT - Renders inline SVG markup for detailed vector illustrations
+// Enables high-fidelity shapes like spaceships, astronauts, celestial bodies
+// ============================================================================
+const SvgElement: React.FC<{
+  element: PlannedElement;
+  style: React.CSSProperties;
+  sceneFrame: number;
+}> = React.memo(({ element, style, sceneFrame }) => {
+  const svgStyle = element.style as Record<string, unknown>;
+  const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '200px';
+  const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '200px';
+  
+  // Organic motion
+  const driftX = noise3D('svg-dx-' + element.id, sceneFrame * 0.012, 0, 0) * 8;
+  const driftY = noise3D('svg-dy-' + element.id, 0, sceneFrame * 0.012, 0) * 6;
+  
+  return (
+    <div
+      style={{
+        ...style,
+        width,
+        height,
+        transform: `${style.transform} translateX(${driftX}px) translateY(${driftY}px)`,
+        filter: (svgStyle.filter as string) || undefined,
+        opacity: (svgStyle.opacity as number) ?? undefined,
+      }}
+      dangerouslySetInnerHTML={{ __html: element.content }}
+    />
+  );
+});
+
+// ============================================================================
 // ARROW ELEMENT - Render a proper arrow icon instead of a label block
 // ============================================================================
 const ArrowElement: React.FC<{
