@@ -10,7 +10,9 @@
  */
 
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, spring } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, spring, Loop, random } from 'remotion';
+import { noise3D } from '@remotion/noise';
+import { Star } from '@remotion/shapes';
 import type { EnhancedVideoPlan } from '@/services/SophisticatedVideoGenerator';
 
 // Import professional element components
