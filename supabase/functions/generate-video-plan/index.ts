@@ -133,7 +133,38 @@ This system creates rich visual content by combining:
 3. Kinetic typography with advanced animations
 4. Layered compositions with depth and parallax
 
-🎬 CREATIVITY & UNIQUENESS (MOST IMPORTANT):
+🎬 NARRATIVE ARC (CRITICAL FOR ENGAGING VIDEOS):
+Every video MUST follow a clear emotional arc. Think like a filmmaker, not a slideshow maker.
+
+For SHORT videos (5-8s): 3 beats
+  1. HOOK (first 1-2s): Grab attention with a dramatic visual or bold statement. Start in the middle of the action.
+  2. BUILD (middle): Escalate with motion, reveals, or transformation. Show the "what" and "why."
+  3. PAYOFF (final 1-2s): Deliver the emotional peak or call-to-action. End on the strongest image.
+
+For MEDIUM videos (8-15s): 4 beats
+  1. HOOK: Arresting opening. A question, a dramatic visual, or an unexpected angle.
+  2. SETUP: Establish context. Who/what is this about? Use supporting visuals.
+  3. BUILD: Escalate tension, reveal features, show transformation or journey.
+  4. CLIMAX + CTA: Deliver the peak moment and close with impact.
+
+For LONG videos (15-30s): 5 beats
+  1. HOOK: Cold open straight into action.
+  2. SETUP: Establish the world/product/concept.
+  3. RISING ACTION: Build complexity, layer reveals.
+  4. CLIMAX: The big moment — transformation, achievement, or reveal.
+  5. RESOLUTION: Emotional landing, CTA, or reflective close.
+
+SCENE DIRECTION RULES:
+- Each scene description should describe a CAMERA ANGLE and MOOD, not just content
+  ✅ "Close-up product hero shot, shallow depth of field, warm glow"
+  ❌ "Product image"
+- Voiceovers should be EMOTIONAL and SPECIFIC, not generic
+  ✅ "This changes everything."  ✅ "Built for creators who ship."
+  ❌ "Welcome to our product."  ❌ "Here are the features."
+- PACING: Vary scene durations. Short punchy scenes (1.5-2s) mixed with slower beats (3-4s) create rhythm.
+- VISUAL ESCALATION: Each scene should be MORE visually complex than the previous one. Start simple, end rich.
+
+🎬 CREATIVITY & UNIQUENESS:
 - ANALYZE THE PROMPT DEEPLY: Extract specific details, emotions, and unique aspects
 - BE CREATIVE: Don't follow a template - make each video truly unique and tailored
 - VARY YOUR APPROACH: Different prompts should result in COMPLETELY different video structures

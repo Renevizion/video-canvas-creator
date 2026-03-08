@@ -1,6 +1,6 @@
 import React from 'react';
 import { Composition } from 'remotion';
-import { DynamicVideo } from '../components/remotion/DynamicVideo';
+import { SophisticatedVideo } from '../components/remotion/SophisticatedVideo';
 import type { VideoPlan } from '../types/video';
 import { 
   MusicVisualization, 
@@ -215,26 +215,26 @@ export const RemotionRoot: React.FC = () => {
     <>
       <Composition
         id="DynamicVideo"
-        component={DynamicVideo as unknown as React.ComponentType<Record<string, unknown>>}
+        component={SophisticatedVideo as unknown as React.ComponentType<Record<string, unknown>>}
         durationInFrames={Math.round(defaultPlan.duration * 30)}
         fps={30}
         width={1920}
         height={1080}
         defaultProps={{
-          plan: defaultPlan,
+          videoPlan: defaultPlan,
         }}
       />
       
-      {/* NEW: Demo composition showing how to use showcase elements in video plans */}
+      {/* Demo composition showing how to use showcase elements in video plans */}
       <Composition
         id="ShowcaseElementsDemo"
-        component={DynamicVideo as unknown as React.ComponentType<Record<string, unknown>>}
+        component={SophisticatedVideo as unknown as React.ComponentType<Record<string, unknown>>}
         durationInFrames={Math.round(showcaseElementsPlan.duration * 30)}
         fps={30}
         width={1920}
         height={1080}
         defaultProps={{
-          plan: showcaseElementsPlan,
+          videoPlan: showcaseElementsPlan,
         }}
       />
       

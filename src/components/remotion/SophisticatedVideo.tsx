@@ -10,7 +10,9 @@
  */
 
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, spring } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Easing, spring, Loop, random } from 'remotion';
+import { noise3D } from '@remotion/noise';
+import { Star } from '@remotion/shapes';
 import type { EnhancedVideoPlan } from '@/services/SophisticatedVideoGenerator';
 
 // Import professional element components
@@ -165,8 +167,15 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
     `.replace(/\s+/g, ' ').trim();
   })() : 'none';
   
+  // Extract colors for animated background
+  const colors = videoPlan.style?.colorPalette || ['#000000', '#06b6d4', '#1e293b', '#0f172a'];
+  const globalBg = colors[3] || colors[0] || '#0f172a';
+  
   return (
-    <AbsoluteFill style={{ backgroundColor: '#000000', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
+      {/* Animated background with organic noise-driven motion */}
+      <AnimatedBackground colors={colors} />
+      
       {/* Main content with camera transform */}
       <div
         style={{
@@ -1149,5 +1158,125 @@ function getParallaxKey(elementType: string): string {
   
   return parallaxMapping[elementType] || 'ui';
 }
+
+// ============================================================================
+// ANIMATED BACKGROUND - Organic gradient with noise3D motion + particles
+// Ported from DynamicVideo to unify rendering
+// ============================================================================
+const AnimatedBackground: React.FC<{ colors: string[] }> = React.memo(({ colors }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const primary = colors[1] || '#06b6d4';
+  const secondary = colors[2] || '#1e293b';
+  const bg = colors[3] || colors[0] || '#0f172a';
+  
+  // Use noise3D for smooth organic motion of orbs
+  const orb1X = 60 + noise3D('orb1-x', frame * 0.01, 0, 0) * 20;
+  const orb1Y = 20 + noise3D('orb1-y', 0, frame * 0.01, 0) * 15;
+  const orb1Rotation = noise3D('orb1-rot', frame * 0.005, 0, 0) * 30;
+  
+  const orb2X = 30 + noise3D('orb2-x', frame * 0.008, 0, 0) * 15;
+  const orb2Y = 70 + noise3D('orb2-y', 0, frame * 0.008, 0) * 20;
+  const orb2Rotation = noise3D('orb2-rot', frame * 0.006, 0, 0) * 25;
+  
+  // Generate deterministic particles
+  const particles = React.useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: `p-${i}`,
+      x: random(`px-${i}`) * 100,
+      y: random(`py-${i}`) * 100,
+      size: 4 + random(`ps-${i}`) * 10,
+      color: [primary, colors[3] || '#8b5cf6', '#ffffff'][Math.floor(random(`pc-${i}`) * 3)] + '30',
+      speed: 0.5 + random(`psp-${i}`) * 1.5,
+      type: (['circle', 'star', 'dot'] as const)[Math.floor(random(`pt-${i}`) * 3)],
+    }));
+  }, [primary, colors]);
+  
+  const loopDuration = Math.min(durationInFrames, fps * 5);
+  
+  return (
+    <AbsoluteFill>
+      {/* Base gradient */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: `linear-gradient(135deg, ${secondary} 0%, ${bg} 100%)`,
+      }} />
+      
+      {/* Animated orbs */}
+      <div style={{
+        position: 'absolute',
+        top: `${orb1Y}%`,
+        left: `${orb1X}%`,
+        width: 600,
+        height: 600,
+        borderRadius: '50%',
+        background: `radial-gradient(circle, ${primary}20 0%, transparent 70%)`,
+        transform: `translate(-50%, -50%) rotate(${orb1Rotation}deg)`,
+        filter: 'blur(60px)',
+      }} />
+      <div style={{
+        position: 'absolute',
+        top: `${orb2Y}%`,
+        left: `${orb2X}%`,
+        width: 500,
+        height: 500,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, #8b5cf620 0%, transparent 70%)',
+        transform: `translate(-50%, -50%) rotate(${orb2Rotation}deg)`,
+        filter: 'blur(80px)',
+      }} />
+      
+      {/* Particle field */}
+      <Loop durationInFrames={Math.max(1, loopDuration)}>
+        <AbsoluteFill style={{ pointerEvents: 'none' }}>
+          {particles.map(p => {
+            const floatX = noise3D(`particle-x-${p.id}`, frame * p.speed * 0.01, 0, 0) * 30;
+            const floatY = noise3D(`particle-y-${p.id}`, 0, frame * p.speed * 0.01, 0) * 30;
+            const opacity = 0.3 + noise3D(`particle-o-${p.id}`, frame * p.speed * 0.02, 0, 0) * 0.4;
+            const scale = 0.8 + noise3D(`particle-s-${p.id}`, 0, 0, frame * p.speed * 0.01) * 0.4;
+            
+            if (p.type === 'star') {
+              return (
+                <div key={p.id} style={{
+                  position: 'absolute',
+                  left: `${p.x + floatX}%`,
+                  top: `${p.y + floatY}%`,
+                  opacity,
+                  transform: `translate(-50%, -50%) scale(${scale})`,
+                }}>
+                  <Star points={4} innerRadius={p.size * 0.4} outerRadius={p.size} fill={p.color} />
+                </div>
+              );
+            }
+            
+            return (
+              <div key={p.id} style={{
+                position: 'absolute',
+                left: `${p.x + floatX}%`,
+                top: `${p.y + floatY}%`,
+                width: p.size,
+                height: p.size,
+                borderRadius: '50%',
+                background: p.color,
+                opacity,
+                transform: `translate(-50%, -50%) scale(${scale})`,
+                filter: p.type === 'dot' ? undefined : 'blur(1px)',
+              }} />
+            );
+          })}
+        </AbsoluteFill>
+      </Loop>
+      
+      {/* Subtle vignette */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)',
+        pointerEvents: 'none',
+      }} />
+    </AbsoluteFill>
+  );
+});
 
 export default SophisticatedVideo;
