@@ -556,17 +556,28 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         </div>
       );
       
-    case 'shape':
+    case 'shape': {
       const shapeContent = element.content || '';
-      const shapeType = shapeContent.toLowerCase();
+      const shapeType = shapeContent.toLowerCase().trim();
       const shapeColor = baseStyle.color || baseStyle.fill || baseStyle.background || '#3b82f6';
       
-      // Check if content is emoji or text that should be displayed
+      // Semantic labels that should NOT be rendered as visible text
+      const SEMANTIC_LABELS = new Set([
+        'background', 'rect', 'circle', 'triangle', 'star', 'hexagon', 'polygon',
+        'square', 'dot', 'shape', 'container', 'wrapper', 'overlay', 'spacer',
+        'divider', 'bg', 'fg', 'foreground', 'gradient', 'glow', 'blur',
+        'nebula', 'atmosphere', 'particle', 'dust', 'flare', 'rim', 'shadow',
+      ]);
+      const isSemanticLabel = SEMANTIC_LABELS.has(shapeType) || /^(bg|background|scene|s\d)[\s_-]/i.test(shapeType);
+      
+      // Check if content is emoji
       const isEmoji = /^[\p{Emoji}]+$/u.test(shapeContent);
-      const isShortText = shapeContent.length > 0 && shapeContent.length <= 50 && !['circle', 'rect', 'triangle', 'star', 'hexagon', ''].includes(shapeType);
+      // Only show text if it's NOT a semantic label and is short meaningful content
+      const isShortText = shapeContent.length > 0 && shapeContent.length <= 50 
+        && !isSemanticLabel
+        && !['circle', 'rect', 'triangle', 'star', 'hexagon', ''].includes(shapeType);
       
       if (isEmoji || isShortText) {
-        // Render as a styled container with text/emoji content
         return (
           <div
             style={{
@@ -593,8 +604,8 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         );
       }
       
-      // Handle pure shape types
-      if (shapeType === 'circle') {
+      // Handle pure shape types — all render as CSS divs with full style support
+      if (shapeType === 'circle' || shapeType === 'dot') {
         return (
           <div
             style={{
@@ -603,7 +614,9 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
               borderRadius: '50%',
               background: baseStyle.background || shapeColor,
               border: baseStyle.border,
-              boxShadow: baseStyle.boxShadow
+              boxShadow: baseStyle.boxShadow,
+              filter: baseStyle.filter,
+              opacity: baseStyle.opacity ?? 1,
             }}
           />
         );
@@ -617,7 +630,9 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
               height: 0,
               borderLeft: '50px solid transparent',
               borderRight: '50px solid transparent',
-              borderBottom: `86px solid ${shapeColor}`
+              borderBottom: `86px solid ${shapeColor}`,
+              filter: baseStyle.filter,
+              opacity: baseStyle.opacity ?? 1,
             }}
           />
         );
@@ -633,13 +648,15 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
               clipPath: shapeType === 'star' 
                 ? 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)'
                 : 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-              boxShadow: baseStyle.boxShadow
+              boxShadow: baseStyle.boxShadow,
+              filter: baseStyle.filter,
+              opacity: baseStyle.opacity ?? 1,
             }}
           />
         );
       }
       
-      // Default rectangle (including empty shapes for gradients/nebulas)
+      // Default rectangle — supports gradients, shadows, filters, borders
       return (
         <div
           style={{
@@ -655,6 +672,7 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
           }}
         />
       );
+    }
       
     case '3d-card': {
       const rotateY = typeof baseStyle.rotateY === 'number' ? baseStyle.rotateY : 0;
@@ -935,6 +953,20 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         </div>
       );
       
+    case 'svg':
+      // Render inline SVG markup for detailed vector illustrations
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            filter: baseStyle.filter,
+            opacity: baseStyle.opacity ?? 1,
+          }}
+          dangerouslySetInnerHTML={{ __html: element.content || '' }}
+        />
+      );
+
     default:
       // For unknown types, render a nice gradient placeholder instead of showing type labels
       return (
@@ -950,7 +982,6 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
             justifyContent: 'center',
           }}
         >
-          {/* Show content if it's emoji or short text */}
           {element.content && element.content.length <= 4 && (
             <span style={{ fontSize: baseStyle.fontSize || 48 }}>{element.content}</span>
           )}
