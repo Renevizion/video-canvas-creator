@@ -234,26 +234,49 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
           let animOpacity = 1;
           let animScale = 1;
           let animTranslateY = 0;
+          let animTranslateX = 0;
           
           const animName = element.animation?.name || 'fadeIn';
+          const animProps = (element.animation?.properties || {}) as Record<string, any>;
           
           const localFrame = Math.max(0, frame - animStartFrame);
+
+          // Helper: read continuous translate/scale from properties across the full scene
+          const sceneLocalProgress = Math.max(0, Math.min(1, (frame - sceneStartFrame) / sceneDurationFrames));
+
+          const applyContinuousMotion = () => {
+            if (animProps.translateX) {
+              const [fromX, toX] = Array.isArray(animProps.translateX) ? animProps.translateX : [0, 0];
+              animTranslateX = interpolate(sceneLocalProgress, [0, 1], [fromX * (width / 100), toX * (width / 100)], { extrapolateRight: 'clamp' });
+            }
+            if (animProps.translateY) {
+              const [fromY, toY] = Array.isArray(animProps.translateY) ? animProps.translateY : [0, 0];
+              animTranslateY = interpolate(sceneLocalProgress, [0, 1], [fromY * (height / 100), toY * (height / 100)], { extrapolateRight: 'clamp' });
+            }
+            if (animProps.scale) {
+              const [fromS, toS] = Array.isArray(animProps.scale) ? animProps.scale : [1, 1];
+              animScale = interpolate(sceneLocalProgress, [0, 1], [fromS, toS], { extrapolateRight: 'clamp' });
+            }
+            if (animProps.rotate) {
+              // handled via elementRotation below
+            }
+          };
 
           switch (animName) {
             case 'fadeIn':
               animOpacity = animProgress;
+              applyContinuousMotion();
               break;
 
             case 'springIn': {
-              const props = (element.animation?.properties || {}) as Record<string, any>;
               const s = spring({
                 fps,
                 frame: localFrame,
                 durationInFrames: Math.max(1, Math.round(animDuration)),
                 config: {
-                  damping: props.damping ?? 14,
-                  stiffness: props.stiffness ?? 120,
-                  mass: props.mass ?? 0.9,
+                  damping: animProps.damping ?? 14,
+                  stiffness: animProps.stiffness ?? 120,
+                  mass: animProps.mass ?? 0.9,
                 },
               });
 
@@ -268,20 +291,19 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
 
             case 'bounceIn':
             case 'bounce': {
-              const props = (element.animation?.properties || {}) as Record<string, any>;
               const s = spring({
                 fps,
                 frame: localFrame,
                 durationInFrames: Math.max(1, Math.round(animDuration)),
                 config: {
-                  damping: props.damping ?? 9,
-                  stiffness: props.stiffness ?? 140,
-                  mass: props.mass ?? 0.7,
+                  damping: animProps.damping ?? 9,
+                  stiffness: animProps.stiffness ?? 140,
+                  mass: animProps.mass ?? 0.7,
                 },
               });
 
               animOpacity = 1;
-              const rawScale = 0.5 + s * 0.5; // allows overshoot when s > 1
+              const rawScale = 0.5 + s * 0.5;
               animScale = Math.min(1.18, Math.max(0, rawScale));
               animTranslateY = interpolate(s, [0, 1], [44, 0], {
                 extrapolateLeft: 'clamp',
@@ -291,25 +313,58 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
             }
 
             case 'popIn':
-            case 'scale':
-            case 'zoomIn':
+            case 'zoomIn': {
               animOpacity = animProgress;
-              animScale = interpolate(animProgress, [0, 1], [0.7, 1], { extrapolateRight: 'clamp' });
+              const scaleRange = animProps.scale || [0.7, 1];
+              animScale = interpolate(animProgress, [0, 1], scaleRange, { extrapolateRight: 'clamp' });
+              applyContinuousMotion();
               break;
+            }
+
+            case 'scale': {
+              animOpacity = animProgress;
+              const scaleRange = animProps.scale || [0.9, 1];
+              // Scale continuously over the whole scene (not just entrance)
+              animScale = interpolate(sceneLocalProgress, [0, 1], scaleRange, { extrapolateRight: 'clamp' });
+              applyContinuousMotion();
+              break;
+            }
 
             case 'slideUp':
               animOpacity = animProgress;
-              animTranslateY = interpolate(animProgress, [0, 1], [30, 0], { extrapolateRight: 'clamp' });
+              if (animProps.translateY) {
+                const [fromY, toY] = animProps.translateY;
+                animTranslateY = interpolate(animProgress, [0, 1], [fromY * (height / 100), toY * (height / 100)], { extrapolateRight: 'clamp' });
+              } else {
+                animTranslateY = interpolate(animProgress, [0, 1], [30, 0], { extrapolateRight: 'clamp' });
+              }
               break;
 
             case 'slideIn':
               animOpacity = animProgress;
-              animTranslateY = interpolate(animProgress, [0, 1], [-30, 0], { extrapolateRight: 'clamp' });
+              if (animProps.translateX) {
+                const [fromX, toX] = animProps.translateX;
+                animTranslateX = interpolate(sceneLocalProgress, [0, 1], [fromX * (width / 100), toX * (width / 100)], { extrapolateRight: 'clamp' });
+              } else {
+                animTranslateY = interpolate(animProgress, [0, 1], [-30, 0], { extrapolateRight: 'clamp' });
+              }
+              applyContinuousMotion();
               break;
 
             case 'float':
-              animOpacity = animProgress;
-              animTranslateY = Math.sin(frame * 0.05) * 5;
+              animOpacity = Math.min(1, animProgress * 2); // quick fade in
+              if (animProps.translateY) {
+                const [fromY, toY] = animProps.translateY;
+                const range = (toY - fromY) * (height / 100);
+                animTranslateY = Math.sin(frame * 0.04) * (range / 2);
+              } else {
+                animTranslateY = Math.sin(frame * 0.05) * 5;
+              }
+              if (animProps.translateX) {
+                const [fromX, toX] = animProps.translateX;
+                const range = (toX - fromX) * (width / 100);
+                animTranslateX = Math.sin(frame * 0.03 + 1.5) * (range / 2);
+              }
               break;
 
             case 'pulse':
@@ -319,10 +374,18 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
 
             case 'rotate':
               animOpacity = animProgress;
+              applyContinuousMotion();
               break;
 
             default:
               animOpacity = animProgress;
+              applyContinuousMotion();
+          }
+
+          // Apply rotation from properties
+          let propRotation = 0;
+          if (animProps.rotate && Array.isArray(animProps.rotate)) {
+            propRotation = interpolate(sceneLocalProgress, [0, 1], animProps.rotate, { extrapolateRight: 'clamp' });
           }
           
           // Ken Burns effect for images
