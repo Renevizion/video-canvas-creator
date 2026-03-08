@@ -850,6 +850,160 @@ function applyPromptDrivenEnhancements(
   return plan;
 }
 
+function isInterplanetaryMigrationPrompt(promptLower: string) {
+  const hasEarthToMars = /(earth).*\b(to|towards|into)\b.*(mars)|(mars).*\b(from)\b.*(earth)/.test(promptLower);
+  const hasBothPlanets = promptLower.includes('earth') && promptLower.includes('mars');
+  const migrationTerms = [
+    'move', 'moving', 'moves', 'migrate', 'migration', 'relocate', 'exodus',
+    'evacuate', 'colonize', 'colonization', 'settle', 'departure', 'arrival', 'civilization'
+  ];
+  const hasMigrationIntent = migrationTerms.some((t) => promptLower.includes(t));
+
+  return hasEarthToMars || (hasBothPlanets && hasMigrationIntent);
+}
+
+function enforceInterplanetaryStoryFlow(plan: any, requestedDuration: number) {
+  if (!plan || !Array.isArray(plan.scenes) || plan.scenes.length === 0) return plan;
+
+  const beats = [
+    {
+      title: 'EARTH EXODUS',
+      description: 'Final departure from Earth orbit with migration fleets forming launch lanes.',
+      voiceover: 'Earth behind us. Mars ahead.'
+    },
+    {
+      title: 'INTERPLANETARY TRANSIT',
+      description: 'Fleet in deep-space transit, propulsion wakes carving through silence.',
+      voiceover: 'Months pass in the long crossing.'
+    },
+    {
+      title: 'MARS FIRST SIGHT',
+      description: 'First wide reveal of Mars growing from a red star into a world.',
+      voiceover: 'Mars emerges on the horizon.'
+    },
+    {
+      title: 'DESCENT AND LANDING',
+      description: 'Controlled atmospheric descent and convoy landing on dust plains.',
+      voiceover: 'Descent begins. Touchdown confirmed.'
+    },
+    {
+      title: 'FOUNDATION ESTABLISHED',
+      description: 'Habitat domes, power grids, and first colony lights activate in sequence.',
+      voiceover: 'The second home is now alive.'
+    },
+  ];
+
+  while (plan.scenes.length < beats.length) {
+    const clone = { ...plan.scenes[Math.max(0, plan.scenes.length - 1)] };
+    clone.id = `scene_${plan.scenes.length + 1}`;
+    plan.scenes.push(clone);
+  }
+
+  const totalDuration = Math.max(10, Number(plan.duration || requestedDuration || 12));
+  const weights = [0.16, 0.24, 0.18, 0.2, 0.22];
+
+  let running = 0;
+  plan.scenes = plan.scenes.slice(0, beats.length).map((scene: any, index: number) => {
+    const rawDuration = index === beats.length - 1
+      ? Number((totalDuration - running).toFixed(2))
+      : Number((totalDuration * weights[index]).toFixed(2));
+
+    const sceneDuration = Math.max(1.8, rawDuration);
+    const startTime = Number(running.toFixed(2));
+    running += sceneDuration;
+
+    const beat = beats[index];
+    const transitionByBeat = index === 1 ? { type: 'slide', duration: 0.6 } : { type: 'fade', duration: 0.5 };
+
+    const textId = `${scene.id || `scene_${index + 1}`}_beat_title`;
+    const hasBeatTitle = (scene.elements || []).some((el: any) => el?.id === textId);
+    const beatTitleEl = {
+      id: textId,
+      type: 'text',
+      content: beat.title,
+      position: { x: 50, y: index === 4 ? 22 : 14, z: 5 },
+      size: { width: 86, height: 12 },
+      style: { fontSize: 44, fontWeight: 800, color: '#ffffff', letterSpacing: 4 },
+      animation: { name: 'slideUp', type: 'slide', duration: 0.8, easing: 'ease-out', delay: 0.1, properties: { translateY: [8, 0] } }
+    };
+
+    return {
+      ...scene,
+      startTime,
+      duration: sceneDuration,
+      description: beat.description,
+      voiceover: beat.voiceover,
+      transition: scene.transition || transitionByBeat,
+      elements: hasBeatTitle ? scene.elements : [...(scene.elements || []), beatTitleEl],
+    };
+  });
+
+  plan.duration = Number(running.toFixed(2));
+  return plan;
+}
+
+function createShipSvgMarkup(seed: string, primary: string, secondary: string) {
+  const safe = seed.replace(/[^a-zA-Z0-9_-]/g, '_');
+  return `<svg viewBox="0 0 260 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+    <defs>
+      <linearGradient id="ship_body_${safe}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f8fafc"/>
+        <stop offset="55%" stop-color="${primary}"/>
+        <stop offset="100%" stop-color="${secondary}"/>
+      </linearGradient>
+      <radialGradient id="ship_engine_${safe}" cx="50%" cy="50%">
+        <stop offset="0%" stop-color="rgba(180,230,255,1)"/>
+        <stop offset="65%" stop-color="rgba(80,150,255,0.5)"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+    </defs>
+    <ellipse cx="32" cy="50" rx="32" ry="6" fill="rgba(100,180,255,0.45)"/>
+    <polygon points="88,25 126,42 80,42" fill="${secondary}" opacity="0.9"/>
+    <polygon points="88,75 126,58 80,58" fill="${secondary}" opacity="0.9"/>
+    <ellipse cx="150" cy="50" rx="90" ry="18" fill="url(#ship_body_${safe})"/>
+    <ellipse cx="208" cy="47" rx="14" ry="10" fill="rgba(180,220,255,0.55)"/>
+    <circle cx="60" cy="50" r="13" fill="url(#ship_engine_${safe})"/>
+  </svg>`;
+}
+
+function injectSpaceSvgAnchors(plan: any, colors: string[]) {
+  if (!plan || !Array.isArray(plan.scenes)) return plan;
+
+  const primary = colors[1] || '#5c6bc0';
+  const secondary = colors[3] || '#283593';
+
+  plan.scenes = plan.scenes.map((scene: any, sceneIdx: number) => {
+    const elements = scene.elements || [];
+    const hasSvg = elements.some((el: any) => el?.type === 'svg');
+    if (hasSvg) return scene;
+
+    const xPath = [24, 38, 52, 66, 78];
+    const yPath = [58, 52, 48, 54, 60];
+    const idx = Math.min(sceneIdx, xPath.length - 1);
+
+    const anchor = {
+      id: `${scene.id || `scene_${sceneIdx + 1}`}_svg_anchor_ship`,
+      type: 'svg',
+      content: createShipSvgMarkup(scene.id || `scene_${sceneIdx + 1}`, primary, secondary),
+      position: { x: xPath[idx], y: yPath[idx], z: 3 },
+      size: { width: 20, height: 6 },
+      style: { filter: 'drop-shadow(0 4px 14px rgba(0,0,0,0.45)) drop-shadow(0 0 16px rgba(110,150,255,0.25))' },
+      animation: {
+        name: sceneIdx === 0 ? 'slideIn' : 'float',
+        type: 'slide',
+        duration: Math.max(1.2, Number(scene.duration || 3)),
+        easing: 'ease-out',
+        delay: 0,
+        properties: sceneIdx === 0 ? { translateX: [-14, 0], translateY: [1, 0] } : { translateY: [-1.2, 1.2] }
+      }
+    };
+
+    return { ...scene, elements: [...elements, anchor] };
+  });
+
+  return plan;
+}
+
 function isTechPrompt(promptLower: string) {
   const techKeywords = [
     'saas', 'software', 'app', 'dashboard', 'terminal', 'code', 'developer', 'api', 'analytics', 'kpi',
