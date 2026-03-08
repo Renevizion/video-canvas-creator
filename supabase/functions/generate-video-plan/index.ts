@@ -195,14 +195,14 @@ VOICEOVER & CAPTIONS:
    - Text: Headlines, captions (z: 3-4)
    - Foreground: Sparkles, lens flares, accent shapes (z: 5)
 
-4. ADVANCED ELEMENT TYPES:
-   - "code-editor" - 3D laptop with animated code. For tech/SaaS content
-   - "terminal" - Command line typing effect. For developer tools
-   - "progress" - Animated progress indicator. For metrics/growth
+4. ADVANCED ELEMENT TYPES (STRICT USAGE):
+   - "code-editor" - 3D laptop with animated code. ONLY for explicit tech/SaaS/dev prompts
+   - "terminal" - Command line typing effect. ONLY for explicit tech/SaaS/dev prompts
+   - "progress" - Animated progress indicator. ONLY for analytics/metrics/business prompts
    - "3d-card" - Glassmorphic floating card. For feature showcases
    - "laptop-mockup" - 3D rotating laptop frame. For product demos
 
-5. ANIMATION VARIETY:
+   HARD RULE: For cinematic story prompts (space, travel, lifestyle, nature, fantasy), do NOT use terminal/progress/code-editor unless the user explicitly asks.
    Mix these animation types for visual interest:
    - "scale" / "popIn" / "zoomIn" - Dramatic entrances
    - "slideUp" / "slideIn" - Smooth reveals
