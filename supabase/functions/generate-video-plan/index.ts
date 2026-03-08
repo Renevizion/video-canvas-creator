@@ -1064,23 +1064,183 @@ function createCodeOnlySpaceJourneyPlan(
   },
   existingStyle: any
 ) {
-  const totalDuration = Math.max(8, options.duration || 10);
-  let scene1Duration = Math.max(2.5, Number((totalDuration * 0.3).toFixed(2)));
-  let scene2Duration = Math.max(3, Number((totalDuration * 0.4).toFixed(2)));
-  let scene3Duration = Number((totalDuration - scene1Duration - scene2Duration).toFixed(2));
-
-  if (scene3Duration < 2.5) {
-    const needed = 2.5 - scene3Duration;
-    scene2Duration = Math.max(2.5, Number((scene2Duration - needed).toFixed(2)));
-    scene3Duration = Number((totalDuration - scene1Duration - scene2Duration).toFixed(2));
-  }
+  const totalDuration = Math.max(9, options.duration || 12);
+  let s1 = Math.max(3, Number((totalDuration * 0.3).toFixed(2)));
+  let s2 = Math.max(3.5, Number((totalDuration * 0.4).toFixed(2)));
+  let s3 = Number((totalDuration - s1 - s2).toFixed(2));
+  if (s3 < 2.5) { s2 = Math.max(3, Number((s2 - (2.5 - s3)).toFixed(2))); s3 = Number((totalDuration - s1 - s2).toFixed(2)); }
 
   const baseStyle = existingStyle || {
     colorPalette: options.colors,
     typography: { primary: 'Orbitron', secondary: 'JetBrains Mono', sizes: { h1: 70, h2: 42, body: 22 } },
-    spacing: 24,
-    borderRadius: 16,
+    spacing: 24, borderRadius: 16,
   };
+
+  // ── Reusable star particle layer generator ──
+  const makeStars = (sceneId: string, count: number) => {
+    const stars = [];
+    const positions = [
+      {x:12,y:8},{x:88,y:14},{x:45,y:6},{x:72,y:22},{x:18,y:30},{x:92,y:38},
+      {x:34,y:12},{x:65,y:4},{x:8,y:48},{x:78,y:8},{x:55,y:18},{x:26,y:22},
+      {x:95,y:52},{x:42,y:28},{x:16,y:16},{x:82,y:44},{x:58,y:36},{x:4,y:38},
+      {x:68,y:48},{x:38,y:42}
+    ];
+    for (let i = 0; i < Math.min(count, positions.length); i++) {
+      const p = positions[i];
+      const sz = 1 + (i % 3);
+      const brightness = 0.5 + (i % 5) * 0.12;
+      stars.push({
+        id: `${sceneId}_star_${i}`,
+        type: 'shape', content: 'circle',
+        position: { x: p.x, y: p.y, z: 0.5 },
+        size: { width: sz, height: sz },
+        style: { background: `rgba(255,255,255,${brightness})`, boxShadow: `0 0 ${sz*3}px rgba(255,255,255,${brightness*0.6})` },
+        animation: { name: 'pulse', duration: 1.5 + (i % 4) * 0.6, delay: i * 0.08, properties: { scale: [0.8, 1.5 + (i%3)*0.3] } }
+      });
+    }
+    return stars;
+  };
+
+  // ── Nebula cloud layers ──
+  const makeNebula = (sceneId: string, hue1: string, hue2: string, x: number, y: number) => ({
+    id: `${sceneId}_nebula`, type: 'shape', content: 'rect',
+    position: { x, y, z: 0.3 },
+    size: { width: 60, height: 40 },
+    style: {
+      background: `radial-gradient(ellipse at 40% 45%, ${hue1} 0%, ${hue2} 35%, transparent 70%)`,
+      filter: 'blur(20px)', opacity: 0.35,
+    },
+    animation: { name: 'scale', duration: 8, properties: { scale: [1, 1.06], translateX: [-1, 1] } }
+  });
+
+  // ── Detailed moon with craters ──
+  const makeMoon = (sceneId: string, x: number, y: number, sizePct: number, z: number) => {
+    const craters = [
+      { cx: 30, cy: 25, r: 8 }, { cx: 55, cy: 40, r: 12 }, { cx: 70, cy: 20, r: 6 },
+      { cx: 40, cy: 65, r: 10 }, { cx: 60, cy: 75, r: 7 }, { cx: 25, cy: 50, r: 5 },
+    ];
+    const craterEls = craters.map((c, i) => ({
+      id: `${sceneId}_crater_${i}`, type: 'shape', content: 'circle',
+      position: { x: x + (c.cx - 50) * sizePct / 100, y: y + (c.cy - 50) * sizePct / 100, z: z + 0.1 },
+      size: { width: sizePct * c.r / 100, height: sizePct * c.r / 100 },
+      style: {
+        background: `radial-gradient(circle at 40% 38%, rgba(90,90,90,0.5), rgba(50,50,50,0.8) 60%, rgba(30,30,30,0.3) 100%)`,
+        boxShadow: `inset 1px 1px 4px rgba(0,0,0,0.6), inset -1px -1px 2px rgba(180,180,180,0.15)`,
+      },
+      animation: { name: 'fadeIn', duration: 0.8, delay: 0.1 + i * 0.05 }
+    }));
+
+    return [{
+      id: `${sceneId}_moon_body`, type: 'shape', content: 'circle',
+      position: { x, y, z },
+      size: { width: sizePct, height: sizePct },
+      style: {
+        background: `radial-gradient(circle at 30% 28%, #f5f5f0 0%, #d4d0c8 18%, #b0aba0 40%, #807a70 65%, #504a40 85%, #2a2520 100%)`,
+        boxShadow: `0 0 ${sizePct}px rgba(220,215,200,0.15), inset -${sizePct*0.12}px -${sizePct*0.1}px ${sizePct*0.3}px rgba(0,0,0,0.55), 0 0 ${sizePct*0.6}px rgba(180,175,160,0.08)`,
+      },
+      animation: { name: 'fadeIn', duration: 1.2 }
+    }, {
+      // Rim light on edge
+      id: `${sceneId}_moon_rim`, type: 'shape', content: 'circle',
+      position: { x: x + sizePct * 0.02, y, z: z + 0.05 },
+      size: { width: sizePct * 0.98, height: sizePct * 0.98 },
+      style: {
+        background: 'transparent',
+        border: '1px solid rgba(255,248,230,0.2)',
+        boxShadow: `inset ${sizePct*0.15}px ${sizePct*0.08}px ${sizePct*0.2}px rgba(255,248,230,0.12)`,
+      },
+      animation: { name: 'fadeIn', duration: 1.5 }
+    }, ...craterEls];
+  };
+
+  // ── Multi-part spaceship ──
+  const makeShip = (sceneId: string, x: number, y: number, scale: number, z: number, anim: any) => {
+    const w = 22 * scale; const h = 7 * scale;
+    return [
+      // Main fuselage
+      { id: `${sceneId}_ship_body`, type: 'shape', content: 'rect',
+        position: { x, y, z },
+        size: { width: w, height: h },
+        style: {
+          background: `linear-gradient(180deg, #e8eaf6 0%, #9fa8da 25%, #5c6bc0 50%, #3949ab 75%, #283593 100%)`,
+          borderRadius: 999,
+          boxShadow: `0 ${h*0.4}px ${h*1.2}px rgba(0,0,0,0.45), 0 0 ${h*2}px rgba(100,140,255,0.15)`,
+        },
+        animation: anim
+      },
+      // Cockpit window
+      { id: `${sceneId}_ship_cockpit`, type: 'shape', content: 'circle',
+        position: { x: x + w * 0.35, y: y - h * 0.05, z: z + 0.2 },
+        size: { width: h * 0.5, height: h * 0.4 },
+        style: {
+          background: `radial-gradient(circle at 35% 35%, rgba(180,220,255,0.9), rgba(80,130,220,0.7) 60%, rgba(40,80,180,0.5))`,
+          boxShadow: `0 0 8px rgba(130,180,255,0.5)`,
+        },
+        animation: anim
+      },
+      // Wing top
+      { id: `${sceneId}_ship_wing_top`, type: 'shape', content: 'triangle',
+        position: { x: x - w * 0.05, y: y - h * 0.55, z: z - 0.1 },
+        size: { width: w * 0.35, height: h * 0.6 },
+        style: { color: '#3949ab', filter: 'brightness(0.85)' },
+        animation: anim
+      },
+      // Wing bottom
+      { id: `${sceneId}_ship_wing_bot`, type: 'shape', content: 'triangle',
+        position: { x: x - w * 0.05, y: y + h * 0.55, z: z - 0.1 },
+        size: { width: w * 0.35, height: h * 0.6 },
+        style: { color: '#283593', filter: 'brightness(0.8)' },
+        animation: anim
+      },
+      // Engine glow core
+      { id: `${sceneId}_engine_core`, type: 'shape', content: 'circle',
+        position: { x: x - w * 0.48, y, z: z + 0.1 },
+        size: { width: h * 0.7, height: h * 0.7 },
+        style: {
+          background: `radial-gradient(circle, rgba(120,200,255,1) 0%, rgba(80,160,255,0.8) 30%, rgba(50,120,255,0.3) 60%, transparent 100%)`,
+          filter: 'blur(2px)',
+        },
+        animation: { ...anim, name: 'pulse', duration: 0.8, properties: { scale: [0.85, 1.3] } }
+      },
+      // Engine exhaust trail
+      { id: `${sceneId}_engine_trail`, type: 'shape', content: 'rect',
+        position: { x: x - w * 0.75, y, z: z - 0.1 },
+        size: { width: w * 0.5, height: h * 0.3 },
+        style: {
+          background: `linear-gradient(90deg, transparent 0%, rgba(100,180,255,0.15) 20%, rgba(100,180,255,0.5) 60%, rgba(140,210,255,0.8) 100%)`,
+          borderRadius: 999, filter: 'blur(3px)',
+        },
+        animation: { ...anim, name: 'pulse', duration: 1.2, properties: { scale: [0.9, 1.15] } }
+      },
+    ];
+  };
+
+  // ── Lens flare ──
+  const makeLensFlare = (sceneId: string, x: number, y: number) => [
+    { id: `${sceneId}_flare_core`, type: 'shape', content: 'circle',
+      position: { x, y, z: 4.5 }, size: { width: 4, height: 4 },
+      style: { background: 'radial-gradient(circle, rgba(255,250,230,0.9), rgba(255,220,150,0.3) 40%, transparent 70%)', filter: 'blur(1px)' },
+      animation: { name: 'pulse', duration: 2.5, properties: { scale: [0.8, 1.4] } }
+    },
+    { id: `${sceneId}_flare_ring`, type: 'shape', content: 'circle',
+      position: { x, y, z: 4.4 }, size: { width: 12, height: 12 },
+      style: { background: 'transparent', border: '1px solid rgba(255,240,200,0.12)', filter: 'blur(2px)', opacity: 0.4 },
+      animation: { name: 'scale', duration: 3, properties: { scale: [0.9, 1.1] } }
+    },
+    { id: `${sceneId}_flare_streak`, type: 'shape', content: 'rect',
+      position: { x, y, z: 4.3 }, size: { width: 25, height: 0.5 },
+      style: { background: 'linear-gradient(90deg, transparent, rgba(255,240,200,0.15) 30%, rgba(255,240,200,0.25) 50%, rgba(255,240,200,0.15) 70%, transparent)', filter: 'blur(1px)' },
+      animation: { name: 'fadeIn', duration: 1.5, delay: 0.3 }
+    },
+  ];
+
+  // ── Atmospheric horizon glow ──
+  const makeAtmosphere = (sceneId: string, y: number, color: string) => ({
+    id: `${sceneId}_atmo`, type: 'shape', content: 'rect',
+    position: { x: 50, y, z: 0.8 }, size: { width: 120, height: 8 },
+    style: { background: `linear-gradient(180deg, transparent, ${color} 50%, transparent)`, filter: 'blur(12px)', opacity: 0.5 },
+    animation: { name: 'fadeIn', duration: 2, delay: 0.5 }
+  });
 
   return {
     duration: totalDuration,
@@ -1088,189 +1248,120 @@ function createCodeOnlySpaceJourneyPlan(
     resolution: options.resolution,
     aspectRatio: options.aspectRatio,
     scenes: [
+      // ═══════ SCENE 1: DEPARTURE ═══════
       {
         id: 'scene_1_departure_code',
         startTime: 0,
-        duration: scene1Duration,
-        description: 'Code-rendered launch setup with layered space background and departing spacecraft silhouette.',
+        duration: s1,
+        description: 'Deep space departure with detailed ship launching toward a distant moon.',
         voiceover: 'Initiating lunar approach.',
         elements: [
-          {
-            id: 'bg_space_1',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 50, y: 50, z: 0 },
-            size: { width: 100, height: 100 },
-            style: { background: 'radial-gradient(ellipse at 50% 32%, rgba(58,78,120,0.45), rgba(14,20,40,0.7) 38%, #04060d 100%)' },
-            animation: { name: 'fadeIn', duration: 1 }
-          },
-          {
-            id: 'moon_far_1',
-            type: 'shape',
-            content: 'circle',
-            position: { x: 70, y: 38, z: 1 },
-            size: { width: 28, height: 28 },
-            style: {
-              background: 'radial-gradient(circle at 35% 35%, #ececec 0%, #b6b6b6 38%, #777777 70%, #3b3b3b 100%)',
-              boxShadow: '0 0 50px rgba(220,220,220,0.24), inset -12px -12px 30px rgba(0,0,0,0.45)'
-            },
-            animation: { name: 'scale', duration: scene1Duration, properties: { scale: [1.03, 1] } }
-          },
-          {
-            id: 'ship_body_1',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 34, y: 62, z: 3 },
-            size: { width: 20, height: 6 },
-            style: {
-              background: 'linear-gradient(135deg, #f2f5ff 0%, #a8b4d9 40%, #4f5f91 100%)',
-              borderRadius: 999,
-              boxShadow: '0 12px 30px rgba(0,0,0,0.45)'
-            },
-            animation: { name: 'slideIn', duration: scene1Duration, properties: { translateX: [-12, 4] } }
-          },
-          {
-            id: 'engine_glow_1',
-            type: 'shape',
-            content: 'circle',
-            position: { x: 25, y: 62, z: 2 },
-            size: { width: 5, height: 5 },
-            style: { background: 'radial-gradient(circle, rgba(111,196,255,0.95) 0%, rgba(111,196,255,0.2) 60%, transparent 100%)', filter: 'blur(1px)' },
-            animation: { name: 'pulse', duration: 1.6, properties: { scale: [0.9, 1.4] } }
-          },
-          {
-            id: 'title_departure_1',
-            type: 'text',
-            content: 'LUNAR ORBIT START',
-            position: { x: 50, y: 86, z: 4 },
-            size: { width: 82, height: 12 },
-            style: { fontSize: 52, fontWeight: 800, color: '#ffffff', letterSpacing: 5 },
-            animation: { name: 'slideUp', duration: 0.9, delay: 0.2, properties: { translateY: [8, 0] } }
-          }
-        ],
-        transition: { type: 'fade', duration: 0.5 }
-      },
-      {
-        id: 'scene_2_orbit_code',
-        startTime: scene1Duration,
-        duration: scene2Duration,
-        description: 'Code-rendered orbit pass with large lunar body, drifting stars, and lateral spacecraft motion.',
-        voiceover: 'Sweeping past the moon.',
-        elements: [
-          {
-            id: 'bg_space_2',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 50, y: 50, z: 0 },
-            size: { width: 100, height: 100 },
-            style: { background: 'linear-gradient(180deg, #050812 0%, #0d1327 45%, #0a0e1d 100%)' },
-            animation: { name: 'fadeIn', duration: 0.8 }
-          },
-          {
-            id: 'moon_main_2',
-            type: 'shape',
-            content: 'circle',
-            position: { x: 60, y: 66, z: 1 },
-            size: { width: 78, height: 78 },
-            style: {
-              background: 'radial-gradient(circle at 32% 32%, #f1f1f1 0%, #bfbfbf 35%, #818181 65%, #404040 100%)',
-              boxShadow: '0 0 80px rgba(200,200,200,0.2), inset -22px -22px 50px rgba(0,0,0,0.55)'
-            },
-            animation: { name: 'scale', duration: scene2Duration, properties: { scale: [1.03, 0.98] } }
-          },
-          {
-            id: 'ship_orbit_2',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 25, y: 42, z: 3 },
-            size: { width: 16, height: 5 },
-            style: {
-              background: 'linear-gradient(135deg, #f7f9ff 0%, #a8b7de 40%, #4d629f 100%)',
-              borderRadius: 999,
-              boxShadow: '0 0 24px rgba(130,182,255,0.32), 0 10px 22px rgba(0,0,0,0.4)'
-            },
-            animation: { name: 'slideIn', duration: scene2Duration, properties: { translateX: [-18, 34], translateY: [-2, 3] } }
-          },
-          {
-            id: 'ship_trail_2',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 18, y: 42, z: 2 },
-            size: { width: 10, height: 2 },
-            style: { background: 'linear-gradient(90deg, rgba(120,210,255,0.7), rgba(120,210,255,0))', borderRadius: 999, filter: 'blur(0.5px)' },
-            animation: { name: 'slideIn', duration: scene2Duration, properties: { translateX: [-18, 34], translateY: [-2, 3] } }
-          },
-          {
-            id: 'star_orb_2',
-            type: 'shape',
-            content: 'star',
-            position: { x: 86, y: 16, z: 1 },
-            size: { width: 3, height: 3 },
-            style: { color: '#ffffffc2' },
-            animation: { name: 'pulse', duration: 1.8, properties: { scale: [1, 1.8] } }
-          }
+          // Space background
+          { id: 's1_bg', type: 'shape', content: 'rect', position: { x: 50, y: 50, z: 0 }, size: { width: 100, height: 100 },
+            style: { background: 'radial-gradient(ellipse at 50% 30%, #0c1228 0%, #070b18 40%, #020408 100%)' },
+            animation: { name: 'fadeIn', duration: 1 } },
+          // Nebula layers
+          makeNebula('s1', 'rgba(60,30,140,0.3)', 'rgba(30,60,160,0.15)', 30, 25),
+          { id: 's1_nebula2', type: 'shape', content: 'rect', position: { x: 75, y: 40, z: 0.3 }, size: { width: 45, height: 30 },
+            style: { background: 'radial-gradient(ellipse at 55% 50%, rgba(140,50,80,0.2), rgba(80,30,100,0.1) 40%, transparent 70%)', filter: 'blur(18px)', opacity: 0.3 },
+            animation: { name: 'scale', duration: 7, properties: { scale: [1, 1.04] } } },
+          // Stars
+          ...makeStars('s1', 16),
+          // Distant moon (small)
+          ...makeMoon('s1', 72, 32, 14, 1),
+          // Ship (entering from left, moving right toward moon)
+          ...makeShip('s1', 30, 58, 1, 3, { name: 'slideIn', duration: s1, properties: { translateX: [-15, 8], translateY: [2, -1] } }),
+          // Atmospheric horizon glow at bottom
+          makeAtmosphere('s1', 95, 'rgba(40,60,120,0.3)'),
+          // Lens flare from distant sun
+          ...makeLensFlare('s1', 88, 12),
+          // Title
+          { id: 's1_title', type: 'text', content: 'LUNAR APPROACH', position: { x: 50, y: 88, z: 5 }, size: { width: 82, height: 12 },
+            style: { fontSize: 52, fontWeight: 800, color: '#ffffff', letterSpacing: 6, textShadow: '0 0 30px rgba(100,150,255,0.4)' },
+            animation: { name: 'slideUp', duration: 0.9, delay: 0.3, properties: { translateY: [6, 0] } } },
         ],
         transition: { type: 'fade', duration: 0.6 }
       },
+
+      // ═══════ SCENE 2: ORBIT PASS ═══════
+      {
+        id: 'scene_2_orbit_code',
+        startTime: s1,
+        duration: s2,
+        description: 'Ship sweeps across the frame as the massive moon dominates the scene.',
+        voiceover: 'Sweeping past the far side.',
+        elements: [
+          // Deep space bg
+          { id: 's2_bg', type: 'shape', content: 'rect', position: { x: 50, y: 50, z: 0 }, size: { width: 100, height: 100 },
+            style: { background: 'linear-gradient(180deg, #030610 0%, #0a1025 35%, #060c1a 70%, #020408 100%)' },
+            animation: { name: 'fadeIn', duration: 0.8 } },
+          // Nebula behind moon
+          makeNebula('s2', 'rgba(50,80,180,0.25)', 'rgba(20,40,100,0.1)', 55, 50),
+          // Stars
+          ...makeStars('s2', 18),
+          // MASSIVE moon filling lower-right
+          ...makeMoon('s2', 62, 72, 80, 1),
+          // Atmospheric glow on moon's lit edge
+          makeAtmosphere('s2', 38, 'rgba(200,195,180,0.12)'),
+          // Ship crossing laterally (smaller = further away feel, then closer)
+          ...makeShip('s2', 20, 35, 0.8, 3, { name: 'slideIn', duration: s2, properties: { translateX: [-22, 40], translateY: [-1, 3] } }),
+          // Lens flare from sun behind moon
+          ...makeLensFlare('s2', 38, 28),
+          // Foreground dust particles
+          { id: 's2_dust1', type: 'shape', content: 'circle', position: { x: 15, y: 60, z: 4.5 }, size: { width: 1.5, height: 1.5 },
+            style: { background: 'rgba(200,195,180,0.3)', filter: 'blur(1px)' },
+            animation: { name: 'slideIn', duration: s2, properties: { translateX: [0, 18], translateY: [0, -4] } } },
+          { id: 's2_dust2', type: 'shape', content: 'circle', position: { x: 80, y: 25, z: 4.5 }, size: { width: 1, height: 1 },
+            style: { background: 'rgba(200,195,180,0.2)', filter: 'blur(1px)' },
+            animation: { name: 'slideIn', duration: s2, delay: 0.3, properties: { translateX: [0, 12], translateY: [0, -2] } } },
+        ],
+        transition: { type: 'fade', duration: 0.6 }
+      },
+
+      // ═══════ SCENE 3: REVEAL ═══════
       {
         id: 'scene_3_reveal_code',
-        startTime: Number((scene1Duration + scene2Duration).toFixed(2)),
-        duration: scene3Duration,
-        description: 'Code-rendered reveal with moon horizon and final hero silhouette completing the orbital story.',
-        voiceover: 'Orbit complete. Horizon unlocked.',
+        startTime: Number((s1 + s2).toFixed(2)),
+        duration: s3,
+        description: 'Grand reveal: moon horizon with ship silhouette and dramatic lighting.',
+        voiceover: 'Orbit complete. Stars beyond.',
         elements: [
-          {
-            id: 'bg_space_3',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 50, y: 50, z: 0 },
-            size: { width: 100, height: 100 },
-            style: { background: 'radial-gradient(ellipse at 50% 25%, rgba(52,76,138,0.35), rgba(9,14,28,0.72) 42%, #04060d 100%)' },
-            animation: { name: 'fadeIn', duration: 0.9 }
-          },
-          {
-            id: 'moon_horizon_3',
-            type: 'shape',
-            content: 'circle',
-            position: { x: 50, y: 126, z: 1 },
-            size: { width: 160, height: 160 },
-            style: {
-              background: 'radial-gradient(circle at 50% 0%, #d7d7d7 0%, #9a9a9a 48%, #565656 80%, #353535 100%)',
-              boxShadow: 'inset 0 -20px 40px rgba(0,0,0,0.45)'
-            },
-            animation: { name: 'scale', duration: scene3Duration, properties: { scale: [1.02, 1] } }
-          },
-          {
-            id: 'hero_silhouette_3',
-            type: 'shape',
-            content: 'rect',
-            position: { x: 35, y: 66, z: 3 },
-            size: { width: 13, height: 28 },
-            style: {
-              background: 'linear-gradient(180deg, #b7c8ef 0%, #6072a6 45%, #27355f 100%)',
-              borderRadius: 999,
-              boxShadow: '0 10px 24px rgba(0,0,0,0.42)'
-            },
-            animation: { name: 'float', duration: scene3Duration, properties: { translateY: [-1.2, 1.2] } }
-          },
-          {
-            id: 'final_title_3',
-            type: 'text',
-            content: 'AROUND THE MOON',
-            position: { x: 50, y: 18, z: 4 },
-            size: { width: 84, height: 14 },
-            style: { fontSize: 48, fontWeight: 760, color: '#ffffff', letterSpacing: 4 },
-            animation: { name: 'zoomIn', duration: 1.2, delay: 0.2, properties: { scale: [0.9, 1] } }
-          }
+          // Space bg with warm tint
+          { id: 's3_bg', type: 'shape', content: 'rect', position: { x: 50, y: 50, z: 0 }, size: { width: 100, height: 100 },
+            style: { background: 'radial-gradient(ellipse at 50% 20%, #0f1830 0%, #070c1c 35%, #020408 100%)' },
+            animation: { name: 'fadeIn', duration: 0.9 } },
+          // Nebula/galaxy backdrop
+          { id: 's3_galaxy', type: 'shape', content: 'rect', position: { x: 50, y: 30, z: 0.2 }, size: { width: 70, height: 35 },
+            style: { background: 'radial-gradient(ellipse at 50% 60%, rgba(100,60,160,0.2), rgba(40,70,140,0.15) 30%, transparent 65%)', filter: 'blur(15px)', opacity: 0.4 },
+            animation: { name: 'scale', duration: 6, properties: { scale: [1, 1.03] } } },
+          // Stars
+          ...makeStars('s3', 20),
+          // Moon horizon (giant, mostly off-screen bottom)
+          ...makeMoon('s3', 50, 130, 170, 1),
+          // Horizon golden rim light
+          { id: 's3_rim', type: 'shape', content: 'rect', position: { x: 50, y: 52, z: 1.5 }, size: { width: 110, height: 3 },
+            style: { background: 'linear-gradient(90deg, transparent 5%, rgba(255,230,160,0.25) 25%, rgba(255,240,180,0.4) 50%, rgba(255,230,160,0.25) 75%, transparent 95%)', filter: 'blur(4px)' },
+            animation: { name: 'fadeIn', duration: 1.5, delay: 0.3 } },
+          // Ship silhouette in hero position
+          ...makeShip('s3', 38, 45, 0.7, 3, { name: 'float', duration: s3, properties: { translateY: [-0.8, 0.8], translateX: [-0.5, 0.5] } }),
+          // Lens flare on horizon
+          ...makeLensFlare('s3', 55, 50),
+          // Atmospheric glow
+          makeAtmosphere('s3', 54, 'rgba(255,230,170,0.15)'),
+          // Title
+          { id: 's3_title', type: 'text', content: 'AROUND THE MOON', position: { x: 50, y: 16, z: 5 }, size: { width: 84, height: 14 },
+            style: { fontSize: 48, fontWeight: 760, color: '#ffffff', letterSpacing: 5, textShadow: '0 0 25px rgba(255,230,160,0.3)' },
+            animation: { name: 'zoomIn', duration: 1.2, delay: 0.2, properties: { scale: [0.88, 1] } } },
+          // Subtitle
+          { id: 's3_sub', type: 'text', content: 'ORBIT COMPLETE', position: { x: 50, y: 24, z: 5 }, size: { width: 60, height: 8 },
+            style: { fontSize: 22, fontWeight: 400, color: 'rgba(200,210,230,0.7)', letterSpacing: 8 },
+            animation: { name: 'fadeIn', duration: 1.5, delay: 0.8 } },
         ],
         transition: { type: 'fade', duration: 0.5 }
       }
     ],
     requiredAssets: [],
-    style: {
-      ...baseStyle,
-      colorPalette: baseStyle.colorPalette || options.colors,
-    },
+    style: { ...baseStyle, colorPalette: baseStyle.colorPalette || options.colors },
     sourcePrompt: options.prompt,
   };
 }
