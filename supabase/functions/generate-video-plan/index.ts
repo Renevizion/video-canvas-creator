@@ -384,7 +384,18 @@ Return ONLY the JSON structure, no other text.`;
       plan = createFallbackPlan(prompt, duration, colors);
     }
 
-    // Validate and fix the plan structure
+    // Validate, then apply prompt-aware shaping, then validate again
+    plan = validateAndFixPlan(plan, duration, colors);
+    plan = applyPromptDrivenEnhancements(plan, {
+      prompt,
+      duration,
+      generateImages,
+      imageStyle,
+      aspectRatio,
+      resolution,
+      colors,
+      referenceMode,
+    });
     plan = validateAndFixPlan(plan, duration, colors);
 
     // Store in database
