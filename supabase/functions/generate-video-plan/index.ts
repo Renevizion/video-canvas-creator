@@ -1194,64 +1194,66 @@ function createCodeOnlySpaceJourneyPlan(
     }, ...craterEls];
   };
 
-  // ── Multi-part spaceship ──
+  // ── Multi-part spaceship using SVG for detailed vector art ──
   const makeShip = (sceneId: string, x: number, y: number, scale: number, z: number, anim: any) => {
     const w = 22 * scale; const h = 7 * scale;
+    const svgContent = `<svg viewBox="0 0 260 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+      <defs>
+        <linearGradient id="body_${sceneId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8eaf6"/>
+          <stop offset="25%" stop-color="#9fa8da"/>
+          <stop offset="50%" stop-color="#5c6bc0"/>
+          <stop offset="75%" stop-color="#3949ab"/>
+          <stop offset="100%" stop-color="#283593"/>
+        </linearGradient>
+        <radialGradient id="cockpit_${sceneId}" cx="35%" cy="35%">
+          <stop offset="0%" stop-color="rgba(180,220,255,0.95)"/>
+          <stop offset="60%" stop-color="rgba(80,130,220,0.7)"/>
+          <stop offset="100%" stop-color="rgba(40,80,180,0.4)"/>
+        </radialGradient>
+        <radialGradient id="engine_${sceneId}" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="rgba(180,230,255,1)"/>
+          <stop offset="30%" stop-color="rgba(100,190,255,0.9)"/>
+          <stop offset="60%" stop-color="rgba(50,120,255,0.4)"/>
+          <stop offset="100%" stop-color="transparent"/>
+        </radialGradient>
+        <linearGradient id="trail_${sceneId}" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="transparent"/>
+          <stop offset="30%" stop-color="rgba(100,180,255,0.2)"/>
+          <stop offset="70%" stop-color="rgba(100,180,255,0.5)"/>
+          <stop offset="100%" stop-color="rgba(140,210,255,0.8)"/>
+        </linearGradient>
+      </defs>
+      <!-- Exhaust trail -->
+      <ellipse cx="30" cy="50" rx="35" ry="6" fill="url(#trail_${sceneId})" opacity="0.7" filter="blur(2px)"/>
+      <!-- Top wing -->
+      <polygon points="90,25 130,42 80,42" fill="#3949ab" opacity="0.85"/>
+      <!-- Bottom wing -->
+      <polygon points="90,75 130,58 80,58" fill="#283593" opacity="0.85"/>
+      <!-- Main fuselage -->
+      <ellipse cx="150" cy="50" rx="90" ry="18" fill="url(#body_${sceneId})"/>
+      <!-- Fuselage highlight -->
+      <ellipse cx="160" cy="42" rx="70" ry="6" fill="rgba(255,255,255,0.15)"/>
+      <!-- Cockpit window -->
+      <ellipse cx="210" cy="47" rx="14" ry="10" fill="url(#cockpit_${sceneId})" stroke="rgba(180,220,255,0.4)" stroke-width="1"/>
+      <!-- Cockpit glare -->
+      <ellipse cx="206" cy="43" rx="5" ry="3" fill="rgba(255,255,255,0.5)"/>
+      <!-- Engine glow -->
+      <circle cx="58" cy="50" r="14" fill="url(#engine_${sceneId})"/>
+      <!-- Antenna -->
+      <line x1="220" y1="35" x2="235" y2="20" stroke="#9fa8da" stroke-width="1.5" stroke-linecap="round"/>
+      <circle cx="236" cy="19" r="2" fill="#e8eaf6"/>
+      <!-- Panel lines -->
+      <line x1="130" y1="35" x2="130" y2="65" stroke="rgba(0,0,0,0.15)" stroke-width="0.5"/>
+      <line x1="170" y1="34" x2="170" y2="66" stroke="rgba(0,0,0,0.1)" stroke-width="0.5"/>
+    </svg>`;
+
     return [
-      // Main fuselage
-      { id: `${sceneId}_ship_body`, type: 'shape', content: 'rect',
+      { id: `${sceneId}_ship_svg`, type: 'svg', content: svgContent,
         position: { x, y, z },
         size: { width: w, height: h },
-        style: {
-          background: `linear-gradient(180deg, #e8eaf6 0%, #9fa8da 25%, #5c6bc0 50%, #3949ab 75%, #283593 100%)`,
-          borderRadius: 999,
-          boxShadow: `0 ${h*0.4}px ${h*1.2}px rgba(0,0,0,0.45), 0 0 ${h*2}px rgba(100,140,255,0.15)`,
-        },
+        style: { filter: `drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(100,140,255,0.2))` },
         animation: anim
-      },
-      // Cockpit window
-      { id: `${sceneId}_ship_cockpit`, type: 'shape', content: 'circle',
-        position: { x: x + w * 0.35, y: y - h * 0.05, z: z + 0.2 },
-        size: { width: h * 0.5, height: h * 0.4 },
-        style: {
-          background: `radial-gradient(circle at 35% 35%, rgba(180,220,255,0.9), rgba(80,130,220,0.7) 60%, rgba(40,80,180,0.5))`,
-          boxShadow: `0 0 8px rgba(130,180,255,0.5)`,
-        },
-        animation: anim
-      },
-      // Wing top
-      { id: `${sceneId}_ship_wing_top`, type: 'shape', content: 'triangle',
-        position: { x: x - w * 0.05, y: y - h * 0.55, z: z - 0.1 },
-        size: { width: w * 0.35, height: h * 0.6 },
-        style: { color: '#3949ab', filter: 'brightness(0.85)' },
-        animation: anim
-      },
-      // Wing bottom
-      { id: `${sceneId}_ship_wing_bot`, type: 'shape', content: 'triangle',
-        position: { x: x - w * 0.05, y: y + h * 0.55, z: z - 0.1 },
-        size: { width: w * 0.35, height: h * 0.6 },
-        style: { color: '#283593', filter: 'brightness(0.8)' },
-        animation: anim
-      },
-      // Engine glow core
-      { id: `${sceneId}_engine_core`, type: 'shape', content: 'circle',
-        position: { x: x - w * 0.48, y, z: z + 0.1 },
-        size: { width: h * 0.7, height: h * 0.7 },
-        style: {
-          background: `radial-gradient(circle, rgba(120,200,255,1) 0%, rgba(80,160,255,0.8) 30%, rgba(50,120,255,0.3) 60%, transparent 100%)`,
-          filter: 'blur(2px)',
-        },
-        animation: { ...anim, name: 'pulse', duration: 0.8, properties: { scale: [0.85, 1.3] } }
-      },
-      // Engine exhaust trail
-      { id: `${sceneId}_engine_trail`, type: 'shape', content: 'rect',
-        position: { x: x - w * 0.75, y, z: z - 0.1 },
-        size: { width: w * 0.5, height: h * 0.3 },
-        style: {
-          background: `linear-gradient(90deg, transparent 0%, rgba(100,180,255,0.15) 20%, rgba(100,180,255,0.5) 60%, rgba(140,210,255,0.8) 100%)`,
-          borderRadius: 999, filter: 'blur(3px)',
-        },
-        animation: { ...anim, name: 'pulse', duration: 1.2, properties: { scale: [0.9, 1.15] } }
       },
     ];
   };
