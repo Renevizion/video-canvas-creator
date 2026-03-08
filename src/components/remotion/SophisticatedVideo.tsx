@@ -167,8 +167,15 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
     `.replace(/\s+/g, ' ').trim();
   })() : 'none';
   
+  // Extract colors for animated background
+  const colors = videoPlan.style?.colorPalette || ['#000000', '#06b6d4', '#1e293b', '#0f172a'];
+  const globalBg = colors[3] || colors[0] || '#0f172a';
+  
   return (
-    <AbsoluteFill style={{ backgroundColor: '#000000', overflow: 'hidden' }}>
+    <AbsoluteFill style={{ backgroundColor: globalBg, overflow: 'hidden' }}>
+      {/* Animated background with organic noise-driven motion */}
+      <AnimatedBackground colors={colors} />
+      
       {/* Main content with camera transform */}
       <div
         style={{
