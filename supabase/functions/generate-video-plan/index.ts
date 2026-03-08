@@ -235,6 +235,14 @@ IMPORTANT: The description in requiredAssets controls AI image generation. Be SP
 
 ✅ GOOD: "Isometric 3D render of a modern smartphone displaying an app interface, floating in space with soft glow, clean white background"
 ❌ BAD: "phone"
+
+⚠️ CRITICAL RULE FOR LAYERED SCENES:
+- BACKGROUND images must ONLY show the ENVIRONMENT (sky, landscape, space, room). NEVER include the main subject (person, vehicle, object) in background images.
+- FOREGROUND/SUBJECT images must show ONLY the subject on a clean/transparent background so it can be layered on top.
+- Example: For "spaceship flying over the moon":
+  ✅ Background: "Deep space scene with large detailed moon surface filling lower third, dense starfield, nebula glow, NO spacecraft"
+  ✅ Foreground: "Isolated sleek spacecraft on clean black background, side profile, engine glow, suitable for compositing"
+  ❌ Background: "Spacecraft flying over the moon" (this bakes the subject into the background!)
 ` : 'Image generation is disabled. Use geometric shapes, text, and the advanced element types listed above.'}
 
 📐 SCENE STRUCTURE (EXAMPLE):
@@ -872,28 +880,28 @@ function createSpaceJourneyPlan(
       {
         id: 'cockpit_pov',
         type: 'image',
-        description: 'First-person view from inside a spacecraft cockpit, illuminated instrument panels, moon visible through front glass, stars outside, cinematic, ultra-detailed, realistic lighting',
+        description: 'First-person view from inside a spacecraft cockpit, illuminated instrument panels and HUD displays, moon visible through front window, stars outside, NO external spacecraft visible, interior-only POV shot, cinematic, ultra-detailed, realistic lighting',
         specifications: { ...assetSpecs, style: options.imageStyle },
         providedByUser: false
       },
       {
         id: 'orbit_wide',
         type: 'image',
-        description: 'Cinematic wide shot of a spacecraft traveling around the moon, visible lunar curvature, deep starfield, motion blur trails, dramatic rim lighting, photorealistic',
+        description: 'Deep space environment with massive detailed moon filling lower half, visible craters and terrain, dense starfield and faint nebula above, dramatic rim lighting on lunar edge, NO spacecraft, NO vehicles, pure environment, photorealistic, cinematic',
         specifications: { ...assetSpecs, style: options.imageStyle },
         providedByUser: false
       },
       {
         id: 'ship_silhouette',
         type: 'image',
-        description: 'Foreground silhouette of a sleek spacecraft wing edge and engine glow, close-up framing for speed sensation, realistic cinematic style',
+        description: 'Isolated sleek futuristic spacecraft on a solid black background, side-profile view, glowing blue engine exhaust, clean edges suitable for compositing and layering, no stars or environment, just the ship',
         specifications: { width: 768, height: 768, style: options.imageStyle },
         providedByUser: false
       },
       {
         id: 'moon_reveal',
         type: 'image',
-        description: 'Epic cinematic reveal of spacecraft completing orbit around the moon, giant lunar horizon, dense stars and nebula in background, high detail, IMAX composition',
+        description: 'Epic cinematic lunar landscape panorama, giant moon horizon with detailed surface craters, dense stars and colorful nebula in background, dramatic golden rim light on horizon, NO spacecraft or vehicles, pure environment shot, IMAX composition',
         specifications: { ...assetSpecs, style: options.imageStyle },
         providedByUser: false
       }
