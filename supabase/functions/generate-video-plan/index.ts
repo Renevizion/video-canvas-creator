@@ -453,8 +453,41 @@ Return ONLY the JSON structure, no other text.`;
         return asset;
       });
       
-      await Promise.all(assetPromises);
+      const generatedAssets = await Promise.all(assetPromises);
       console.log('All assets generated');
+
+      // CRITICAL: Inject generated image URLs back into the plan's scene elements
+      // Without this, the renderer sees description text instead of URLs and shows placeholders.
+      const assetUrlMap: Record<string, string> = {};
+      for (const asset of generatedAssets) {
+        if (asset?.url) {
+          assetUrlMap[asset.id] = asset.url;
+        }
+      }
+
+      if (Object.keys(assetUrlMap).length > 0) {
+        for (const scene of plan.scenes) {
+          for (const element of scene.elements) {
+            if (element.type === 'image' && assetUrlMap[element.id]) {
+              element.content = assetUrlMap[element.id];
+            }
+          }
+        }
+        // Also update requiredAssets with URLs
+        for (const asset of plan.requiredAssets) {
+          if (assetUrlMap[asset.id]) {
+            asset.url = assetUrlMap[asset.id];
+          }
+        }
+
+        // Re-save the updated plan with image URLs
+        await supabase
+          .from('video_plans')
+          .update({ plan, status: 'completed' })
+          .eq('id', stored.id);
+
+        console.log('Plan updated with', Object.keys(assetUrlMap).length, 'asset URLs');
+      }
     }
 
     return new Response(JSON.stringify({
