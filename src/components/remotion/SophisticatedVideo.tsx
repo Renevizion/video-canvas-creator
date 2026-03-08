@@ -504,6 +504,13 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         element.content?.startsWith('/') ||
         element.content?.startsWith('data:');
       if (isUrl) {
+        // Foreground/subject elements (z > 1) default to 'contain' to avoid cropping
+        // Background elements default to 'cover' to fill the frame
+        const zDepthForFit = element.position?.z ?? 0;
+        const defaultFit = zDepthForFit > 1 ? 'contain' : 'cover';
+        const objectFit = baseStyle.objectFit || defaultFit;
+        const mixBlendMode = baseStyle.mixBlendMode || 'normal';
+        
         return (
           <img
             src={element.content}
@@ -511,10 +518,11 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
             style={{
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
+              objectFit,
               borderRadius: baseStyle.borderRadius || 0,
               boxShadow: baseStyle.boxShadow || '0 20px 40px rgba(0,0,0,0.4)',
-              filter: baseStyle.filter
+              filter: baseStyle.filter,
+              mixBlendMode: mixBlendMode as any,
             }}
           />
         );
