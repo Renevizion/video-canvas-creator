@@ -1022,35 +1022,28 @@ function enforceNoAiImageElements(
         }
 
         if (/ship|spaceship|rocket|astronaut|helmet|cockpit|spaceman|person/.test(prompt)) {
-          // Multi-part ship: body + cockpit + engine glow + trail
           const sx = element.position?.x ?? 50;
           const sy = element.position?.y ?? 50;
-          return [
-            { ...element, id: `${baseId}_body`, type: 'shape', content: 'rect',
-              position: { x: sx, y: sy, z: Math.max(z, 2) },
-              size: { width: 20, height: 6 },
-              style: { background: 'linear-gradient(180deg, #e8eaf6, #5c6bc0 50%, #283593)', borderRadius: 999, boxShadow: '0 8px 24px rgba(0,0,0,0.45), 0 0 20px rgba(100,140,255,0.15)' },
-              animation: element.animation || { name: 'float', duration: 5, properties: { translateY: [-1, 1] } },
-            },
-            { id: `${baseId}_cockpit`, type: 'shape', content: 'circle',
-              position: { x: sx + 7, y: sy - 0.3, z: Math.max(z, 2) + 0.2 },
-              size: { width: 3, height: 2.5 },
-              style: { background: 'radial-gradient(circle at 35% 35%, rgba(180,220,255,0.9), rgba(40,80,180,0.5))', boxShadow: '0 0 8px rgba(130,180,255,0.5)' },
-              animation: element.animation || { name: 'float', duration: 5, properties: { translateY: [-1, 1] } },
-            },
-            { id: `${baseId}_engine`, type: 'shape', content: 'circle',
-              position: { x: sx - 10, y: sy, z: Math.max(z, 2) + 0.1 },
-              size: { width: 4.5, height: 4.5 },
-              style: { background: 'radial-gradient(circle, rgba(120,200,255,1), rgba(50,120,255,0.3) 60%, transparent)', filter: 'blur(2px)' },
-              animation: { name: 'pulse', duration: 0.8, properties: { scale: [0.85, 1.3] } },
-            },
-            { id: `${baseId}_trail`, type: 'shape', content: 'rect',
-              position: { x: sx - 16, y: sy, z: Math.max(z, 2) - 0.1 },
-              size: { width: 12, height: 2 },
-              style: { background: 'linear-gradient(90deg, transparent, rgba(100,180,255,0.15) 20%, rgba(140,210,255,0.7))', borderRadius: 999, filter: 'blur(3px)' },
-              animation: { name: 'pulse', duration: 1.2, properties: { scale: [0.9, 1.15] } },
-            },
-          ];
+          const shipSvg = `<svg viewBox="0 0 260 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;overflow:visible">
+            <defs>
+              <linearGradient id="fb_${baseId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8eaf6"/><stop offset="50%" stop-color="#5c6bc0"/><stop offset="100%" stop-color="#283593"/></linearGradient>
+              <radialGradient id="fc_${baseId}" cx="35%" cy="35%"><stop offset="0%" stop-color="rgba(180,220,255,0.95)"/><stop offset="100%" stop-color="rgba(40,80,180,0.4)"/></radialGradient>
+              <radialGradient id="fe_${baseId}" cx="50%" cy="50%"><stop offset="0%" stop-color="rgba(180,230,255,1)"/><stop offset="60%" stop-color="rgba(50,120,255,0.4)"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+            </defs>
+            <ellipse cx="30" cy="50" rx="35" ry="6" fill="rgba(100,180,255,0.4)" opacity="0.7"/>
+            <polygon points="90,25 130,42 80,42" fill="#3949ab" opacity="0.85"/>
+            <polygon points="90,75 130,58 80,58" fill="#283593" opacity="0.85"/>
+            <ellipse cx="150" cy="50" rx="90" ry="18" fill="url(#fb_${baseId})"/>
+            <ellipse cx="210" cy="47" rx="14" ry="10" fill="url(#fc_${baseId})" stroke="rgba(180,220,255,0.4)" stroke-width="1"/>
+            <circle cx="58" cy="50" r="14" fill="url(#fe_${baseId})"/>
+          </svg>`;
+          return [{
+            ...element, id: `${baseId}_ship_svg`, type: 'svg', content: shipSvg,
+            position: { x: sx, y: sy, z: Math.max(z, 2) },
+            size: { width: 20, height: 6 },
+            style: { filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5)) drop-shadow(0 0 15px rgba(100,140,255,0.2))' },
+            animation: element.animation || { name: 'float', duration: 5, properties: { translateY: [-1, 1] } },
+          }];
         }
       }
 
