@@ -428,7 +428,7 @@ export const SophisticatedVideo: React.FC<SophisticatedVideoProps> = ({ videoPla
                 `.trim().replace(/\s+/g, ' '),
                 transformStyle: 'preserve-3d',
                 opacity: animOpacity * parallaxOffset.opacity,
-                filter: parallaxOffset.blur > 0 ? `blur(${parallaxOffset.blur}px)` : (element.style?.filter || undefined),
+                filter: parallaxOffset.blur > 0 ? `blur(${parallaxOffset.blur}px)` : (element.style?.filter as string | undefined),
                 zIndex: Math.round(((element.position.z ?? 0) as number) * 1000),
                 willChange: 'transform',
               }}
