@@ -953,6 +953,20 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
         </div>
       );
       
+    case 'svg':
+      // Render inline SVG markup for detailed vector illustrations
+      return (
+        <div
+          style={{
+            width: '100%',
+            height: '100%',
+            filter: baseStyle.filter,
+            opacity: baseStyle.opacity ?? 1,
+          }}
+          dangerouslySetInnerHTML={{ __html: element.content || '' }}
+        />
+      );
+
     default:
       // For unknown types, render a nice gradient placeholder instead of showing type labels
       return (
@@ -968,7 +982,6 @@ const ElementRenderer: React.FC<ElementRendererProps> = ({ element, frame, scene
             justifyContent: 'center',
           }}
         >
-          {/* Show content if it's emoji or short text */}
           {element.content && element.content.length <= 4 && (
             <span style={{ fontSize: baseStyle.fontSize || 48 }}>{element.content}</span>
           )}
