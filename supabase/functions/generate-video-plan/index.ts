@@ -203,6 +203,8 @@ VOICEOVER & CAPTIONS:
    - "laptop-mockup" - 3D rotating laptop frame. For product demos
 
    HARD RULE: For cinematic story prompts (space, travel, lifestyle, nature, fantasy), do NOT use terminal/progress/code-editor unless the user explicitly asks.
+
+5. ANIMATION VARIETY:
    Mix these animation types for visual interest:
    - "scale" / "popIn" / "zoomIn" - Dramatic entrances
    - "slideUp" / "slideIn" - Smooth reveals
