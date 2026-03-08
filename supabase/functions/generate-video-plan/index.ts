@@ -963,87 +963,128 @@ function enforceNoAiImageElements(
         return [element];
       }
 
-      // Keep real URLs (user-provided or previously generated assets), convert only prompt-text images.
       if (isDirectAssetUrl(element.content)) {
         return [element];
       }
 
       const prompt = String(element.content || '').toLowerCase();
       const z = element.position?.z ?? 1;
+      const baseId = element.id || `el_${sceneIndex}_${elIndex}`;
 
-      // Space-aware conversion for richer code-rendered visuals
+      // Space-aware: detailed multi-part shapes
       if (context.spacePrompt) {
         if (/moon|lunar|planet|earth/.test(prompt)) {
-          return [{
-            ...element,
-            id: `${element.id || `el_${sceneIndex}_${elIndex}`}_moon_shape`,
-            type: 'shape',
-            content: 'circle',
-            style: {
-              background: 'radial-gradient(circle at 35% 35%, #f0f0f0 0%, #b5b5b5 35%, #777777 65%, #3a3a3a 100%)',
-              boxShadow: '0 0 70px rgba(220,220,220,0.22), inset -18px -18px 45px rgba(0,0,0,0.5)',
+          // Multi-part moon with craters + rim light
+          const sz = Math.max(element.size?.width || 40, 35);
+          const cx = element.position?.x ?? 50;
+          const cy = element.position?.y ?? 50;
+          return [
+            { ...element, id: `${baseId}_moon`, type: 'shape', content: 'circle',
+              style: {
+                background: 'radial-gradient(circle at 30% 28%, #f5f5f0, #d4d0c8 18%, #b0aba0 40%, #807a70 65%, #504a40 85%, #2a2520)',
+                boxShadow: `0 0 ${sz}px rgba(220,215,200,0.15), inset -${sz*0.12}px -${sz*0.1}px ${sz*0.3}px rgba(0,0,0,0.55)`,
+              },
+              position: { x: cx, y: cy, z }, size: { width: sz, height: sz },
+              animation: element.animation || { name: 'scale', duration: 6, properties: { scale: [1.03, 1] } },
             },
-            animation: element.animation || { name: 'scale', duration: 6, properties: { scale: [1.05, 1] } },
-            position: { ...(element.position || { x: 50, y: 50 }), z },
-          }];
+            // Crater spots
+            ...([{dx:-12,dy:-10,s:4},{dx:5,dy:-5,s:6},{dx:15,dy:8,s:3},{dx:-5,dy:12,s:5}].map((c, i) => ({
+              id: `${baseId}_crater_${i}`, type: 'shape', content: 'circle',
+              position: { x: cx + c.dx * sz / 100, y: cy + c.dy * sz / 100, z: z + 0.1 },
+              size: { width: c.s, height: c.s },
+              style: { background: 'radial-gradient(circle at 40% 38%, rgba(90,90,90,0.5), rgba(30,30,30,0.3) 100%)', boxShadow: 'inset 1px 1px 3px rgba(0,0,0,0.5)' },
+              animation: { name: 'fadeIn', duration: 0.8, delay: 0.1 + i * 0.05 }
+            }))),
+            // Rim light
+            { id: `${baseId}_rim`, type: 'shape', content: 'circle',
+              position: { x: cx, y: cy, z: z + 0.05 }, size: { width: sz * 0.98, height: sz * 0.98 },
+              style: { background: 'transparent', border: '1px solid rgba(255,248,230,0.15)', boxShadow: `inset ${sz*0.15}px ${sz*0.08}px ${sz*0.2}px rgba(255,248,230,0.1)` },
+              animation: { name: 'fadeIn', duration: 1.5 }
+            },
+          ];
         }
 
         if (/star|galaxy|space|nebula|cosmos/.test(prompt)) {
-          return [{
-            ...element,
-            id: `${element.id || `el_${sceneIndex}_${elIndex}`}_space_shape`,
-            type: 'shape',
-            content: 'rect',
-            style: {
-              background: 'radial-gradient(ellipse at 50% 35%, rgba(58,78,120,0.45) 0%, rgba(20,24,48,0.55) 35%, #05070f 100%)',
+          return [
+            { ...element, id: `${baseId}_space`, type: 'shape', content: 'rect',
+              style: { background: 'radial-gradient(ellipse at 50% 35%, rgba(58,78,120,0.45), rgba(20,24,48,0.55) 35%, #05070f)' },
+              animation: element.animation || { name: 'fadeIn', duration: 1 },
+              position: { ...(element.position || { x: 50, y: 50 }), z: Math.min(z, 0) },
             },
-            animation: element.animation || { name: 'fadeIn', duration: 1 },
-            position: { ...(element.position || { x: 50, y: 50 }), z: Math.min(z, 0) },
-          }];
+            // Add nebula glow
+            { id: `${baseId}_nebula`, type: 'shape', content: 'rect',
+              position: { x: (element.position?.x ?? 50) + 10, y: (element.position?.y ?? 50) - 5, z: 0.3 },
+              size: { width: 50, height: 35 },
+              style: { background: 'radial-gradient(ellipse at 45% 50%, rgba(80,40,160,0.25), transparent 65%)', filter: 'blur(18px)', opacity: 0.35 },
+              animation: { name: 'scale', duration: 7, properties: { scale: [1, 1.05] } }
+            },
+          ];
         }
 
         if (/ship|spaceship|rocket|astronaut|helmet|cockpit|spaceman|person/.test(prompt)) {
-          return [{
-            ...element,
-            id: `${element.id || `el_${sceneIndex}_${elIndex}`}_subject_shape`,
-            type: 'shape',
-            content: 'rect',
-            style: {
-              background: 'linear-gradient(135deg, #f5f7ff 0%, #9aa9d4 38%, #4a5e94 100%)',
-              borderRadius: 999,
-              boxShadow: '0 0 30px rgba(145,182,255,0.32), 0 14px 40px rgba(0,0,0,0.45)',
+          // Multi-part ship: body + cockpit + engine glow + trail
+          const sx = element.position?.x ?? 50;
+          const sy = element.position?.y ?? 50;
+          return [
+            { ...element, id: `${baseId}_body`, type: 'shape', content: 'rect',
+              position: { x: sx, y: sy, z: Math.max(z, 2) },
+              size: { width: 20, height: 6 },
+              style: { background: 'linear-gradient(180deg, #e8eaf6, #5c6bc0 50%, #283593)', borderRadius: 999, boxShadow: '0 8px 24px rgba(0,0,0,0.45), 0 0 20px rgba(100,140,255,0.15)' },
+              animation: element.animation || { name: 'float', duration: 5, properties: { translateY: [-1, 1] } },
             },
-            animation: element.animation || { name: 'float', duration: 6, properties: { translateY: [-1.2, 1.2] } },
-            position: { ...(element.position || { x: 50, y: 50 }), z: Math.max(z, 2) },
-          }];
+            { id: `${baseId}_cockpit`, type: 'shape', content: 'circle',
+              position: { x: sx + 7, y: sy - 0.3, z: Math.max(z, 2) + 0.2 },
+              size: { width: 3, height: 2.5 },
+              style: { background: 'radial-gradient(circle at 35% 35%, rgba(180,220,255,0.9), rgba(40,80,180,0.5))', boxShadow: '0 0 8px rgba(130,180,255,0.5)' },
+              animation: element.animation || { name: 'float', duration: 5, properties: { translateY: [-1, 1] } },
+            },
+            { id: `${baseId}_engine`, type: 'shape', content: 'circle',
+              position: { x: sx - 10, y: sy, z: Math.max(z, 2) + 0.1 },
+              size: { width: 4.5, height: 4.5 },
+              style: { background: 'radial-gradient(circle, rgba(120,200,255,1), rgba(50,120,255,0.3) 60%, transparent)', filter: 'blur(2px)' },
+              animation: { name: 'pulse', duration: 0.8, properties: { scale: [0.85, 1.3] } },
+            },
+            { id: `${baseId}_trail`, type: 'shape', content: 'rect',
+              position: { x: sx - 16, y: sy, z: Math.max(z, 2) - 0.1 },
+              size: { width: 12, height: 2 },
+              style: { background: 'linear-gradient(90deg, transparent, rgba(100,180,255,0.15) 20%, rgba(140,210,255,0.7))', borderRadius: 999, filter: 'blur(3px)' },
+              animation: { name: 'pulse', duration: 1.2, properties: { scale: [0.9, 1.15] } },
+            },
+          ];
         }
       }
 
+      // Generic fallback: glassmorphic card instead of boring gradient
       return [{
         ...element,
-        id: `${element.id || `el_${sceneIndex}_${elIndex}`}_shape_fallback`,
+        id: `${baseId}_shape_fallback`,
         type: 'shape',
         content: 'rect',
         style: {
-          background: `linear-gradient(135deg, ${context.colors?.[0] || '#0a0e27'}, ${context.colors?.[1] || '#1a1a2e'})`,
-          borderRadius: 16,
-          boxShadow: '0 12px 30px rgba(0,0,0,0.35)',
+          background: `linear-gradient(145deg, ${context.colors?.[0] || '#0a0e27'}88, ${context.colors?.[1] || '#1a1a2e'}88)`,
+          backdropFilter: 'blur(12px)',
+          borderRadius: 20,
+          border: '1px solid rgba(255,255,255,0.1)',
+          boxShadow: '0 15px 35px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1)',
         },
         animation: element.animation || { name: 'fadeIn', duration: 0.8 },
       }];
     });
 
-    // Ensure minimal depth/ambience in no-image mode
-    const hasStarLayer = mappedElements.some((el: any) => el?.id?.includes('auto_star_particle'));
+    // Add star particles for space scenes
+    const hasStarLayer = mappedElements.some((el: any) => el?.id?.includes('auto_stars'));
     if (context.spacePrompt && !hasStarLayer) {
-      mappedElements.push({
-        id: `${scene.id || `scene_${sceneIndex + 1}`}_auto_star_particle`,
-        type: 'shape',
-        content: 'circle',
-        position: { x: 82, y: 18, z: 1 },
-        size: { width: 2, height: 2 },
-        style: { color: '#ffffffaa' },
-        animation: { name: 'pulse', duration: 2.4, properties: { scale: [1, 1.8] } },
+      // Add 8 scattered star particles instead of just 1
+      const starPositions = [{x:12,y:8},{x:88,y:14},{x:45,y:6},{x:72,y:22},{x:18,y:30},{x:92,y:38},{x:34,y:12},{x:65,y:4}];
+      starPositions.forEach((p, i) => {
+        mappedElements.push({
+          id: `${scene.id || `scene_${sceneIndex + 1}`}_auto_stars_${i}`,
+          type: 'shape', content: 'circle',
+          position: { x: p.x, y: p.y, z: 0.5 },
+          size: { width: 1 + (i % 3), height: 1 + (i % 3) },
+          style: { background: `rgba(255,255,255,${0.4 + (i%4)*0.15})`, boxShadow: `0 0 ${3 + i}px rgba(255,255,255,${0.3 + (i%3)*0.1})` },
+          animation: { name: 'pulse', duration: 1.5 + i * 0.4, delay: i * 0.1, properties: { scale: [0.7, 1.5 + (i%2)*0.3] } },
+        });
       });
     }
 
