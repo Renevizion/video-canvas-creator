@@ -685,6 +685,9 @@ function validateAndFixPlan(plan: any, duration: number, colors: string[]) {
     plan.scenes = createFallbackPlan("Video", duration, colors).scenes;
   }
   
+  // Ensure every scene has visual density (minimum 4 elements)
+  plan = enforceMinimumVisualDensity(plan, colors);
+  
   // Add sophisticated metadata for A-grade rendering
   return enhanceWithSophisticatedMetadata(plan);
 }
