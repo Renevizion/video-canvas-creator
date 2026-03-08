@@ -106,7 +106,8 @@ export interface PlannedElement {
     | 'music-visualization'
     | 'tiktok-captions'
     | 'stats-counter'
-    | 'progress';
+    | 'progress'
+    | 'svg';
   content: string;
   position: { x: number; y: number; z: number };
   size: { width: number; height: number };

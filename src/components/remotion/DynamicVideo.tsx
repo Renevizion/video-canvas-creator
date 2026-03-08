@@ -1099,6 +1099,9 @@ const ElementRenderer: React.FC<{
           delay={pathStyle.delay || 0}
         />
       );
+    case 'svg':
+      // Render inline SVG markup for detailed vector illustrations
+      return <SvgElement element={element} style={baseStyle} sceneFrame={sceneFrame} />;
     default:
       return null;
   }
@@ -1262,18 +1265,13 @@ const ShapeElement: React.FC<{
   sceneFrame: number;
 }> = React.memo(({ element, style, globalStyle, colors, sceneFrame }) => {
   const shapeStyle = element.style as Record<string, unknown>;
-  // NOTE: We intentionally do NOT render element.content as visible text for shapes.
-  // Many plans use content as a semantic label (e.g. "Background", "Arrow", "UI Card")
-  // which should not appear in the final video.
   const content = element.content || '';
   
-  // Detect shape type from content/description
   const isCard = content.toLowerCase().includes('card') || content.toLowerCase().includes('ui');
   const isButton = content.toLowerCase().includes('button') || content.toLowerCase().includes('cta');
   const isDevice = content.toLowerCase().includes('phone') || content.toLowerCase().includes('device') || content.toLowerCase().includes('mockup');
   const isGlobe = content.toLowerCase().includes('globe') || content.toLowerCase().includes('world');
   
-  // New: Detect @remotion/shapes types
   const isCircle = content.toLowerCase().includes('circle') || content.toLowerCase().includes('dot');
   const isRect = content.toLowerCase().includes('rect') || content.toLowerCase().includes('square');
   const isTriangle = content.toLowerCase().includes('triangle') || content.toLowerCase().includes('arrow');
@@ -1286,11 +1284,37 @@ const ShapeElement: React.FC<{
   const shapeSize = typeof element.size?.width === 'number' ? element.size.width : 200;
   const shapeColor = (shapeStyle.color as string) || colors[1] || '#06b6d4';
   
-  // Render using @remotion/shapes for geometric shapes with MOTION GRAPHICS FLOW
-  // Using noise3D for organic, choreographed motion like prompt-to-motion-graphics template
+  // ═══════════════════════════════════════════════════════════════
+  // CRITICAL FIX: When a shape has a custom CSS background (gradients, shadows),
+  // render as a styled <div> instead of @remotion/shapes primitives.
+  // @remotion/shapes only support solid fills and ignore CSS backgrounds entirely.
+  // ═══════════════════════════════════════════════════════════════
+  const hasCustomBackground = !!shapeStyle.background;
   
+  if (hasCustomBackground && (isCircle || isRect || isTriangle || isPolygon || isStar)) {
+    const pulse = 1 + noise3D('shape-pulse-' + element.id, sceneFrame * 0.06, 0, 0) * 0.08;
+    const driftX = noise3D('shape-drift-x-' + element.id, sceneFrame * 0.015, 0, 0) * 12;
+    const driftY = noise3D('shape-drift-y-' + element.id, 0, sceneFrame * 0.015, 0) * 10;
+    
+    const cssShape: React.CSSProperties = {
+      ...style,
+      width,
+      height,
+      background: shapeStyle.background as string,
+      borderRadius: isCircle ? '50%' : (shapeStyle.borderRadius as number | string) || borderRadius,
+      boxShadow: (shapeStyle.boxShadow as string) || undefined,
+      border: (shapeStyle.border as string) || undefined,
+      filter: (shapeStyle.filter as string) || undefined,
+      opacity: (shapeStyle.opacity as number) ?? undefined,
+      transform: `${style.transform} translateX(${driftX}px) translateY(${driftY}px) scale(${pulse})`,
+      overflow: 'hidden',
+    };
+    
+    return <div style={cssShape} />;
+  }
+  
+  // Geometric shapes using @remotion/shapes (solid fills only)
   if (isCircle) {
-    // Motion graphics: Add organic pulse and drift for "flow"
     const pulse = 1 + noise3D('circle-pulse-' + element.id, sceneFrame * 0.08, 0, 0) * 0.15;
     const driftX = noise3D('circle-drift-x-' + element.id, sceneFrame * 0.02, 0, 0) * 20;
     const driftY = noise3D('circle-drift-y-' + element.id, 0, sceneFrame * 0.02, 0) * 15;
@@ -1312,7 +1336,6 @@ const ShapeElement: React.FC<{
   }
   
   if (isRect) {
-    // Motion graphics: Rotating and scaling with organic feel
     const pulse = 1 + noise3D('rect-pulse-' + element.id, sceneFrame * 0.06, 0, 0) * 0.1;
     const rotateZ = noise3D('rect-rot-' + element.id, sceneFrame * 0.015, 0, 0) * 15;
     
@@ -1334,7 +1357,6 @@ const ShapeElement: React.FC<{
   }
   
   if (isTriangle) {
-    // Motion graphics: Floating triangle with rotation
     const floatY = noise3D('tri-float-' + element.id, 0, 0, sceneFrame * 0.025) * 25;
     const rotateZ = noise3D('tri-rot-' + element.id, sceneFrame * 0.02, 0, 0) * 20;
     
@@ -1355,9 +1377,8 @@ const ShapeElement: React.FC<{
   }
   
   if (isStar) {
-    // Motion graphics: Pulsing, spinning star
     const pulse = 1 + noise3D('star-pulse-' + element.id, sceneFrame * 0.1, 0, 0) * 0.2;
-    const spin = (sceneFrame * 0.5) % 360; // Continuous slow spin
+    const spin = (sceneFrame * 0.5) % 360;
     const glow = 0.5 + noise3D('star-glow-' + element.id, sceneFrame * 0.05, 0, 0) * 0.3;
     
     return (
@@ -1379,7 +1400,6 @@ const ShapeElement: React.FC<{
   }
   
   if (isPolygon) {
-    // Motion graphics: Slow rotating polygon with breathing effect
     const breathe = 1 + noise3D('poly-breathe-' + element.id, sceneFrame * 0.04, 0, 0) * 0.12;
     const rotateZ = (sceneFrame * 0.3) % 360;
     
@@ -1418,9 +1438,7 @@ const ShapeElement: React.FC<{
           justifyContent: 'center',
           padding: 24,
         }}
-      >
-        {/* intentionally no label text */}
-      </div>
+      />
     );
   }
   
@@ -1469,7 +1487,6 @@ const ShapeElement: React.FC<{
           flexDirection: 'column',
         }}
       >
-        {/* Screen */}
         <div style={{
           flex: 1,
           background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
@@ -1492,7 +1509,6 @@ const ShapeElement: React.FC<{
   
   // Globe/World element
   if (isGlobe) {
-    // Throttle rotation to every 4th frame for performance
     const throttledFrame = Math.floor(sceneFrame / 4) * 4;
     const rotation = throttledFrame * 0.5;
     return (
@@ -1515,7 +1531,6 @@ const ShapeElement: React.FC<{
           transform: `${style.transform} rotateY(${rotation}deg)`,
         }}
       >
-        {/* Grid lines */}
         <div style={{
           position: 'absolute',
           inset: 0,
@@ -1530,7 +1545,7 @@ const ShapeElement: React.FC<{
     );
   }
   
-  // Default shape - gradient filled
+  // Default shape - use custom background if available, otherwise gradient
   const background = (shapeStyle.background as string) || 
     `linear-gradient(135deg, ${colors[1]}20 0%, ${colors[1]}10 100%)`;
   
@@ -1541,16 +1556,48 @@ const ShapeElement: React.FC<{
         width,
         height,
         background,
-        borderRadius,
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+        borderRadius: (shapeStyle.borderRadius as number | string) || borderRadius,
+        border: (shapeStyle.border as string) || '1px solid rgba(255,255,255,0.1)',
+        boxShadow: (shapeStyle.boxShadow as string) || '0 20px 50px rgba(0,0,0,0.25)',
+        filter: (shapeStyle.filter as string) || undefined,
+        opacity: (shapeStyle.opacity as number) ?? undefined,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}
-    >
-      {/* intentionally no label text */}
-    </div>
+    />
+  );
+});
+
+// ============================================================================
+// SVG ELEMENT - Renders inline SVG markup for detailed vector illustrations
+// Enables high-fidelity shapes like spaceships, astronauts, celestial bodies
+// ============================================================================
+const SvgElement: React.FC<{
+  element: PlannedElement;
+  style: React.CSSProperties;
+  sceneFrame: number;
+}> = React.memo(({ element, style, sceneFrame }) => {
+  const svgStyle = element.style as Record<string, unknown>;
+  const width = element.size?.width ? (element.size.width <= 100 ? `${element.size.width}%` : `${element.size.width}px`) : '200px';
+  const height = element.size?.height ? (element.size.height <= 100 ? `${element.size.height}%` : `${element.size.height}px`) : '200px';
+  
+  // Organic motion
+  const driftX = noise3D('svg-dx-' + element.id, sceneFrame * 0.012, 0, 0) * 8;
+  const driftY = noise3D('svg-dy-' + element.id, 0, sceneFrame * 0.012, 0) * 6;
+  
+  return (
+    <div
+      style={{
+        ...style,
+        width,
+        height,
+        transform: `${style.transform} translateX(${driftX}px) translateY(${driftY}px)`,
+        filter: (svgStyle.filter as string) || undefined,
+        opacity: (svgStyle.opacity as number) ?? undefined,
+      }}
+      dangerouslySetInnerHTML={{ __html: element.content }}
+    />
   );
 });
 
