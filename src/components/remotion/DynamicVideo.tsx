@@ -1099,6 +1099,9 @@ const ElementRenderer: React.FC<{
           delay={pathStyle.delay || 0}
         />
       );
+    case 'svg':
+      // Render inline SVG markup for detailed vector illustrations
+      return <SvgElement element={element} style={baseStyle} sceneFrame={sceneFrame} />;
     default:
       return null;
   }
