@@ -235,6 +235,14 @@ IMPORTANT: The description in requiredAssets controls AI image generation. Be SP
 
 ✅ GOOD: "Isometric 3D render of a modern smartphone displaying an app interface, floating in space with soft glow, clean white background"
 ❌ BAD: "phone"
+
+⚠️ CRITICAL RULE FOR LAYERED SCENES:
+- BACKGROUND images must ONLY show the ENVIRONMENT (sky, landscape, space, room). NEVER include the main subject (person, vehicle, object) in background images.
+- FOREGROUND/SUBJECT images must show ONLY the subject on a clean/transparent background so it can be layered on top.
+- Example: For "spaceship flying over the moon":
+  ✅ Background: "Deep space scene with large detailed moon surface filling lower third, dense starfield, nebula glow, NO spacecraft"
+  ✅ Foreground: "Isolated sleek spacecraft on clean black background, side profile, engine glow, suitable for compositing"
+  ❌ Background: "Spacecraft flying over the moon" (this bakes the subject into the background!)
 ` : 'Image generation is disabled. Use geometric shapes, text, and the advanced element types listed above.'}
 
 📐 SCENE STRUCTURE (EXAMPLE):
