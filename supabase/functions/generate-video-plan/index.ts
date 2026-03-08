@@ -1016,9 +1016,10 @@ function isJourneyPrompt(promptLower: string) {
   const journeyKeywords = [
     'travel', 'travelling', 'traveling', 'journey', 'orbit', 'around', 'through', 'explore', 'voyage',
     'fly', 'flying', 'mission', 'move', 'moving', 'moves', 'migrate', 'migration', 'relocate',
-    'exodus', 'evacuate', 'colonize', 'colonization', 'settle', 'departure', 'arrival', 'from', 'to'
+    'exodus', 'evacuate', 'colonize', 'colonization', 'settle', 'departure', 'arrival'
   ];
-  return journeyKeywords.some((keyword) => promptLower.includes(keyword));
+  const hasRoutePattern = /\bfrom\b[\s\S]{0,80}\bto\b/.test(promptLower);
+  return hasRoutePattern || journeyKeywords.some((keyword) => promptLower.includes(keyword));
 }
 
 function isSpacePrompt(promptLower: string) {
