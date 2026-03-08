@@ -1,6 +1,6 @@
 import React from 'react';
 import { Composition } from 'remotion';
-import { DynamicVideo } from '../components/remotion/DynamicVideo';
+import { SophisticatedVideo } from '../components/remotion/SophisticatedVideo';
 import type { VideoPlan } from '../types/video';
 import { 
   MusicVisualization, 
