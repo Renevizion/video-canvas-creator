@@ -1014,14 +1014,17 @@ function isTechPrompt(promptLower: string) {
 
 function isJourneyPrompt(promptLower: string) {
   const journeyKeywords = [
-    'travel', 'travelling', 'traveling', 'journey', 'orbit', 'around', 'through', 'explore', 'voyage', 'fly', 'flying', 'mission'
+    'travel', 'travelling', 'traveling', 'journey', 'orbit', 'around', 'through', 'explore', 'voyage',
+    'fly', 'flying', 'mission', 'move', 'moving', 'moves', 'migrate', 'migration', 'relocate',
+    'exodus', 'evacuate', 'colonize', 'colonization', 'settle', 'departure', 'arrival', 'from', 'to'
   ];
   return journeyKeywords.some((keyword) => promptLower.includes(keyword));
 }
 
 function isSpacePrompt(promptLower: string) {
   const spaceKeywords = [
-    'space', 'moon', 'lunar', 'astronaut', 'spaceship', 'cosmos', 'galaxy', 'starfield', 'orbit'
+    'space', 'moon', 'lunar', 'astronaut', 'spaceship', 'cosmos', 'galaxy', 'starfield', 'orbit',
+    'earth', 'mars', 'planet', 'interplanetary', 'solar system', 'red planet'
   ];
   return spaceKeywords.some((keyword) => promptLower.includes(keyword));
 }
