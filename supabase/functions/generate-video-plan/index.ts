@@ -887,21 +887,21 @@ function createSpaceJourneyPlan(
       {
         id: 'orbit_wide',
         type: 'image',
-        description: 'Cinematic wide shot of a spacecraft traveling around the moon, visible lunar curvature, deep starfield, motion blur trails, dramatic rim lighting, photorealistic',
+        description: 'Deep space environment with massive detailed moon filling lower half, visible craters and terrain, dense starfield and faint nebula above, dramatic rim lighting on lunar edge, NO spacecraft, NO vehicles, pure environment, photorealistic, cinematic',
         specifications: { ...assetSpecs, style: options.imageStyle },
         providedByUser: false
       },
       {
         id: 'ship_silhouette',
         type: 'image',
-        description: 'Foreground silhouette of a sleek spacecraft wing edge and engine glow, close-up framing for speed sensation, realistic cinematic style',
+        description: 'Isolated sleek futuristic spacecraft on a solid black background, side-profile view, glowing blue engine exhaust, clean edges suitable for compositing and layering, no stars or environment, just the ship',
         specifications: { width: 768, height: 768, style: options.imageStyle },
         providedByUser: false
       },
       {
         id: 'moon_reveal',
         type: 'image',
-        description: 'Epic cinematic reveal of spacecraft completing orbit around the moon, giant lunar horizon, dense stars and nebula in background, high detail, IMAX composition',
+        description: 'Epic cinematic lunar landscape panorama, giant moon horizon with detailed surface craters, dense stars and colorful nebula in background, dramatic golden rim light on horizon, NO spacecraft or vehicles, pure environment shot, IMAX composition',
         specifications: { ...assetSpecs, style: options.imageStyle },
         providedByUser: false
       }
