@@ -808,9 +808,22 @@ function applyPromptDrivenEnhancements(
   const techPrompt = isTechPrompt(promptLower);
   const journeyPrompt = isJourneyPrompt(promptLower);
   const spacePrompt = isSpacePrompt(promptLower);
+  const interplanetaryMigrationPrompt = isInterplanetaryMigrationPrompt(promptLower);
 
   if (!techPrompt) {
     plan = removeTechUiWidgets(plan);
+  }
+
+  // Special handling for Earth -> Mars style migration stories to avoid narrative jumps
+  if (interplanetaryMigrationPrompt) {
+    plan = enforceInterplanetaryStoryFlow(plan, options.duration);
+
+    if (!options.generateImages) {
+      plan = enforceNoAiImageElements(plan, { spacePrompt: true, colors: options.colors });
+      plan = injectSpaceSvgAnchors(plan, options.colors);
+    }
+
+    return plan;
   }
 
   if (spacePrompt && journeyPrompt && options.generateImages) {
@@ -823,6 +836,11 @@ function applyPromptDrivenEnhancements(
 
   if (!options.generateImages) {
     plan = enforceNoAiImageElements(plan, { spacePrompt, colors: options.colors });
+
+    // Ensure code-rendered space videos still keep at least one cinematic SVG anchor
+    if (spacePrompt) {
+      plan = injectSpaceSvgAnchors(plan, options.colors);
+    }
   }
 
   if (journeyPrompt) {
