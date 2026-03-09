@@ -1354,21 +1354,146 @@ function enforceNoAiImageElements(
         }
       }
 
-      // Generic fallback: glassmorphic card instead of boring gradient
-      return [{
-        ...element,
-        id: `${baseId}_shape_fallback`,
-        type: 'shape',
-        content: 'rect',
-        style: {
-          background: `linear-gradient(145deg, ${context.colors?.[0] || '#0a0e27'}88, ${context.colors?.[1] || '#1a1a2e'}88)`,
-          backdropFilter: 'blur(12px)',
-          borderRadius: 20,
-          border: '1px solid rgba(255,255,255,0.1)',
-          boxShadow: '0 15px 35px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1)',
+      // === NON-SPACE CONTENT-AWARE REPLACEMENTS ===
+      const accent = context.colors?.[3] || context.colors?.[2] || '#f43f5e';
+      const secondary = context.colors?.[1] || '#1a1a2e';
+      const cx = element.position?.x ?? 50;
+      const cy = element.position?.y ?? 50;
+      const sw = element.size?.width || 300;
+      const sh = element.size?.height || 300;
+
+      // Person / Portrait / Silhouette
+      if (/person|man|woman|keanu|actor|human|face|portrait|silhouette|figure|hero/.test(prompt)) {
+        return [
+          // Head circle
+          { id: `${baseId}_head`, type: 'shape', content: 'circle',
+            position: { x: cx, y: cy - 12, z: z + 0.1 },
+            size: { width: Math.min(sw * 0.3, 80), height: Math.min(sw * 0.3, 80) },
+            style: { background: `radial-gradient(circle at 30% 30%, ${secondary}, #111)`, boxShadow: '0 8px 30px rgba(0,0,0,0.6)' },
+            animation: { name: 'fadeIn', duration: 1.2, delay: 0.2 }
+          },
+          // Body shape
+          { id: `${baseId}_body`, type: 'shape', content: 'rect',
+            position: { x: cx, y: cy + 8, z },
+            size: { width: Math.min(sw * 0.4, 100), height: Math.min(sh * 0.5, 180) },
+            style: { background: `linear-gradient(180deg, ${secondary}, #0a0a0a)`, borderRadius: '40px 40px 20px 20px', boxShadow: '0 15px 40px rgba(0,0,0,0.5)' },
+            animation: element.animation || { name: 'slideUp', duration: 1.5, properties: { translateY: [10, 0] } }
+          },
+        ];
+      }
+
+      // Motorcycle / Vehicle
+      if (/motorcycle|bike|vehicle|car|ride|riding|driving|wheel/.test(prompt)) {
+        return [
+          // Body frame
+          { id: `${baseId}_frame`, type: 'shape', content: 'rect',
+            position: { x: cx, y: cy, z },
+            size: { width: Math.min(sw, 400), height: Math.min(sh * 0.3, 80) },
+            style: { background: `linear-gradient(90deg, #2a2a2a, ${secondary}, #1a1a1a)`, borderRadius: 40, boxShadow: '0 10px 30px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.1)' },
+            animation: element.animation || { name: 'slideIn', duration: 2, properties: { translateX: [-20, 0] } }
+          },
+          // Front wheel
+          { id: `${baseId}_wheel_f`, type: 'shape', content: 'circle',
+            position: { x: cx + 18, y: cy + 8, z: z + 0.1 },
+            size: { width: 50, height: 50 },
+            style: { background: 'radial-gradient(circle, #444, #111)', border: '3px solid #222', boxShadow: '0 5px 15px rgba(0,0,0,0.4)' },
+            animation: { name: 'rotate', duration: 1, properties: { rotate: [0, 360] } }
+          },
+          // Rear wheel  
+          { id: `${baseId}_wheel_r`, type: 'shape', content: 'circle',
+            position: { x: cx - 18, y: cy + 8, z: z + 0.1 },
+            size: { width: 50, height: 50 },
+            style: { background: 'radial-gradient(circle, #444, #111)', border: '3px solid #222', boxShadow: '0 5px 15px rgba(0,0,0,0.4)' },
+            animation: { name: 'rotate', duration: 1, properties: { rotate: [0, 360] } }
+          },
+        ];
+      }
+
+      // Sun / Sunrise / Sunset / Dawn
+      if (/sun|sunrise|sunset|dawn|dusk|glow|light|horizon/.test(prompt)) {
+        return [
+          // Sun core
+          { id: `${baseId}_sun`, type: 'shape', content: 'circle',
+            position: { x: cx, y: cy, z },
+            size: { width: Math.min(sw, 500), height: Math.min(sw, 500) },
+            style: { background: `radial-gradient(circle, ${accent}, #ff6b35 40%, transparent 70%)`, filter: 'blur(20px)' },
+            animation: element.animation || { name: 'scale', duration: 4, properties: { scale: [0.8, 1.1], translateY: [20, 0] } }
+          },
+          // Glow ring
+          { id: `${baseId}_glow`, type: 'shape', content: 'circle',
+            position: { x: cx, y: cy, z: z - 0.1 },
+            size: { width: Math.min(sw * 1.5, 700), height: Math.min(sw * 1.5, 700) },
+            style: { background: `radial-gradient(circle, transparent 30%, ${accent}30 50%, transparent 70%)`, filter: 'blur(30px)', opacity: 0.6 },
+            animation: { name: 'pulse', duration: 3, properties: { scale: [1, 1.15] } }
+          },
+        ];
+      }
+
+      // Road / Path / Landscape
+      if (/road|path|canyon|mountain|landscape|scenery|background|blur/.test(prompt)) {
+        return [
+          // Motion blur lines
+          { id: `${baseId}_motion`, type: 'shape', content: 'rect',
+            position: { x: cx, y: cy, z },
+            size: { width: 100, height: 100 },
+            style: { background: `repeating-linear-gradient(90deg, transparent, transparent 48%, rgba(255,255,255,0.08) 50%, transparent 52%)` },
+            animation: { name: 'slideIn', duration: 0.5, properties: { translateX: [-100, 100] } }
+          },
+          // Horizon gradient
+          { id: `${baseId}_horizon`, type: 'shape', content: 'rect',
+            position: { x: 50, y: 80, z: z - 0.1 },
+            size: { width: 120, height: 40 },
+            style: { background: `linear-gradient(0deg, ${secondary}80, transparent)`, filter: 'blur(10px)' },
+            animation: { name: 'fadeIn', duration: 1.5 }
+          },
+        ];
+      }
+
+      // Training / Action / Movement
+      if (/training|action|movement|martial|fighting|practice|dojo|gym/.test(prompt)) {
+        return [
+          // Dynamic action shape
+          { id: `${baseId}_action`, type: 'shape', content: 'rect',
+            position: { x: cx, y: cy, z },
+            size: { width: Math.min(sw, 350), height: Math.min(sh, 350) },
+            style: { background: `linear-gradient(135deg, ${accent}40, ${secondary}60)`, borderRadius: '50%', transform: 'rotate(15deg)', boxShadow: `0 0 60px ${accent}30` },
+            animation: element.animation || { name: 'scale', duration: 2, properties: { scale: [0.9, 1.1], rotate: [10, 20] } }
+          },
+          // Motion trail
+          { id: `${baseId}_trail`, type: 'shape', content: 'rect',
+            position: { x: cx - 10, y: cy, z: z - 0.1 },
+            size: { width: sw * 0.8, height: sh * 0.3 },
+            style: { background: `linear-gradient(90deg, transparent, ${accent}20, transparent)`, filter: 'blur(15px)', opacity: 0.5 },
+            animation: { name: 'slideIn', duration: 1.5, properties: { translateX: [-30, 10] } }
+          },
+        ];
+      }
+
+      // FINAL Generic fallback: Abstract animated shape (not boring rectangle)
+      return [
+        // Main abstract form
+        { id: `${baseId}_abstract`, type: 'shape', content: 'circle',
+          position: { x: cx, y: cy, z },
+          size: { width: Math.min(sw, 400), height: Math.min(sh, 400) },
+          style: {
+            background: `radial-gradient(ellipse at 40% 40%, ${accent}50, ${secondary}60 50%, transparent 80%)`,
+            filter: 'blur(8px)',
+            boxShadow: `0 0 80px ${accent}20`,
+          },
+          animation: element.animation || { name: 'float', duration: 4, properties: { translateY: [-5, 5], scale: [0.95, 1.05] } }
         },
-        animation: element.animation || { name: 'fadeIn', duration: 0.8 },
-      }];
+        // Secondary accent
+        { id: `${baseId}_accent2`, type: 'shape', content: 'circle',
+          position: { x: cx + 15, y: cy - 10, z: z + 0.1 },
+          size: { width: Math.min(sw * 0.5, 200), height: Math.min(sw * 0.5, 200) },
+          style: {
+            background: `radial-gradient(circle, ${accent}30, transparent 70%)`,
+            filter: 'blur(20px)',
+            opacity: 0.6,
+          },
+          animation: { name: 'pulse', duration: 3, properties: { scale: [0.9, 1.2] } }
+        },
+      ];
     });
 
     // Add star particles for space scenes
